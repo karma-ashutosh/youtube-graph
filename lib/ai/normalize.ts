@@ -1,21 +1,28 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Concept, NormalizedConcept } from "../types";
 import { nameToSlug } from "../utils/parsers";
 import { NormalizedConceptSchema } from "../utils/validators";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Determine which AI provider to use from environment
+const AI_PROVIDER = process.env.AI_PROVIDER || "gemini"; // "claude" or "gemini"
+
+// Initialize clients
+const anthropic = AI_PROVIDER === "claude" && process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
+
+const googleAI = AI_PROVIDER === "gemini" && process.env.GOOGLE_API_KEY
+  ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
+  : null;
 
 /**
- * Use LLM to normalize a concept name against existing concepts
- * This helps avoid duplicates by matching similar concepts
+ * Build the prompt for concept normalization
  */
-export async function normalizeConcept(
+function buildNormalizationPrompt(
   rawName: string,
   existingConcepts: Concept[]
-): Promise<NormalizedConcept> {
+): string {
   // Take top 50 most mentioned concepts for context
   const topConcepts = existingConcepts
     .slice(0, 50)
@@ -25,7 +32,7 @@ export async function normalizeConcept(
     )
     .join("\n");
 
-  const prompt = `You are normalizing concept names for a knowledge graph.
+  return `You are normalizing concept names for a knowledge graph.
 
 EXISTING CONCEPTS (top 50 for context):
 ${topConcepts || "No existing concepts yet."}
@@ -53,34 +60,110 @@ OUTPUT (JSON only, no explanation):
   "matched_existing_id": "product_market_fit",
   "confidence": "high"
 }`;
+}
+
+/**
+ * Parse JSON response with error handling
+ */
+function parseJsonResponse(text: string): any {
+  // Try to extract JSON from markdown code blocks if present
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/```\s*([\s\S]*?)\s*```/);
+  const cleanText = jsonMatch ? jsonMatch[1] : text;
+
+  return JSON.parse(cleanText.trim());
+}
+
+/**
+ * Use Claude to normalize a concept
+ */
+async function normalizeWithClaude(
+  rawName: string,
+  existingConcepts: Concept[]
+): Promise<NormalizedConcept> {
+  if (!anthropic) {
+    throw new Error("Claude API key not configured. Set ANTHROPIC_API_KEY in .env");
+  }
+
+  const prompt = buildNormalizationPrompt(rawName, existingConcepts);
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const message = await anthropic.messages.create({
+      model: "claude-3-5-haiku-20241022",
+      max_tokens: 1024,
+      temperature: 0.1,
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a concept normalization expert. Return only valid JSON.",
-        },
         {
           role: "user",
           content: prompt,
         },
       ],
-      temperature: 0.1, // Low temperature for consistency
-      response_format: { type: "json_object" },
     });
 
-    const content = completion.choices[0].message.content;
-    if (!content) {
-      throw new Error("No response from OpenAI");
+    const content = message.content[0];
+    if (content.type !== "text") {
+      throw new Error("Unexpected response type from Claude");
     }
 
-    const parsed = JSON.parse(content);
-    const validated = NormalizedConceptSchema.parse(parsed);
+    const parsed = parseJsonResponse(content.text);
+    return NormalizedConceptSchema.parse(parsed);
+  } catch (error) {
+    console.error("Error normalizing concept with Claude:", error);
+    throw error;
+  }
+}
 
-    return validated;
+/**
+ * Use Gemini to normalize a concept
+ */
+async function normalizeWithGemini(
+  rawName: string,
+  existingConcepts: Concept[]
+): Promise<NormalizedConcept> {
+  if (!googleAI) {
+    throw new Error("Gemini API key not configured. Set GOOGLE_API_KEY in .env");
+  }
+
+  const prompt = buildNormalizationPrompt(rawName, existingConcepts);
+
+  try {
+    const model = googleAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        temperature: 0.1,
+        responseMimeType: "application/json",
+      },
+    });
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+
+    const parsed = parseJsonResponse(text);
+    return NormalizedConceptSchema.parse(parsed);
+  } catch (error) {
+    console.error("Error normalizing concept with Gemini:", error);
+    throw error;
+  }
+}
+
+/**
+ * Use LLM to normalize a concept name against existing concepts
+ * This helps avoid duplicates by matching similar concepts
+ */
+export async function normalizeConcept(
+  rawName: string,
+  existingConcepts: Concept[]
+): Promise<NormalizedConcept> {
+  try {
+    if (AI_PROVIDER === "claude") {
+      return await normalizeWithClaude(rawName, existingConcepts);
+    } else if (AI_PROVIDER === "gemini") {
+      return await normalizeWithGemini(rawName, existingConcepts);
+    } else {
+      throw new Error(
+        `Unknown AI provider: ${AI_PROVIDER}. Use "claude" or "gemini"`
+      );
+    }
   } catch (error) {
     console.error("Error normalizing concept with LLM:", error);
 

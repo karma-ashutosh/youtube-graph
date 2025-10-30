@@ -5,7 +5,7 @@ A Next.js application that processes video transcript segments and creates a que
 ## Features
 
 - **Data Ingestion Pipeline**: Upload video transcript segments with AI-analyzed concepts
-- **AI-Powered Concept Normalization**: Uses OpenAI to intelligently merge similar concepts and avoid duplicates
+- **AI-Powered Concept Normalization**: Uses Claude or Gemini to intelligently merge similar concepts and avoid duplicates
 - **Neo4j Knowledge Graph**: Stores and queries complex relationships between videos, segments, concepts, examples, and key ideas
 - **Interactive Graph Visualization**: Explore concept relationships in a force-directed graph
 - **Concept Explorer**: Browse, search, and filter all concepts with detailed information
@@ -18,14 +18,14 @@ A Next.js application that processes video transcript segments and creates a que
 - **API**: Next.js API routes
 - **Data Validation**: Zod
 - **Neo4j Client**: neo4j-driver
-- **LLM Integration**: OpenAI (for concept normalization)
+- **LLM Integration**: Anthropic Claude or Google Gemini (configurable via env, for concept normalization)
 - **Visualization**: react-force-graph-2d
 
 ## Prerequisites
 
 - Node.js 18+ and npm
 - Neo4j database (either Neo4j Aura free tier or local Docker instance)
-- OpenAI API key (for concept normalization)
+- AI API key: Either Anthropic Claude API key OR Google Gemini API key (for concept normalization)
 
 ## Setup Instructions
 
@@ -71,8 +71,15 @@ NEO4J_PASSWORD=your_password
 # NEO4J_USER=neo4j
 # NEO4J_PASSWORD=xxxxx
 
-# OpenAI API Key
-OPENAI_API_KEY=sk-xxxxx
+# AI Provider Configuration
+# Choose "claude" or "gemini"
+AI_PROVIDER=gemini
+
+# Anthropic Claude API Key (if using AI_PROVIDER=claude)
+ANTHROPIC_API_KEY=sk-ant-xxxxx
+
+# Google Gemini API Key (if using AI_PROVIDER=gemini)
+GOOGLE_API_KEY=xxxxx
 ```
 
 ### 4. Initialize Database Schema
@@ -188,14 +195,29 @@ See `sample-segments.json` for complete examples.
 
 ## Key Features Explained
 
+### AI Provider Configuration
+
+The system supports two AI providers for concept normalization, controlled via the `AI_PROVIDER` environment variable:
+
+**Gemini (Google)** - Default, recommended for cost-effectiveness
+- Set `AI_PROVIDER=gemini`
+- Uses `gemini-1.5-flash` model
+- Free tier available with generous limits
+- Get your API key at: https://ai.google.dev/
+
+**Claude (Anthropic)** - Alternative option
+- Set `AI_PROVIDER=claude`
+- Uses `claude-3-5-haiku-20241022` model (fast and efficient)
+- Get your API key at: https://console.anthropic.com/
+
 ### Concept Normalization
 
-The system uses OpenAI's GPT models to intelligently normalize concept names:
+The AI provider intelligently normalizes concept names to:
 
-- Matches variations (e.g., "PMF" → "Product-Market Fit")
-- Avoids creating duplicate concepts for similar terms
-- Maintains aliases for all variations
-- Updates statistics (mentions, timestamps) automatically
+- Match variations (e.g., "PMF" → "Product-Market Fit")
+- Avoid creating duplicate concepts for similar terms
+- Maintain aliases for all variations
+- Update statistics (mentions, timestamps) automatically
 
 ### Ingestion Pipeline
 
@@ -270,7 +292,7 @@ Potential improvements for production use:
 7. **User Authentication**: Multi-user support with permissions
 8. **Query API**: Safe Cypher query execution with validation
 9. **Real-time Updates**: WebSocket integration for live graph updates
-10. **Alternative LLM Support**: Add Google Gemini as a cheaper alternative
+10. **Model Selection**: Allow users to choose specific models (e.g., Claude Opus, Gemini Pro)
 
 ## Troubleshooting
 
