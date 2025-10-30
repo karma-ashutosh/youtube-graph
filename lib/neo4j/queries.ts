@@ -384,12 +384,110 @@ export async function getConceptById(conceptId: string) {
 }
 
 /**
+ * Get all segments
+ */
+export async function getAllSegments(): Promise<any[]> {
+  const session = getSession();
+
+  try {
+    const result = await session.run(`
+      MATCH (s:Segment)-[:FROM_VIDEO]->(v:Video)
+      RETURN s, v
+      ORDER BY s.created_at DESC
+    `);
+
+    return result.records.map((record) => {
+      const segment = record.get("s").properties;
+      const video = record.get("v").properties;
+
+      // Convert Neo4j integers
+      const convertIntegers = (obj: any): any => {
+        if (!obj) return obj;
+        if (neo4j.isInt(obj)) return obj.toNumber();
+        if (typeof obj === 'object' && !Array.isArray(obj)) {
+          const converted: any = {};
+          for (const key in obj) {
+            converted[key] = convertIntegers(obj[key]);
+          }
+          return converted;
+        }
+        return obj;
+      };
+
+      return {
+        segment: convertIntegers(segment),
+        video: convertIntegers(video),
+      };
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Get a segment by ID with all its relationships
+ */
+export async function getSegmentById(segmentId: string) {
+  const session = getSession();
+
+  try {
+    const result = await session.run(
+      `
+      MATCH (s:Segment {segment_id: $segment_id})-[:FROM_VIDEO]->(v:Video)
+
+      OPTIONAL MATCH (s)-[d:DISCUSSES]->(c:Concept)
+      OPTIONAL MATCH (e:Example)-[:MENTIONED_IN]->(s)
+      OPTIONAL MATCH (ki:KeyIdea)-[:EXTRACTED_FROM]->(s)
+
+      RETURN s, v,
+             collect(DISTINCT {concept: c, discusses: d}) as concepts,
+             collect(DISTINCT e) as examples,
+             collect(DISTINCT ki) as key_ideas
+      `,
+      { segment_id: segmentId }
+    );
+
+    if (result.records.length === 0) {
+      return null;
+    }
+
+    const record = result.records[0];
+
+    // Helper function to convert Neo4j integers
+    const convertIntegers = (obj: any): any => {
+      if (!obj) return obj;
+      if (neo4j.isInt(obj)) return obj.toNumber();
+      if (Array.isArray(obj)) return obj.map(convertIntegers);
+      if (typeof obj === 'object') {
+        const converted: any = {};
+        for (const key in obj) {
+          converted[key] = convertIntegers(obj[key]);
+        }
+        return converted;
+      }
+      return obj;
+    };
+
+    return {
+      segment: convertIntegers(record.get("s").properties),
+      video: convertIntegers(record.get("v").properties),
+      concepts: convertIntegers(record.get("concepts")),
+      examples: record.get("examples").map((e: any) => convertIntegers(e?.properties)).filter(Boolean),
+      keyIdeas: record.get("key_ideas").map((ki: any) => convertIntegers(ki?.properties)).filter(Boolean),
+    };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
  * Get graph data for visualization
  */
 export async function getGraphData(params?: {
   minMentions?: number;
   category?: string;
   limit?: number;
+  includeSegments?: boolean;
 }) {
   const session = getSession();
 
@@ -444,17 +542,73 @@ export async function getGraphData(params?: {
       strength: neo4j.isInt(record.get("strength"))
         ? record.get("strength").toNumber()
         : record.get("strength"),
+      type: "concept-concept",
     }));
 
+    const nodes = concepts.map((c: any) => ({
+      id: c.concept_id,
+      label: c.canonical_name,
+      type: "concept",
+      mentions: neo4j.isInt(c.total_mentions) ? c.total_mentions.toNumber() : c.total_mentions || 0,
+      importance: c.importance_score || 0,
+      category: c.category || "Uncategorized",
+    }));
+
+    // If includeSegments is true, also add segment nodes and their links to concepts
+    if (params?.includeSegments) {
+      const segmentQuery = `
+        MATCH (s:Segment)-[:DISCUSSES]->(c:Concept)
+        WHERE c.concept_id IN $concept_ids
+        WITH DISTINCT s
+        LIMIT 20
+        RETURN s
+      `;
+
+      const segmentResult = await session.run(segmentQuery, {
+        concept_ids: conceptIds,
+      });
+
+      const segments = segmentResult.records.map((record) => record.get("s").properties);
+
+      // Add segment nodes
+      segments.forEach((s: any) => {
+        nodes.push({
+          id: s.segment_id,
+          label: s.topic_hint.substring(0, 30) + (s.topic_hint.length > 30 ? "..." : ""),
+          type: "segment",
+          mentions: 0,
+          importance: 0,
+          category: "segment",
+          duration: neo4j.isInt(s.duration_seconds) ? s.duration_seconds.toNumber() : s.duration_seconds,
+        });
+      });
+
+      // Get segment-to-concept links
+      const segmentLinkQuery = `
+        MATCH (s:Segment)-[d:DISCUSSES]->(c:Concept)
+        WHERE s.segment_id IN $segment_ids
+          AND c.concept_id IN $concept_ids
+        RETURN s.segment_id as source, c.concept_id as target, d.role as role
+      `;
+
+      const segmentLinkResult = await session.run(segmentLinkQuery, {
+        segment_ids: segments.map((s: any) => s.segment_id),
+        concept_ids: conceptIds,
+      });
+
+      segmentLinkResult.records.forEach((record) => {
+        links.push({
+          source: record.get("source"),
+          target: record.get("target"),
+          strength: 1,
+          type: "segment-concept",
+          role: record.get("role"),
+        });
+      });
+    }
+
     return {
-      nodes: concepts.map((c: any) => ({
-        id: c.concept_id,
-        label: c.canonical_name,
-        type: "concept",
-        mentions: neo4j.isInt(c.total_mentions) ? c.total_mentions.toNumber() : c.total_mentions || 0,
-        importance: c.importance_score || 0,
-        category: c.category || "Uncategorized",
-      })),
+      nodes,
       links,
     };
   } finally {

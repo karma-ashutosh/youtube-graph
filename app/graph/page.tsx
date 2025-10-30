@@ -16,11 +16,13 @@ interface GraphData {
     mentions?: number;
     importance?: number;
     category?: string;
+    duration?: number;
   }>;
   links: Array<{
     source: string;
     target: string;
     type: string;
+    role?: string;
   }>;
 }
 
@@ -31,6 +33,7 @@ export default function GraphPage() {
   const [minMentions, setMinMentions] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [maxNodes, setMaxNodes] = useState(50);
+  const [includeSegments, setIncludeSegments] = useState(false);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [nodeDetails, setNodeDetails] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -38,7 +41,7 @@ export default function GraphPage() {
 
   useEffect(() => {
     fetchGraphData();
-  }, [minMentions, selectedCategory, maxNodes]);
+  }, [minMentions, selectedCategory, maxNodes, includeSegments]);
 
   const fetchGraphData = async () => {
     try {
@@ -46,6 +49,7 @@ export default function GraphPage() {
       if (minMentions > 0) params.append("minMentions", minMentions.toString());
       if (selectedCategory) params.append("category", selectedCategory);
       params.append("limit", maxNodes.toString());
+      params.append("includeSegments", includeSegments.toString());
 
       const response = await fetch(`/api/graph?${params}`);
       const data = await response.json();
@@ -62,10 +66,11 @@ export default function GraphPage() {
     }
   };
 
-  const fetchNodeDetails = async (nodeId: string) => {
+  const fetchNodeDetails = async (nodeId: string, nodeType: string) => {
     setLoadingDetails(true);
     try {
-      const response = await fetch(`/api/concepts/${nodeId}`);
+      const endpoint = nodeType === "segment" ? `/api/segments/${nodeId}` : `/api/concepts/${nodeId}`;
+      const response = await fetch(endpoint);
       const data = await response.json();
 
       if (response.ok) {
@@ -79,10 +84,8 @@ export default function GraphPage() {
   };
 
   const handleNodeClick = (node: any) => {
-    if (node.type === "concept") {
-      setSelectedNode(node);
-      fetchNodeDetails(node.id);
-    }
+    setSelectedNode(node);
+    fetchNodeDetails(node.id, node.type);
   };
 
   const closeSidePanel = () => {
@@ -116,7 +119,7 @@ export default function GraphPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
             Min Mentions: {minMentions}
@@ -159,6 +162,18 @@ export default function GraphPage() {
             <option value="Business">Business</option>
             <option value="Uncategorized">Uncategorized</option>
           </select>
+        </div>
+
+        <div className="flex items-center">
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeSegments}
+              onChange={(e) => setIncludeSegments(e.target.checked)}
+              className="mr-2 w-4 h-4"
+            />
+            <span className="text-sm font-medium">Show Segments</span>
+          </label>
         </div>
 
         <div className="flex items-end">
@@ -206,44 +221,86 @@ export default function GraphPage() {
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
 
-              // Get color from nodeColor function
-              const colors: { [key: string]: string } = {
-                Product: "#2563eb",
-                Marketing: "#059669",
-                Business: "#dc2626",
-                Uncategorized: "#7c3aed",
-              };
-              const nodeColor = colors[node.category || "Uncategorized"] || "#7c3aed";
+              if (node.type === "segment") {
+                // Draw segment as rectangle
+                const size = 8;
+                const rectWidth = size * 2;
+                const rectHeight = size * 1.5;
 
-              // Draw node circle with border
-              const size = (node.mentions || 1) * 2;
-              ctx.beginPath();
-              ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-              ctx.fillStyle = nodeColor;
-              ctx.fill();
+                ctx.fillStyle = "#f59e0b"; // Amber color for segments
+                ctx.fillRect(
+                  node.x - rectWidth / 2,
+                  node.y - rectHeight / 2,
+                  rectWidth,
+                  rectHeight
+                );
 
-              // Add white border for better visibility
-              ctx.strokeStyle = "#ffffff";
-              ctx.lineWidth = 1.5;
-              ctx.stroke();
+                // Add white border
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(
+                  node.x - rectWidth / 2,
+                  node.y - rectHeight / 2,
+                  rectWidth,
+                  rectHeight
+                );
 
-              // Draw label with white background for readability
-              const labelWidth = ctx.measureText(label).width;
-              const labelHeight = fontSize + 4;
-              const labelY = node.y + size + fontSize + 2;
+                // Draw label with white background for readability
+                const labelWidth = ctx.measureText(label).width;
+                const labelHeight = fontSize + 4;
+                const labelY = node.y + rectHeight / 2 + fontSize + 2;
 
-              // Background for label
-              ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-              ctx.fillRect(
-                node.x - labelWidth / 2 - 2,
-                labelY - fontSize,
-                labelWidth + 4,
-                labelHeight
-              );
+                // Background for label
+                ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                ctx.fillRect(
+                  node.x - labelWidth / 2 - 2,
+                  labelY - fontSize,
+                  labelWidth + 4,
+                  labelHeight
+                );
 
-              // Label text
-              ctx.fillStyle = "#1f2937";
-              ctx.fillText(label, node.x, labelY);
+                // Label text
+                ctx.fillStyle = "#1f2937";
+                ctx.fillText(label, node.x, labelY);
+              } else {
+                // Draw concept as circle
+                const colors: { [key: string]: string } = {
+                  Product: "#2563eb",
+                  Marketing: "#059669",
+                  Business: "#dc2626",
+                  Uncategorized: "#7c3aed",
+                };
+                const nodeColor = colors[node.category || "Uncategorized"] || "#7c3aed";
+
+                const size = (node.mentions || 1) * 2;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+                ctx.fillStyle = nodeColor;
+                ctx.fill();
+
+                // Add white border for better visibility
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Draw label with white background for readability
+                const labelWidth = ctx.measureText(label).width;
+                const labelHeight = fontSize + 4;
+                const labelY = node.y + size + fontSize + 2;
+
+                // Background for label
+                ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                ctx.fillRect(
+                  node.x - labelWidth / 2 - 2,
+                  labelY - fontSize,
+                  labelWidth + 4,
+                  labelHeight
+                );
+
+                // Label text
+                ctx.fillStyle = "#1f2937";
+                ctx.fillText(label, node.x, labelY);
+              }
             }}
             onNodeClick={handleNodeClick}
             linkColor={() => "#94a3b8"}
@@ -268,7 +325,12 @@ export default function GraphPage() {
           <div className="p-6 space-y-4">
             {/* Header */}
             <div className="flex justify-between items-start">
-              <h2 className="text-2xl font-bold">{selectedNode.label}</h2>
+              <div>
+                <h2 className="text-2xl font-bold">{selectedNode.label}</h2>
+                <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded mt-1 inline-block">
+                  {selectedNode.type}
+                </span>
+              </div>
               <button
                 onClick={closeSidePanel}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -285,73 +347,153 @@ export default function GraphPage() {
               </div>
             ) : nodeDetails ? (
               <div className="space-y-4">
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
-                    <div className="text-xs text-gray-600 dark:text-gray-400">Category</div>
-                    <div className="text-sm font-semibold">{nodeDetails.concept.category}</div>
-                  </div>
-                  <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
-                    <div className="text-xs text-gray-600 dark:text-gray-400">Mentions</div>
-                    <div className="text-sm font-semibold">{nodeDetails.concept.total_mentions}</div>
-                  </div>
-                </div>
+                {selectedNode.type === "segment" ? (
+                  // Segment Details
+                  <>
+                    {/* Video Info */}
+                    {nodeDetails.video && (
+                      <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Video</div>
+                        <a
+                          href={nodeDetails.video.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Watch on YouTube →
+                        </a>
+                      </div>
+                    )}
 
-                {/* Aliases */}
-                {nodeDetails.concept.aliases && nodeDetails.concept.aliases.length > 0 && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      Also known as
-                    </div>
-                    <div className="text-sm">{nodeDetails.concept.aliases.join(", ")}</div>
-                  </div>
-                )}
-
-                {/* Key Segment */}
-                {nodeDetails.segments && nodeDetails.segments.length > 0 && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      Featured In ({nodeDetails.segments.length} segments)
-                    </div>
-                    <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900 space-y-2">
-                      {nodeDetails.segments.slice(0, 2).map((item: any, i: number) => {
-                        const seg = item.segment?.properties;
-                        if (!seg) return null;
-                        return (
-                          <div key={i} className="text-sm">
-                            <div className="font-medium truncate">{seg.topic_hint}</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">
-                              {seg.start_time} - {seg.end_time}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {nodeDetails.segments.length > 2 && (
-                        <div className="text-xs text-gray-500">
-                          +{nodeDetails.segments.length - 2} more segments
+                    {/* Time Info */}
+                    {nodeDetails.segment && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                          <div className="text-xs text-gray-600 dark:text-gray-400">Duration</div>
+                          <div className="text-sm font-semibold">{nodeDetails.segment.duration_seconds}s</div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                        <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                          <div className="text-xs text-gray-600 dark:text-gray-400">Time Range</div>
+                          <div className="text-xs font-semibold">
+                            {nodeDetails.segment.start_time} - {nodeDetails.segment.end_time}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                {/* Examples Preview */}
-                {nodeDetails.examples && nodeDetails.examples.length > 0 && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      Examples ({nodeDetails.examples.length})
+                    {/* Concepts */}
+                    {nodeDetails.concepts && nodeDetails.concepts.length > 0 && (
+                      <div>
+                        <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          Concepts Discussed ({nodeDetails.concepts.length})
+                        </div>
+                        <div className="space-y-2">
+                          {nodeDetails.concepts.slice(0, 3).map((item: any, i: number) => {
+                            const concept = item.concept?.properties;
+                            if (!concept) return null;
+                            return (
+                              <div key={i} className="border rounded-lg p-2 bg-gray-50 dark:bg-gray-900 text-sm">
+                                <div className="font-medium">{concept.canonical_name}</div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  Role: {item.discusses?.properties?.role || "N/A"}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {nodeDetails.concepts.length > 3 && (
+                            <div className="text-xs text-gray-500">
+                              +{nodeDetails.concepts.length - 3} more concepts
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Examples */}
+                    {nodeDetails.examples && nodeDetails.examples.length > 0 && (
+                      <div>
+                        <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          Examples ({nodeDetails.examples.length})
+                        </div>
+                        <div className="border-l-4 border-purple-500 pl-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 rounded">
+                          {nodeDetails.examples[0].example_text.substring(0, 100)}
+                          {nodeDetails.examples[0].example_text.length > 100 ? "..." : ""}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Concept Details
+                  <>
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Category</div>
+                        <div className="text-sm font-semibold">{nodeDetails.concept.category}</div>
+                      </div>
+                      <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Mentions</div>
+                        <div className="text-sm font-semibold">{nodeDetails.concept.total_mentions}</div>
+                      </div>
                     </div>
-                    <div className="border-l-4 border-blue-500 pl-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 rounded">
-                      {nodeDetails.examples[0].example_text.substring(0, 150)}
-                      {nodeDetails.examples[0].example_text.length > 150 ? "..." : ""}
-                    </div>
-                  </div>
+
+                    {/* Aliases */}
+                    {nodeDetails.concept.aliases && nodeDetails.concept.aliases.length > 0 && (
+                      <div>
+                        <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          Also known as
+                        </div>
+                        <div className="text-sm">{nodeDetails.concept.aliases.join(", ")}</div>
+                      </div>
+                    )}
+
+                    {/* Key Segment */}
+                    {nodeDetails.segments && nodeDetails.segments.length > 0 && (
+                      <div>
+                        <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          Featured In ({nodeDetails.segments.length} segments)
+                        </div>
+                        <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900 space-y-2">
+                          {nodeDetails.segments.slice(0, 2).map((item: any, i: number) => {
+                            const seg = item.segment?.properties;
+                            if (!seg) return null;
+                            return (
+                              <div key={i} className="text-sm">
+                                <div className="font-medium truncate">{seg.topic_hint}</div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  {seg.start_time} - {seg.end_time}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {nodeDetails.segments.length > 2 && (
+                            <div className="text-xs text-gray-500">
+                              +{nodeDetails.segments.length - 2} more segments
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Examples Preview */}
+                    {nodeDetails.examples && nodeDetails.examples.length > 0 && (
+                      <div>
+                        <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          Examples ({nodeDetails.examples.length})
+                        </div>
+                        <div className="border-l-4 border-blue-500 pl-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 rounded">
+                          {nodeDetails.examples[0].example_text.substring(0, 150)}
+                          {nodeDetails.examples[0].example_text.length > 150 ? "..." : ""}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Actions */}
                 <div className="pt-4 space-y-2">
                   <a
-                    href={`/concepts/${selectedNode.id}`}
+                    href={selectedNode.type === "segment" ? `/segments/${selectedNode.id}` : `/concepts/${selectedNode.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors"
