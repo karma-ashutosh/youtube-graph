@@ -354,12 +354,29 @@ export async function getConceptById(conceptId: string) {
     }
 
     const record = result.records[0];
+    const concept = record.get("c").properties;
+
+    // Helper function to convert Neo4j integers to numbers
+    const convertIntegers = (obj: any): any => {
+      if (!obj) return obj;
+      if (neo4j.isInt(obj)) return obj.toNumber();
+      if (Array.isArray(obj)) return obj.map(convertIntegers);
+      if (typeof obj === 'object') {
+        const converted: any = {};
+        for (const key in obj) {
+          converted[key] = convertIntegers(obj[key]);
+        }
+        return converted;
+      }
+      return obj;
+    };
+
     return {
-      concept: record.get("c").properties,
-      segments: record.get("segments"),
-      examples: record.get("examples").map((e: any) => e?.properties).filter(Boolean),
-      keyIdeas: record.get("key_ideas").map((ki: any) => ki?.properties).filter(Boolean),
-      relatedConcepts: record.get("related_concepts"),
+      concept: convertIntegers(concept),
+      segments: convertIntegers(record.get("segments")),
+      examples: record.get("examples").map((e: any) => convertIntegers(e?.properties)).filter(Boolean),
+      keyIdeas: record.get("key_ideas").map((ki: any) => convertIntegers(ki?.properties)).filter(Boolean),
+      relatedConcepts: convertIntegers(record.get("related_concepts")),
     };
   } finally {
     await session.close();

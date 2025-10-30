@@ -128,8 +128,8 @@ export default function GraphPage() {
       </div>
 
       {graphData && (
-        <div className="border rounded-lg overflow-hidden bg-white dark:bg-gray-900">
-          <div className="text-sm text-gray-600 dark:text-gray-400 p-3 border-b">
+        <div className="border rounded-lg overflow-hidden" style={{ backgroundColor: '#f8f9fa' }}>
+          <div className="text-sm text-gray-600 dark:text-gray-400 p-3 border-b bg-white dark:bg-gray-800">
             Showing {graphData.nodes.length} nodes and {graphData.links.length}{" "}
             links. Click on a concept to view details.
           </div>
@@ -139,16 +139,17 @@ export default function GraphPage() {
             graphData={graphData}
             width={1200}
             height={700}
+            backgroundColor="#f8f9fa"
             nodeLabel="label"
             nodeColor={(node: any) => {
-              // Color by category
+              // Vibrant colors by category with good contrast
               const colors: { [key: string]: string } = {
-                Product: "#3b82f6",
-                Marketing: "#10b981",
-                Business: "#f59e0b",
-                Uncategorized: "#6b7280",
+                Product: "#2563eb",      // Bright blue
+                Marketing: "#059669",    // Emerald green
+                Business: "#dc2626",     // Red
+                Uncategorized: "#7c3aed", // Purple
               };
-              return colors[node.category || "Uncategorized"] || "#6b7280";
+              return colors[node.category || "Uncategorized"] || "#7c3aed";
             }}
             nodeVal={(node: any) => {
               // Size by mentions
@@ -157,26 +158,55 @@ export default function GraphPage() {
             nodeCanvasObject={(node: any, ctx: any, globalScale: any) => {
               const label = node.label;
               const fontSize = 12 / globalScale;
-              ctx.font = `${fontSize}px Sans-Serif`;
+              ctx.font = `bold ${fontSize}px Sans-Serif`;
               ctx.textAlign = "center";
               ctx.textBaseline = "middle";
 
-              // Draw node circle
+              // Get color from nodeColor function
+              const colors: { [key: string]: string } = {
+                Product: "#2563eb",
+                Marketing: "#059669",
+                Business: "#dc2626",
+                Uncategorized: "#7c3aed",
+              };
+              const nodeColor = colors[node.category || "Uncategorized"] || "#7c3aed";
+
+              // Draw node circle with border
               const size = (node.mentions || 1) * 2;
               ctx.beginPath();
               ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-              ctx.fillStyle = node.color;
+              ctx.fillStyle = nodeColor;
               ctx.fill();
 
-              // Draw label
-              ctx.fillStyle = "#000";
-              ctx.fillText(label, node.x, node.y + size + fontSize);
+              // Add white border for better visibility
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+
+              // Draw label with white background for readability
+              const labelWidth = ctx.measureText(label).width;
+              const labelHeight = fontSize + 4;
+              const labelY = node.y + size + fontSize + 2;
+
+              // Background for label
+              ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+              ctx.fillRect(
+                node.x - labelWidth / 2 - 2,
+                labelY - fontSize,
+                labelWidth + 4,
+                labelHeight
+              );
+
+              // Label text
+              ctx.fillStyle = "#1f2937";
+              ctx.fillText(label, node.x, labelY);
             }}
             onNodeClick={handleNodeClick}
-            linkColor={() => "#999"}
-            linkWidth={1}
+            linkColor={() => "#94a3b8"}
+            linkWidth={1.5}
             linkDirectionalParticles={2}
             linkDirectionalParticleWidth={2}
+            linkDirectionalParticleColor={() => "#64748b"}
           />
         </div>
       )}
