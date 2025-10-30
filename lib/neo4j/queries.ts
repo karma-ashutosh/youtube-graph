@@ -11,7 +11,7 @@ export async function getAllConcepts(): Promise<Concept[]> {
   try {
     const result = await session.run(`
       MATCH (c:Concept)
-      RETURN c
+      RETURN DISTINCT c
       ORDER BY c.total_mentions DESC
     `);
 
@@ -377,49 +377,68 @@ export async function getGraphData(params?: {
   const session = getSession();
 
   try {
-    let query = `
+    let conceptQuery = `
       MATCH (c:Concept)
       WHERE c.total_mentions >= $min_mentions
     `;
 
     if (params?.category) {
-      query += ` AND c.category = $category`;
+      conceptQuery += ` AND c.category = $category`;
     }
 
-    query += `
-      WITH c
+    conceptQuery += `
+      RETURN c
+      ORDER BY c.total_mentions DESC
       LIMIT $limit
-
-      OPTIONAL MATCH (c)<-[r:DISCUSSES]-(s:Segment)
-
-      RETURN collect(DISTINCT c) as concepts,
-             collect(DISTINCT {source: s.segment_id, target: c.concept_id, type: r.role}) as links
     `;
 
-    const result = await session.run(query, {
+    // Get concepts first
+    const conceptResult = await session.run(conceptQuery, {
       min_mentions: neo4j.int(params?.minMentions || 0),
       category: params?.category,
       limit: neo4j.int(params?.limit || 100),
     });
 
-    const record = result.records[0];
-    const concepts = record.get("concepts").map((c: any) => c.properties);
-    const links = record.get("links").filter((l: any) => l.source && l.target);
+    const concepts = conceptResult.records.map((record) => record.get("c").properties);
+
+    if (concepts.length === 0) {
+      return { nodes: [], links: [] };
+    }
+
+    // Get concept IDs for link query
+    const conceptIds = concepts.map((c: any) => c.concept_id);
+
+    // Find links between concepts (co-occurrence in segments)
+    const linkQuery = `
+      MATCH (c1:Concept)<-[:DISCUSSES]-(s:Segment)-[:DISCUSSES]->(c2:Concept)
+      WHERE c1.concept_id IN $concept_ids
+        AND c2.concept_id IN $concept_ids
+        AND c1.concept_id < c2.concept_id
+      RETURN c1.concept_id as source, c2.concept_id as target, count(s) as strength
+    `;
+
+    const linkResult = await session.run(linkQuery, {
+      concept_ids: conceptIds,
+    });
+
+    const links = linkResult.records.map((record) => ({
+      source: record.get("source"),
+      target: record.get("target"),
+      strength: neo4j.isInt(record.get("strength"))
+        ? record.get("strength").toNumber()
+        : record.get("strength"),
+    }));
 
     return {
       nodes: concepts.map((c: any) => ({
         id: c.concept_id,
         label: c.canonical_name,
         type: "concept",
-        mentions: c.total_mentions,
-        importance: c.importance_score,
-        category: c.category,
+        mentions: neo4j.isInt(c.total_mentions) ? c.total_mentions.toNumber() : c.total_mentions || 0,
+        importance: c.importance_score || 0,
+        category: c.category || "Uncategorized",
       })),
-      links: links.map((l: any) => ({
-        source: l.source,
-        target: l.target,
-        type: l.type,
-      })),
+      links,
     };
   } finally {
     await session.close();
