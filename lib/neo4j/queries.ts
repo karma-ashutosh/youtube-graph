@@ -1,6 +1,6 @@
 import neo4j from "neo4j-driver";
 import { getSession } from "./client";
-import { Concept, Video, Segment } from "../types";
+import { Concept, Video, Segment, GraphNode, GraphLink } from "../types";
 
 /**
  * Get all existing concepts (for normalization cache)
@@ -536,7 +536,7 @@ export async function getGraphData(params?: {
       concept_ids: conceptIds,
     });
 
-    const links = linkResult.records.map((record) => ({
+    const links: GraphLink[] = linkResult.records.map((record) => ({
       source: record.get("source"),
       target: record.get("target"),
       strength: neo4j.isInt(record.get("strength"))
@@ -545,7 +545,7 @@ export async function getGraphData(params?: {
       type: "concept-concept",
     }));
 
-    const nodes = concepts.map((c: any) => ({
+    const nodes: GraphNode[] = concepts.map((c: any) => ({
       id: c.concept_id,
       label: c.canonical_name,
       type: "concept",

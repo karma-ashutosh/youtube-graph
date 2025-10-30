@@ -6,25 +6,25 @@ export interface SegmentData {
   end_time: string; // "00:04:42"
   topic_hint: string;
   analysis_json: string; // JSON string, needs parsing
-  created_at: string | null;
-  updated_at: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface AnalysisData {
   primary_concept: {
     name: string;
-    coverage_depth: "comprehensive" | "partial" | "reference_only";
+    coverage_depth: "comprehensive" | "partial" | "reference_only" | "surface";
     explanation_type: "definition" | "case_study" | "how_to" | "comparison" | "metaphor" | "story";
   };
   supporting_concepts: Array<{
     name: string;
     role: string;
-    coverage_depth: "comprehensive" | "partial" | "reference_only";
+    coverage_depth: "comprehensive" | "partial" | "reference_only" | "surface";
   }>;
   mentioned_concepts: Array<{
     name: string;
     context: string;
-    coverage_depth: "comprehensive" | "partial" | "reference_only";
+    coverage_depth: "comprehensive" | "partial" | "reference_only" | "surface";
   }>;
   key_ideas: Array<{
     idea: string;
@@ -121,6 +121,7 @@ export interface GraphNode {
   mentions?: number;
   importance?: number;
   category?: string;
+  duration?: number;
 }
 
 export interface GraphLink {
@@ -128,6 +129,7 @@ export interface GraphLink {
   target: string;
   type: string;
   strength?: number;
+  role?: string;
 }
 
 export interface GraphData {
