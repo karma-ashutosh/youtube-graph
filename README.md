@@ -84,17 +84,17 @@ GOOGLE_API_KEY=xxxxx
 
 ### 4. Initialize Database Schema
 
-The application will automatically create constraints and indexes on first run. However, you can manually run them in Neo4j Browser if needed:
+Run the database migration script to create constraints and indexes:
 
-```cypher
-CREATE CONSTRAINT video_id IF NOT EXISTS FOR (v:Video) REQUIRE v.video_id IS UNIQUE;
-CREATE CONSTRAINT segment_id IF NOT EXISTS FOR (s:Segment) REQUIRE s.segment_id IS UNIQUE;
-CREATE CONSTRAINT concept_id IF NOT EXISTS FOR (c:Concept) REQUIRE c.concept_id IS UNIQUE;
-
-CREATE INDEX concept_name IF NOT EXISTS FOR (c:Concept) ON (c.canonical_name);
-CREATE INDEX concept_category IF NOT EXISTS FOR (c:Concept) ON (c.category);
-CREATE INDEX segment_video IF NOT EXISTS FOR (s:Segment) ON (s.video_id);
+```bash
+npm run db:migrate
 ```
+
+This will create:
+- **Uniqueness constraints** on `concept_id`, `segment_id`, `video_id` (prevents duplicates)
+- **Performance indexes** on `category`, `total_mentions`, `canonical_name`, `video_id`
+
+These indexes are essential for query performance. The migration is idempotent and can be run multiple times safely.
 
 ### 5. Run the Development Server
 

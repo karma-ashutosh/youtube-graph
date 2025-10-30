@@ -63,35 +63,40 @@ export async function initializeSchema(): Promise<void> {
   const session = getSession();
 
   try {
-    // Create constraints for uniqueness
+    // Create uniqueness constraints (these automatically create indexes)
     await session.run(`
-      CREATE CONSTRAINT video_id IF NOT EXISTS
-      FOR (v:Video) REQUIRE v.video_id IS UNIQUE
+      CREATE CONSTRAINT concept_id_unique IF NOT EXISTS
+      FOR (c:Concept) REQUIRE c.concept_id IS UNIQUE
     `);
 
     await session.run(`
-      CREATE CONSTRAINT segment_id IF NOT EXISTS
+      CREATE CONSTRAINT segment_id_unique IF NOT EXISTS
       FOR (s:Segment) REQUIRE s.segment_id IS UNIQUE
     `);
 
     await session.run(`
-      CREATE CONSTRAINT concept_id IF NOT EXISTS
-      FOR (c:Concept) REQUIRE c.concept_id IS UNIQUE
+      CREATE CONSTRAINT video_id_unique IF NOT EXISTS
+      FOR (v:Video) REQUIRE v.video_id IS UNIQUE
     `);
 
-    // Create indexes for performance
+    // Create additional indexes for performance
     await session.run(`
-      CREATE INDEX concept_name IF NOT EXISTS
-      FOR (c:Concept) ON (c.canonical_name)
-    `);
-
-    await session.run(`
-      CREATE INDEX concept_category IF NOT EXISTS
+      CREATE INDEX concept_category_index IF NOT EXISTS
       FOR (c:Concept) ON (c.category)
     `);
 
     await session.run(`
-      CREATE INDEX segment_video IF NOT EXISTS
+      CREATE INDEX concept_total_mentions_index IF NOT EXISTS
+      FOR (c:Concept) ON (c.total_mentions)
+    `);
+
+    await session.run(`
+      CREATE INDEX concept_canonical_name_index IF NOT EXISTS
+      FOR (c:Concept) ON (c.canonical_name)
+    `);
+
+    await session.run(`
+      CREATE INDEX segment_video_id_index IF NOT EXISTS
       FOR (s:Segment) ON (s.video_id)
     `);
 
