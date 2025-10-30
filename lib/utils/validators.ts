@@ -4,7 +4,7 @@ import { z } from "zod";
 export const AnalysisDataSchema = z.object({
   primary_concept: z.object({
     name: z.string(),
-    coverage_depth: z.enum(["comprehensive", "partial", "reference_only"]),
+    coverage_depth: z.enum(["comprehensive", "partial", "reference_only", "surface"]),
     explanation_type: z.enum([
       "definition",
       "case_study",
@@ -18,14 +18,14 @@ export const AnalysisDataSchema = z.object({
     z.object({
       name: z.string(),
       role: z.string(),
-      coverage_depth: z.enum(["comprehensive", "partial", "reference_only"]),
+      coverage_depth: z.enum(["comprehensive", "partial", "reference_only", "surface"]),
     })
   ),
   mentioned_concepts: z.array(
     z.object({
       name: z.string(),
       context: z.string(),
-      coverage_depth: z.enum(["comprehensive", "partial", "reference_only"]),
+      coverage_depth: z.enum(["comprehensive", "partial", "reference_only", "surface"]),
     })
   ),
   key_ideas: z.array(
@@ -52,14 +52,18 @@ export const AnalysisDataSchema = z.object({
 });
 
 export const SegmentDataSchema = z.object({
-  id: z.string().nullable(),
+  id: z.union([z.string(), z.number(), z.null()]).transform((val) =>
+    val === null ? null : String(val)
+  ),
   video_url: z.string().url(),
   start_time: z.string(), // "00:03:54"
   end_time: z.string(), // "00:04:42"
   topic_hint: z.string(),
-  analysis_json: z.string(), // Will be parsed separately
-  created_at: z.string().nullable(),
-  updated_at: z.string().nullable(),
+  analysis_json: z.union([z.string(), z.object({}).passthrough()]).transform((val) =>
+    typeof val === 'string' ? val : JSON.stringify(val)
+  ),
+  created_at: z.union([z.string(), z.null()]).optional(),
+  updated_at: z.union([z.string(), z.null()]).optional(),
 });
 
 // Array of segments for batch upload

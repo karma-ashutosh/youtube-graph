@@ -1,3 +1,4 @@
+import neo4j from "neo4j-driver";
 import { getSession } from "./client";
 import { Concept, Video, Segment } from "../types";
 
@@ -23,7 +24,9 @@ export async function getAllConcepts(): Promise<Concept[]> {
         category: node.category || "Uncategorized",
         first_mentioned: new Date(node.first_mentioned),
         last_mentioned: new Date(node.last_mentioned),
-        total_mentions: node.total_mentions || 0,
+        total_mentions: neo4j.isInt(node.total_mentions)
+          ? node.total_mentions.toNumber()
+          : node.total_mentions || 0,
         importance_score: node.importance_score || 0,
       };
     });
@@ -86,7 +89,14 @@ export async function createSegment(params: {
       CREATE (s)-[:FROM_VIDEO]->(v)
       RETURN s
     `,
-      params
+      {
+        video_id: params.videoId,
+        segment_id: params.segmentId,
+        start_time: params.startTime,
+        end_time: params.endTime,
+        duration_seconds: params.durationSeconds,
+        topic_hint: params.topicHint,
+      }
     );
   } finally {
     await session.close();
@@ -190,18 +200,31 @@ export async function linkSegmentToConcept(params: {
   const session = getSession();
 
   try {
-    await session.run(
-      `
+    const queryParams: Record<string, any> = {
+      segment_id: params.segmentId,
+      concept_id: params.conceptId,
+      role: params.role,
+      coverage_depth: params.coverageDepth,
+    };
+
+    let query = `
       MATCH (s:Segment {segment_id: $segment_id})
       MATCH (c:Concept {concept_id: $concept_id})
       CREATE (s)-[:DISCUSSES {
         role: $role,
-        coverage_depth: $coverage_depth,
-        explanation_type: $explanation_type
+        coverage_depth: $coverage_depth`;
+
+    if (params.explanationType) {
+      query += `,
+        explanation_type: $explanation_type`;
+      queryParams.explanation_type = params.explanationType;
+    }
+
+    query += `
       }]->(c)
-    `,
-      params
-    );
+    `;
+
+    await session.run(query, queryParams);
   } finally {
     await session.close();
   }
@@ -221,22 +244,36 @@ export async function createExample(params: {
   const session = getSession();
 
   try {
-    await session.run(
-      `
+    const queryParams: Record<string, any> = {
+      concept_id: params.conceptId,
+      segment_id: params.segmentId,
+      example_id: params.exampleId,
+      example_text: params.exampleText,
+      example_type: params.exampleType,
+    };
+
+    let query = `
       MATCH (c:Concept {concept_id: $concept_id})
       MATCH (s:Segment {segment_id: $segment_id})
       CREATE (e:Example {
         example_id: $example_id,
         example_text: $example_text,
         example_type: $example_type,
-        company_name: $company_name,
-        segment_id: $segment_id
+        segment_id: $segment_id`;
+
+    if (params.companyName) {
+      query += `,
+        company_name: $company_name`;
+      queryParams.company_name = params.companyName;
+    }
+
+    query += `
       })
       CREATE (e)-[:ILLUSTRATES]->(c)
       CREATE (e)-[:MENTIONED_IN]->(s)
-    `,
-      params
-    );
+    `;
+
+    await session.run(query, queryParams);
   } finally {
     await session.close();
   }
@@ -272,7 +309,15 @@ export async function createKeyIdea(params: {
       CREATE (ki)-[:ABOUT]->(c)
       CREATE (ki)-[:EXTRACTED_FROM]->(s)
     `,
-      params
+      {
+        concept_id: params.conceptId,
+        segment_id: params.segmentId,
+        idea_id: params.ideaId,
+        idea_text: params.ideaText,
+        idea_type: params.ideaType,
+        is_novel: params.isNovel,
+        confidence: params.confidence,
+      }
     );
   } finally {
     await session.close();
@@ -352,9 +397,9 @@ export async function getGraphData(params?: {
     `;
 
     const result = await session.run(query, {
-      min_mentions: params?.minMentions || 0,
+      min_mentions: neo4j.int(params?.minMentions || 0),
       category: params?.category,
-      limit: params?.limit || 100,
+      limit: neo4j.int(params?.limit || 100),
     });
 
     const record = result.records[0];
