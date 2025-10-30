@@ -1,0 +1,32 @@
+[
+  {
+    "id": null,
+    "video_url": "https://www.youtube.com/watch?v=wLoHNv9qMKw",
+    "start_time": "00:03:54",
+    "end_time": "00:04:42",
+    "topic_hint": "Marketing tactics selection",
+    "analysis_json": "{\"primary_concept\":{\"name\":\"Marketing Tactics\",\"coverage_depth\":\"comprehensive\",\"explanation_type\":\"how_to\"},\"supporting_concepts\":[{\"name\":\"Product-Market Fit\",\"role\":\"prerequisite\",\"coverage_depth\":\"reference_only\"},{\"name\":\"Customer Acquisition\",\"role\":\"application\",\"coverage_depth\":\"partial\"}],\"mentioned_concepts\":[{\"name\":\"Growth Strategy\",\"context\":\"mentioned as broader topic\",\"coverage_depth\":\"reference_only\"}],\"key_ideas\":[{\"idea\":\"Choose marketing tactics only after achieving product-market fit\",\"type\":\"advice\",\"is_novel\":false,\"confidence\":\"high\"},{\"idea\":\"Different tactics work for different types of products\",\"type\":\"insight\",\"is_novel\":false,\"confidence\":\"high\"}],\"examples\":[{\"example_text\":\"Dropbox used viral referrals to grow rapidly\",\"type\":\"real_company\",\"concept_illustrated\":\"Marketing Tactics\"},{\"example_text\":\"Enterprise products require sales teams, not just ads\",\"type\":\"hypothetical\",\"concept_illustrated\":\"Customer Acquisition\"}]}",
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": null,
+    "video_url": "https://www.youtube.com/watch?v=wLoHNv9qMKw",
+    "start_time": "00:10:15",
+    "end_time": "00:11:30",
+    "topic_hint": "Product-market fit definition",
+    "analysis_json": "{\"primary_concept\":{\"name\":\"Product-Market Fit\",\"coverage_depth\":\"comprehensive\",\"explanation_type\":\"definition\"},\"supporting_concepts\":[{\"name\":\"Customer Validation\",\"role\":\"measurement\",\"coverage_depth\":\"partial\"},{\"name\":\"Retention Metrics\",\"role\":\"indicator\",\"coverage_depth\":\"partial\"}],\"mentioned_concepts\":[{\"name\":\"Startup Growth\",\"context\":\"mentioned as outcome\",\"coverage_depth\":\"reference_only\"}],\"key_ideas\":[{\"idea\":\"PMF means customers are pulling the product from you\",\"type\":\"definition\",\"is_novel\":false,\"confidence\":\"high\"},{\"idea\":\"You know you have PMF when you can't keep up with demand\",\"type\":\"insight\",\"is_novel\":false,\"confidence\":\"medium\"}],\"examples\":[{\"example_text\":\"Airbnb knew they had PMF when hosts couldn't handle all the bookings\",\"type\":\"real_company\",\"concept_illustrated\":\"Product-Market Fit\"},{\"example_text\":\"If you're pushing your product, you don't have PMF yet\",\"type\":\"metaphor\",\"concept_illustrated\":\"Product-Market Fit\"}]}",
+    "created_at": null,
+    "updated_at": null
+  },
+  {
+    "id": null,
+    "video_url": "https://www.youtube.com/watch?v=abc123xyz",
+    "start_time": "00:05:20",
+    "end_time": "00:06:45",
+    "topic_hint": "Fundraising strategy for startups",
+    "analysis_json": "{\"primary_concept\":{\"name\":\"Fundraising Strategy\",\"coverage_depth\":\"comprehensive\",\"explanation_type\":\"how_to\"},\"supporting_concepts\":[{\"name\":\"Investor Relations\",\"role\":\"implementation\",\"coverage_depth\":\"partial\"},{\"name\":\"Valuation\",\"role\":\"negotiation\",\"coverage_depth\":\"reference_only\"}],\"mentioned_concepts\":[{\"name\":\"Venture Capital\",\"context\":\"mentioned as funding source\",\"coverage_depth\":\"reference_only\"}],\"key_ideas\":[{\"idea\":\"Raise money when you don't need it\",\"type\":\"advice\",\"is_novel\":false,\"confidence\":\"high\"},{\"idea\":\"Your first investors matter more than the amount\",\"type\":\"opinion\",\"is_novel\":false,\"confidence\":\"medium\"}],\"examples\":[{\"example_text\":\"Stripe raised from high-quality angels before doing a Series A\",\"type\":\"real_company\",\"concept_illustrated\":\"Fundraising Strategy\"},{\"example_text\":\"Never negotiate valuation before demonstrating traction\",\"type\":\"advice\",\"concept_illustrated\":\"Valuation\"}]}",
+    "created_at": null,
+    "updated_at": null
+  }
+]
