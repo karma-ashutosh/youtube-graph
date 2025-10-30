@@ -30,17 +30,22 @@ export default function GraphPage() {
   const [error, setError] = useState<string | null>(null);
   const [minMentions, setMinMentions] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [maxNodes, setMaxNodes] = useState(50);
+  const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [nodeDetails, setNodeDetails] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const graphRef = useRef<any>();
 
   useEffect(() => {
     fetchGraphData();
-  }, [minMentions, selectedCategory]);
+  }, [minMentions, selectedCategory, maxNodes]);
 
   const fetchGraphData = async () => {
     try {
       const params = new URLSearchParams();
       if (minMentions > 0) params.append("minMentions", minMentions.toString());
       if (selectedCategory) params.append("category", selectedCategory);
+      params.append("limit", maxNodes.toString());
 
       const response = await fetch(`/api/graph?${params}`);
       const data = await response.json();
@@ -57,10 +62,32 @@ export default function GraphPage() {
     }
   };
 
+  const fetchNodeDetails = async (nodeId: string) => {
+    setLoadingDetails(true);
+    try {
+      const response = await fetch(`/api/concepts/${nodeId}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setNodeDetails(data);
+      }
+    } catch (err) {
+      console.error("Error fetching node details:", err);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
   const handleNodeClick = (node: any) => {
     if (node.type === "concept") {
-      window.location.href = `/concepts/${node.id}`;
+      setSelectedNode(node);
+      fetchNodeDetails(node.id);
     }
+  };
+
+  const closeSidePanel = () => {
+    setSelectedNode(null);
+    setNodeDetails(null);
   };
 
   if (loading) {
@@ -81,15 +108,15 @@ export default function GraphPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <div>
         <h1 className="text-3xl font-bold">Knowledge Graph</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Interactive visualization of concept relationships
+          Interactive visualization of concept relationships. Click any node to see details.
         </p>
       </div>
 
-      <div className="flex gap-4 items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
             Min Mentions: {minMentions}
@@ -100,7 +127,22 @@ export default function GraphPage() {
             max="10"
             value={minMentions}
             onChange={(e) => setMinMentions(parseInt(e.target.value))}
-            className="w-48"
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Max Nodes: {maxNodes}
+          </label>
+          <input
+            type="range"
+            min="10"
+            max="100"
+            step="10"
+            value={maxNodes}
+            onChange={(e) => setMaxNodes(parseInt(e.target.value))}
+            className="w-full"
           />
         </div>
 
@@ -109,7 +151,7 @@ export default function GraphPage() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
           >
             <option value="">All Categories</option>
             <option value="Product">Product</option>
@@ -119,12 +161,14 @@ export default function GraphPage() {
           </select>
         </div>
 
-        <button
-          onClick={fetchGraphData}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Refresh
-        </button>
+        <div className="flex items-end">
+          <button
+            onClick={fetchGraphData}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {graphData && (
@@ -216,6 +260,127 @@ export default function GraphPage() {
           No data to display. Try adjusting the filters or upload some segments
           first.
         </div>
+      )}
+
+      {/* Side Panel */}
+      {selectedNode && (
+        <div className="fixed right-0 top-0 h-full w-96 bg-white dark:bg-gray-800 shadow-2xl border-l border-gray-200 dark:border-gray-700 overflow-y-auto z-50">
+          <div className="p-6 space-y-4">
+            {/* Header */}
+            <div className="flex justify-between items-start">
+              <h2 className="text-2xl font-bold">{selectedNode.label}</h2>
+              <button
+                onClick={closeSidePanel}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {loadingDetails ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-gray-600 dark:text-gray-400">Loading details...</div>
+              </div>
+            ) : nodeDetails ? (
+              <div className="space-y-4">
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Category</div>
+                    <div className="text-sm font-semibold">{nodeDetails.concept.category}</div>
+                  </div>
+                  <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">Mentions</div>
+                    <div className="text-sm font-semibold">{nodeDetails.concept.total_mentions}</div>
+                  </div>
+                </div>
+
+                {/* Aliases */}
+                {nodeDetails.concept.aliases && nodeDetails.concept.aliases.length > 0 && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                      Also known as
+                    </div>
+                    <div className="text-sm">{nodeDetails.concept.aliases.join(", ")}</div>
+                  </div>
+                )}
+
+                {/* Key Segment */}
+                {nodeDetails.segments && nodeDetails.segments.length > 0 && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                      Featured In ({nodeDetails.segments.length} segments)
+                    </div>
+                    <div className="border rounded-lg p-3 bg-gray-50 dark:bg-gray-900 space-y-2">
+                      {nodeDetails.segments.slice(0, 2).map((item: any, i: number) => {
+                        const seg = item.segment?.properties;
+                        if (!seg) return null;
+                        return (
+                          <div key={i} className="text-sm">
+                            <div className="font-medium truncate">{seg.topic_hint}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {seg.start_time} - {seg.end_time}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {nodeDetails.segments.length > 2 && (
+                        <div className="text-xs text-gray-500">
+                          +{nodeDetails.segments.length - 2} more segments
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Examples Preview */}
+                {nodeDetails.examples && nodeDetails.examples.length > 0 && (
+                  <div>
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                      Examples ({nodeDetails.examples.length})
+                    </div>
+                    <div className="border-l-4 border-blue-500 pl-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 rounded">
+                      {nodeDetails.examples[0].example_text.substring(0, 150)}
+                      {nodeDetails.examples[0].example_text.length > 150 ? "..." : ""}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="pt-4 space-y-2">
+                  <a
+                    href={`/concepts/${selectedNode.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    View Full Details →
+                  </a>
+                  <button
+                    onClick={closeSidePanel}
+                    className="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-center rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-gray-600 dark:text-gray-400">
+                Unable to load details
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Overlay when side panel is open */}
+      {selectedNode && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-40"
+          onClick={closeSidePanel}
+        />
       )}
     </div>
   );
