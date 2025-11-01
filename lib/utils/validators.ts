@@ -12,6 +12,7 @@ export const AnalysisDataSchema = z.object({
       "comparison",
       "metaphor",
       "story",
+      "advice", // AI sometimes uses this
     ]),
   }),
   supporting_concepts: z.array(
@@ -31,7 +32,17 @@ export const AnalysisDataSchema = z.object({
   key_ideas: z.array(
     z.object({
       idea: z.string(),
-      type: z.enum(["fact", "advice", "insight", "metric", "opinion", "definition", "observation"]),
+      type: z.enum([
+        "fact",
+        "advice",
+        "insight",
+        "metric",
+        "opinion",
+        "definition",
+        "observation",
+        "how_to", // AI sometimes uses this for procedural ideas
+        "comparison", // AI sometimes uses this for comparative ideas
+      ]),
       is_novel: z.boolean(),
       confidence: z.enum(["high", "medium", "low"]),
     })
@@ -45,6 +56,8 @@ export const AnalysisDataSchema = z.object({
         "metaphor",
         "hypothetical",
         "data_point",
+        "case_study", // AI sometimes uses this instead of real_company
+        "comparison", // AI sometimes uses this for comparative examples
       ]),
       concept_illustrated: z.string(),
     })

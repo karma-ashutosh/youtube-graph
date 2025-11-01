@@ -15,27 +15,27 @@ export interface AnalysisData {
   primary_concept: {
     name: string;
     coverage_depth: "comprehensive" | "partial" | "reference_only" | "surface";
-    explanation_type: "definition" | "case_study" | "how_to" | "comparison" | "metaphor" | "story";
+    explanation_type: "definition" | "case_study" | "how_to" | "comparison" | "metaphor" | "story" | "advice";
   };
   supporting_concepts: Array<{
     name: string;
     role: string;
     coverage_depth: "comprehensive" | "partial" | "reference_only" | "surface";
   }>;
-  mentioned_concepts: Array<{
+  mentioned_concepts?: Array<{
     name: string;
     context: string;
     coverage_depth: "comprehensive" | "partial" | "reference_only" | "surface";
   }>;
   key_ideas: Array<{
     idea: string;
-    type: "fact" | "advice" | "insight" | "metric" | "opinion" | "definition" | "observation";
+    type: "fact" | "advice" | "insight" | "metric" | "opinion" | "definition" | "observation" | "how_to" | "comparison";
     is_novel: boolean;
     confidence: "high" | "medium" | "low";
   }>;
   examples: Array<{
     example_text: string;
-    type: "real_company" | "personal_story" | "metaphor" | "hypothetical" | "data_point";
+    type: "real_company" | "personal_story" | "metaphor" | "hypothetical" | "data_point" | "case_study" | "comparison";
     concept_illustrated: string;
   }>;
 }

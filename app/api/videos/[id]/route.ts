@@ -3,9 +3,10 @@ import { getVideoById } from "@/lib/neo4j/queries";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await props.params;
     const videoId = params.id;
     const data = await getVideoById(videoId);
 
