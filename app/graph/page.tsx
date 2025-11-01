@@ -17,6 +17,9 @@ interface GraphData {
     importance?: number;
     category?: string;
     duration?: number;
+    roles?: string[];
+    has_primary?: boolean;
+    primary_count?: number;
   }>;
   links: Array<{
     source: string;
@@ -204,9 +207,29 @@ export default function GraphPage() {
 
       {graphData && (
         <div className="border border-border-subtle rounded-lg overflow-hidden bg-primary-dark">
-          <div className="text-sm text-text-light/80 p-3 border-b border-border-subtle bg-surface-dark">
-            Showing {graphData.nodes.length} nodes and {graphData.links.length}{" "}
-            links. Click on a concept to view details.
+          <div className="text-sm text-text-light/80 p-3 border-b border-border-subtle bg-surface-dark flex justify-between items-center">
+            <div>
+              Showing {graphData.nodes.length} nodes and {graphData.links.length}{" "}
+              links. Click on a concept to view details.
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span>Primary</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span>Supporting</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                <span>Mentioned</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-amber-500"></div>
+                <span>Segment</span>
+              </div>
+            </div>
           </div>
 
           <ForceGraph2D
@@ -217,14 +240,22 @@ export default function GraphPage() {
             backgroundColor="#060A14"
             nodeLabel="label"
             nodeColor={(node: any) => {
-              // Cybernetic color scheme
-              const colors: { [key: string]: string } = {
-                Product: "#79F8FF",      // Cyan cool
-                Marketing: "#FF4757",    // Hot red
-                Business: "#A855F7",     // Purple
-                Uncategorized: "#10B981", // Green
-              };
-              return colors[node.category || "Uncategorized"] || "#79F8FF";
+              // Segment nodes (amber/orange)
+              if (node.type === "segment") {
+                return "#f59e0b";
+              }
+
+              // Concept nodes - color by role
+              if (node.has_primary) {
+                return "#10B981"; // Green for primary concepts (fully explained)
+              } else if (node.roles && node.roles.includes("supporting")) {
+                return "#3B82F6"; // Blue for supporting-only concepts
+              } else if (node.roles && node.roles.includes("mentioned")) {
+                return "#6B7280"; // Gray for mentioned-only concepts
+              }
+
+              // Fallback
+              return "#79F8FF"; // Cyan
             }}
             nodeVal={(node: any) => {
               // Size by mentions
@@ -279,14 +310,15 @@ export default function GraphPage() {
                 ctx.fillStyle = "#1f2937";
                 ctx.fillText(label, node.x, labelY);
               } else {
-                // Draw concept as circle
-                const colors: { [key: string]: string } = {
-                  Product: "#2563eb",
-                  Marketing: "#059669",
-                  Business: "#dc2626",
-                  Uncategorized: "#7c3aed",
-                };
-                const nodeColor = colors[node.category || "Uncategorized"] || "#7c3aed";
+                // Draw concept as circle - color by role
+                let nodeColor = "#79F8FF"; // Fallback cyan
+                if (node.has_primary) {
+                  nodeColor = "#10B981"; // Green for primary concepts
+                } else if (node.roles && node.roles.includes("supporting")) {
+                  nodeColor = "#3B82F6"; // Blue for supporting-only
+                } else if (node.roles && node.roles.includes("mentioned")) {
+                  nodeColor = "#6B7280"; // Gray for mentioned-only
+                }
 
                 const size = (node.mentions || 1) * 2;
                 ctx.beginPath();

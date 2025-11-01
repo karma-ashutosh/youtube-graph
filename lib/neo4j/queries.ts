@@ -680,6 +680,33 @@ export async function getGraphData(params?: {
     // Get concept IDs for link query
     const conceptIds = concepts.map((c: any) => c.concept_id);
 
+    // Get role information for each concept
+    const roleQuery = `
+      MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
+      WHERE c.concept_id IN $concept_ids
+      WITH c.concept_id as concept_id,
+           collect(DISTINCT d.role) as roles,
+           sum(CASE WHEN d.role = 'primary' THEN 1 ELSE 0 END) as primary_count
+      RETURN concept_id, roles, primary_count
+    `;
+
+    const roleResult = await session.run(roleQuery, {
+      concept_ids: conceptIds,
+    });
+
+    // Create a map of concept_id -> role info
+    const roleMap = new Map();
+    roleResult.records.forEach((record) => {
+      const conceptId = record.get("concept_id");
+      const roles = record.get("roles");
+      const primaryCount = record.get("primary_count");
+      roleMap.set(conceptId, {
+        roles,
+        has_primary: roles.includes("primary"),
+        primary_count: neo4j.isInt(primaryCount) ? primaryCount.toNumber() : primaryCount || 0,
+      });
+    });
+
     // Find links between concepts (co-occurrence in segments)
     const linkQuery = `
       MATCH (c1:Concept)<-[:DISCUSSES]-(s:Segment)-[:DISCUSSES]->(c2:Concept)
@@ -702,14 +729,20 @@ export async function getGraphData(params?: {
       type: "concept-concept",
     }));
 
-    const nodes: GraphNode[] = concepts.map((c: any) => ({
-      id: c.concept_id,
-      label: c.canonical_name,
-      type: "concept",
-      mentions: neo4j.isInt(c.total_mentions) ? c.total_mentions.toNumber() : c.total_mentions || 0,
-      importance: c.importance_score || 0,
-      category: c.category || "Uncategorized",
-    }));
+    const nodes: GraphNode[] = concepts.map((c: any) => {
+      const roleInfo = roleMap.get(c.concept_id) || { roles: [], has_primary: false, primary_count: 0 };
+      return {
+        id: c.concept_id,
+        label: c.canonical_name,
+        type: "concept",
+        mentions: neo4j.isInt(c.total_mentions) ? c.total_mentions.toNumber() : c.total_mentions || 0,
+        importance: c.importance_score || 0,
+        category: c.category || "Uncategorized",
+        roles: roleInfo.roles,
+        has_primary: roleInfo.has_primary,
+        primary_count: roleInfo.primary_count,
+      };
+    });
 
     // If includeSegments is true, also add segment nodes and their links to concepts
     if (params?.includeSegments) {
