@@ -92,7 +92,7 @@ export async function ingestSegment(segment: SegmentData): Promise<{
     }
 
     // Step 5: Process mentioned concepts
-    for (const mentionedConcept of analysis.mentioned_concepts) {
+    for (const mentionedConcept of analysis.mentioned_concepts || []) {
       const normalized = await normalizeConcept(
         mentionedConcept.name,
         existingConcepts

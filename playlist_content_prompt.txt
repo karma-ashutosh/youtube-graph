@@ -1,0 +1,207 @@
+
+Analyze this transcript segment from a video in a playlist/series and identify all concepts discussed.
+
+**PLAYLIST CONTEXT:**
+Playlist/Series: {{playlist_title}}
+Video Title: {{video_title}}
+Video Position: {{video_number}} of {{total_videos}}
+
+**SEGMENT CONTEXT:**
+Text: {{segment_text}}
+Segment start: {{start_time}}
+Segment end: {{end_time}}
+Current video outline: {{video_outline}}
+
+**PREVIOUS SEGMENTS (from this video):**
+{{previous_segments_summary}}
+
+**CROSS-VIDEO CONTEXT:**
+Previous videos in playlist covered these primary concepts:
+{{previous_video_concepts}}
+
+---
+
+**YOUR TASK:**
+Extract concepts, ideas, and examples from this specific segment. Pay attention to:
+1. Whether concepts were introduced in previous segments/videos
+2. How this segment builds on or references earlier content
+3. Connections to the broader playlist narrative
+
+---
+
+## EXTRACTION GUIDELINES
+
+### PRIMARY CONCEPT
+**What is the MAIN topic being explained or taught in this segment?**
+- This should answer: "What is this segment about?"
+- Note if this concept was introduced earlier in the playlist
+- There is typically ONE primary concept per segment
+
+**Coverage Depth:**
+- `comprehensive` = Thoroughly explained with definitions, examples, and nuance
+- `partial` = Explained but not in full depth, missing some aspects
+- `surface` = Briefly explained, high-level overview only
+- `reference_only` = Only mentioned by name, no explanation
+
+**Explanation Type:**
+- `definition` = Defines what the concept is
+- `case_study` = Real-world example or company story
+- `how_to` = Step-by-step practical guidance
+- `comparison` = Contrasts with other concepts
+- `metaphor` = Uses analogy or metaphor to explain
+- `story` = Narrative or anecdote to illustrate
+
+**Is Revisited:**
+- `true` = This concept was covered in a previous segment/video and is being revisited
+- `false` = This is the first time this concept is being discussed
+
+---
+
+### SUPPORTING CONCEPTS
+**What concepts are used to EXPLAIN or BUILD UP TO the primary concept?**
+- These provide necessary context or foundational knowledge
+- They're discussed with enough detail to serve a purpose
+- Note if they were defined in previous segments
+
+For each supporting concept:
+1. Name the concept
+2. Explain its ROLE: How does it relate to the primary concept?
+3. Assess coverage depth (comprehensive/partial/surface)
+4. Mark if it was introduced in a previous segment
+
+---
+
+### MENTIONED CONCEPTS
+**What other concepts are briefly REFERENCED but not explained in detail?**
+- These might be:
+  - Prerequisites from earlier in the playlist
+  - Concepts defined in previous videos
+  - Related ideas mentioned in passing
+  - Future topics teased
+
+For each mentioned concept:
+1. Name the concept
+2. Provide CONTEXT: Quote or paraphrase where/how it was mentioned
+3. Mark as `reference_only` coverage depth
+4. Note if it was covered in a previous segment (include segment/video reference)
+
+---
+
+### KEY IDEAS / INSIGHTS
+**Extract specific claims, data points, insights, or advice from the segment.**
+
+Types:
+- `fact` = Objective, verifiable statement
+- `advice` = Actionable recommendation ("you should...")
+- `insight` = Analysis, interpretation, or non-obvious observation
+- `metric` = Specific number, percentage, or measurement
+- `opinion` = Speaker's subjective view
+- `definition` = Formal definition of a term
+
+For each idea:
+1. State the idea clearly and completely
+2. Classify the type
+3. Mark if it's `novel` (not mentioned in previous segments) or familiar
+4. Assess confidence: `high` (stated as fact), `medium` (qualified), `low` (speculative)
+5. Note if it builds on or contradicts previous ideas
+
+---
+
+### EXAMPLES USED
+**Identify concrete examples, case studies, stories, or analogies used to illustrate concepts.**
+
+Types:
+- `real_company` = Named company or product
+- `personal_story` = Speaker's own experience
+- `hypothetical` = Made-up scenario
+- `metaphor` = Analogy or comparison
+- `data_point` = Specific statistic or research finding
+
+For each example:
+1. Summarize the example (2-3 sentences)
+2. Classify the type
+3. Identify which concept it illustrates
+4. Note if it's a continuation of an example from a previous segment
+
+---
+
+### CROSS-REFERENCES (NEW FOR PLAYLISTS)
+**Identify explicit references to previous or future content in the series.**
+
+For each cross-reference:
+1. What concept/topic is being referenced?
+2. Is it pointing backwards (callback) or forwards (foreshadowing)?
+3. Quote the reference phrase
+
+---
+
+## OUTPUT FORMAT (JSON)
+
+```json
+{
+  "primary_concept": {
+    "name": "Product-Market Fit",
+    "coverage_depth": "comprehensive",
+    "explanation_type": "definition",
+    "is_revisited": false,
+    "previous_mention": null
+  },
+  "supporting_concepts": [
+    {
+      "name": "Customer Retention",
+      "role": "Used to explain how to measure PMF quantitatively",
+      "coverage_depth": "partial",
+      "introduced_in_previous_segment": false
+    }
+  ],
+  "mentioned_concepts": [
+    {
+      "name": "Unit Economics",
+      "context": "Speaker mentioned 'as we discussed in video 2, unit economics matter'",
+      "coverage_depth": "reference_only",
+      "previous_coverage": {
+        "was_covered_before": true,
+        "reference": "Video 2, Segment 3"
+      }
+    }
+  ],
+  "key_ideas": [
+    {
+      "idea": "PMF means 40%+ users would be very disappointed if your product disappeared",
+      "type": "metric",
+      "is_novel": true,
+      "confidence": "high",
+      "builds_on_previous": false
+    }
+  ],
+  "examples": [
+    {
+      "example_text": "Airbnb achieved PMF when hosts started earning meaningful income",
+      "type": "real_company",
+      "concept_illustrated": "Product-Market Fit",
+      "is_continuation": false
+    }
+  ],
+  "cross_references": [
+    {
+      "referenced_concept": "Value Proposition",
+      "direction": "backward",
+      "quote": "Remember when we talked about value props earlier...",
+      "source_location": "Video 1, Segment 2"
+    }
+  ]
+}
+```
+
+---
+
+## IMPORTANT REMINDERS FOR PLAYLIST ANALYSIS
+
+1. **Track concept evolution** - Note if a concept is being developed across multiple segments
+2. **Capture callbacks** - Identify when the speaker references previous content
+3. **Maintain continuity** - Examples may span segments; note continuations
+4. **Use exact quotes** for cross-references
+5. **Check your JSON** - Must be valid, parseable JSON
+6. **Context awareness** - Use the previous segments summary to inform your analysis
+
+Begin analysis now.

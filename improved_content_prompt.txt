@@ -1,0 +1,191 @@
+
+Analyze this transcript segment and identify all concepts discussed.
+
+**SEGMENT CONTEXT:**
+Text: {{segment_text}}
+Segment start: {{start_time}}
+Segment end: {{end_time}}
+Video outline: {{video_outline}}
+
+**YOUR TASK:**
+Extract concepts, ideas, and examples from this specific segment. Focus on what is actually discussed in THIS segment's transcript, not what might be in other parts of the video.
+
+---
+
+## EXTRACTION GUIDELINES
+
+### PRIMARY CONCEPT
+**What is the MAIN topic being explained or taught in this segment?**
+- This should answer: "What is this segment about?"
+- There is typically ONE primary concept per segment
+- It's the concept that gets the most coverage/explanation
+
+**Coverage Depth:**
+- `comprehensive` = Thoroughly explained with definitions, examples, and nuance
+- `partial` = Explained but not in full depth, missing some aspects
+- `surface` = Briefly explained, high-level overview only
+- `reference_only` = Only mentioned by name, no explanation
+
+**Explanation Type:**
+- `definition` = Defines what the concept is
+- `case_study` = Real-world example or company story
+- `how_to` = Step-by-step practical guidance
+- `comparison` = Contrasts with other concepts
+- `metaphor` = Uses analogy or metaphor to explain
+- `story` = Narrative or anecdote to illustrate
+
+---
+
+### SUPPORTING CONCEPTS
+**What concepts are used to EXPLAIN or BUILD UP TO the primary concept?**
+- These provide necessary context or foundational knowledge
+- They're discussed with enough detail to serve a purpose
+- Example: If primary = "Positioning", supporting might be "Market Segmentation"
+
+For each supporting concept:
+1. Name the concept
+2. Explain its ROLE: How does it relate to the primary concept?
+3. Assess coverage depth (comprehensive/partial/surface)
+
+---
+
+### MENTIONED CONCEPTS
+**What other concepts are briefly REFERENCED but not explained in detail?**
+- These might be:
+  - Prerequisites the speaker assumes you know
+  - Related ideas mentioned in passing
+  - Future topics teased but not covered
+  - Industry terms used without definition
+
+For each mentioned concept:
+1. Name the concept
+2. Provide CONTEXT: Quote or paraphrase where/how it was mentioned
+3. Mark as `reference_only` coverage depth
+
+**Important:** Capture the actual phrase or sentence where the concept appears.
+
+---
+
+### KEY IDEAS / INSIGHTS
+**Extract specific claims, data points, insights, or advice from the segment.**
+
+Types:
+- `fact` = Objective, verifiable statement
+- `advice` = Actionable recommendation ("you should...")
+- `insight` = Analysis, interpretation, or non-obvious observation
+- `metric` = Specific number, percentage, or measurement
+- `opinion` = Speaker's subjective view
+- `definition` = Formal definition of a term
+
+For each idea:
+1. State the idea clearly and completely
+2. Classify the type
+3. Mark if it's `novel` (not common knowledge) or familiar
+4. Assess confidence: `high` (stated as fact), `medium` (qualified), `low` (speculative)
+
+---
+
+### EXAMPLES USED
+**Identify concrete examples, case studies, stories, or analogies used to illustrate concepts.**
+
+Types:
+- `real_company` = Named company or product (e.g., "Airbnb achieved PMF...")
+- `personal_story` = Speaker's own experience
+- `hypothetical` = Made-up scenario or "imagine if..."
+- `metaphor` = Analogy or comparison (e.g., "it's like...")
+- `data_point` = Specific statistic or research finding
+
+For each example:
+1. Summarize the example (2-3 sentences)
+2. Classify the type
+3. Identify which concept it illustrates
+
+---
+
+## OUTPUT FORMAT (JSON)
+
+Return ONLY valid JSON in exactly this structure:
+
+```json
+{
+  "primary_concept": {
+    "name": "Product-Market Fit",
+    "coverage_depth": "comprehensive",
+    "explanation_type": "definition"
+  },
+  "supporting_concepts": [
+    {
+      "name": "Customer Retention",
+      "role": "Used to explain how to measure PMF quantitatively",
+      "coverage_depth": "partial"
+    },
+    {
+      "name": "Value Proposition",
+      "role": "Foundational concept needed before achieving PMF",
+      "coverage_depth": "surface"
+    }
+  ],
+  "mentioned_concepts": [
+    {
+      "name": "Unit Economics",
+      "context": "Speaker mentioned 'you need to understand your unit economics before claiming PMF'",
+      "coverage_depth": "reference_only"
+    },
+    {
+      "name": "Viral Coefficient",
+      "context": "Listed as one of several PMF metrics alongside retention",
+      "coverage_depth": "reference_only"
+    }
+  ],
+  "key_ideas": [
+    {
+      "idea": "PMF means 40%+ users would be very disappointed if your product disappeared",
+      "type": "metric",
+      "is_novel": true,
+      "confidence": "high"
+    },
+    {
+      "idea": "Most founders declare PMF too early, before they actually have it",
+      "type": "insight",
+      "is_novel": false,
+      "confidence": "high"
+    },
+    {
+      "idea": "You should focus on retention before trying to scale acquisition",
+      "type": "advice",
+      "is_novel": false,
+      "confidence": "high"
+    }
+  ],
+  "examples": [
+    {
+      "example_text": "Airbnb achieved PMF when hosts started earning meaningful income and guests had consistent good experiences, leading to organic word-of-mouth growth",
+      "type": "real_company",
+      "concept_illustrated": "Product-Market Fit"
+    },
+    {
+      "example_text": "Imagine you built a todo app. If only 10% of users would miss it, you don't have PMF yet",
+      "type": "hypothetical",
+      "concept_illustrated": "Product-Market Fit"
+    },
+    {
+      "example_text": "It's like trying to fill a leaky bucket - fix the retention holes before pouring in more water",
+      "type": "metaphor",
+      "concept_illustrated": "Customer Retention"
+    }
+  ]
+}
+```
+
+---
+
+## IMPORTANT REMINDERS
+
+1. **Be comprehensive but accurate** - Include everything discussed, but don't invent content
+2. **Use exact quotes** when possible for mentioned concepts' context
+3. **Distinguish between types** - Is it really a supporting concept, or just mentioned?
+4. **Check your JSON** - Must be valid, parseable JSON
+5. **Focus on THIS segment** - Don't include information from other parts of the video
+6. **Concept names should be clear** - Use standard terminology when possible
+
+Begin analysis now.
