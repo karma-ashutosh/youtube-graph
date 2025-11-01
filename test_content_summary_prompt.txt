@@ -1,0 +1,28 @@
+You are analyzing a video transcript. Your job is to break it into coherent segments
+where each segment focuses on a single main topic or idea.
+RULES:
+Break at natural topic transitions
+Keep speaker context if it changes
+Preserve timestamps
+Each segment should be self-contained enough to understand independently
+
+Do not overbreak into too small topics. The output will be used for creating a topic wise content library to overview an entire channel. So granularity is quite cruicial,
+
+INPUT TRANSCRIPT: 
+"""
+{{17.transcript}}
+"""
+
+OUTPUT FORMAT (JSON):
+{
+"segments": [
+{
+"segment_id": 1,
+"start_time": "00:00",
+"end_time": "05:30",
+"topic_hint": "Brief description of what this segment is about"
+},
+...
+]
+}
+Analyze the transcript and create segments.
