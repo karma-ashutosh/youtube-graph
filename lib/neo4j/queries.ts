@@ -385,29 +385,42 @@ export async function getConceptById(conceptId: string) {
   const session = getSession();
 
   try {
-    const result = await session.run(
+    // First get the main concept data
+    const mainResult = await session.run(
       `
       MATCH (c:Concept {concept_id: $concept_id})
 
       OPTIONAL MATCH (c)<-[d:DISCUSSES]-(s:Segment)-[:FROM_VIDEO]->(v:Video)
       OPTIONAL MATCH (c)<-[:ILLUSTRATES]-(e:Example)
       OPTIONAL MATCH (c)<-[:ABOUT]-(ki:KeyIdea)
-      OPTIONAL MATCH (c)-[r:RELATED_TO]-(related:Concept)
 
       RETURN c,
              collect(DISTINCT {segment: s, video: v, discusses: d}) as segments,
              collect(DISTINCT e) as examples,
-             collect(DISTINCT ki) as key_ideas,
-             collect(DISTINCT {concept: related, strength: r.strength}) as related_concepts
+             collect(DISTINCT ki) as key_ideas
       `,
       { concept_id: conceptId }
     );
 
-    if (result.records.length === 0) {
+    if (mainResult.records.length === 0) {
       return null;
     }
 
-    const record = result.records[0];
+    // Get related concepts through co-occurrence
+    const relatedResult = await session.run(
+      `
+      MATCH (c:Concept {concept_id: $concept_id})
+      MATCH (c)<-[:DISCUSSES]-(shared:Segment)-[:DISCUSSES]->(related:Concept)
+      WHERE c.concept_id <> related.concept_id
+      WITH related, count(DISTINCT shared) as strength
+      ORDER BY strength DESC
+      LIMIT 10
+      RETURN related, strength
+      `,
+      { concept_id: conceptId }
+    );
+
+    const record = mainResult.records[0];
     const concept = record.get("c").properties;
 
     // Helper function to convert Neo4j integers to numbers
@@ -425,12 +438,18 @@ export async function getConceptById(conceptId: string) {
       return obj;
     };
 
+    // Process related concepts
+    const relatedConcepts = relatedResult.records.map((rec) => ({
+      concept: convertIntegers(rec.get("related").properties),
+      strength: convertIntegers(rec.get("strength")),
+    }));
+
     return {
       concept: convertIntegers(concept),
       segments: convertIntegers(record.get("segments")),
       examples: record.get("examples").map((e: any) => convertIntegers(e?.properties)).filter(Boolean),
       keyIdeas: record.get("key_ideas").map((ki: any) => convertIntegers(ki?.properties)).filter(Boolean),
-      relatedConcepts: convertIntegers(record.get("related_concepts")),
+      relatedConcepts: relatedConcepts,
     };
   } finally {
     await session.close();

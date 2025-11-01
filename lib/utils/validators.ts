@@ -59,6 +59,7 @@ export const SegmentDataSchema = z.object({
   start_time: z.string(), // "00:03:54"
   end_time: z.string(), // "00:04:42"
   topic_hint: z.string(),
+  transcript: z.string().optional(), // Add transcript field
   analysis_json: z.union([z.string(), z.object({}).passthrough()]).transform((val) =>
     typeof val === 'string' ? val : JSON.stringify(val)
   ),
