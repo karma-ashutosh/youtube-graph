@@ -34,6 +34,7 @@ export default function GraphPage() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [maxNodes, setMaxNodes] = useState(50);
   const [includeSegments, setIncludeSegments] = useState(false);
+  const [roleFilter, setRoleFilter] = useState("all");
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [nodeDetails, setNodeDetails] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -41,13 +42,14 @@ export default function GraphPage() {
 
   useEffect(() => {
     fetchGraphData();
-  }, [minMentions, selectedCategory, maxNodes, includeSegments]);
+  }, [minMentions, selectedCategory, maxNodes, includeSegments, roleFilter]);
 
   const fetchGraphData = async () => {
     try {
       const params = new URLSearchParams();
       if (minMentions > 0) params.append("minMentions", minMentions.toString());
       if (selectedCategory) params.append("category", selectedCategory);
+      if (roleFilter) params.append("roleFilter", roleFilter);
       params.append("limit", maxNodes.toString());
       params.append("includeSegments", includeSegments.toString());
 
@@ -119,7 +121,7 @@ export default function GraphPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1 text-text-light">
             Min Mentions: {minMentions}
@@ -147,6 +149,20 @@ export default function GraphPage() {
             onChange={(e) => setMaxNodes(parseInt(e.target.value))}
             className="w-full accent-accent-cool"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1 text-text-light">Role Filter</label>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light focus:outline-none focus:border-accent-cool"
+          >
+            <option value="all">All Roles</option>
+            <option value="primary">Primary Only</option>
+            <option value="supporting">Supporting Only</option>
+            <option value="mentioned">Mentioned Only</option>
+          </select>
         </div>
 
         <div>

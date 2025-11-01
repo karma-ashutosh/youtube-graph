@@ -36,6 +36,55 @@ export async function getAllConcepts(): Promise<Concept[]> {
 }
 
 /**
+ * Get all concepts with role statistics (for UI filtering)
+ */
+export async function getAllConceptsWithRoles() {
+  const session = getSession();
+
+  try {
+    const result = await session.run(`
+      MATCH (c:Concept)
+      OPTIONAL MATCH (s:Segment)-[d:DISCUSSES]->(c)
+      WITH c,
+           sum(CASE WHEN d.role = 'primary' THEN 1 ELSE 0 END) as primary_count,
+           sum(CASE WHEN d.role = 'supporting' THEN 1 ELSE 0 END) as supporting_count,
+           sum(CASE WHEN d.role = 'mentioned' THEN 1 ELSE 0 END) as mentioned_count,
+           collect(DISTINCT d.role) as roles
+      RETURN c, primary_count, supporting_count, mentioned_count, roles
+      ORDER BY c.total_mentions DESC
+    `);
+
+    return result.records.map((record) => {
+      const node = record.get("c").properties;
+      const primaryCount = record.get("primary_count");
+      const supportingCount = record.get("supporting_count");
+      const mentionedCount = record.get("mentioned_count");
+      const roles = record.get("roles");
+
+      return {
+        concept_id: node.concept_id,
+        canonical_name: node.canonical_name,
+        aliases: node.aliases || [],
+        category: node.category || "Uncategorized",
+        first_mentioned: node.first_mentioned,
+        last_mentioned: node.last_mentioned,
+        total_mentions: neo4j.isInt(node.total_mentions)
+          ? node.total_mentions.toNumber()
+          : node.total_mentions || 0,
+        importance_score: node.importance_score || 0,
+        primary_count: neo4j.isInt(primaryCount) ? primaryCount.toNumber() : primaryCount || 0,
+        supporting_count: neo4j.isInt(supportingCount) ? supportingCount.toNumber() : supportingCount || 0,
+        mentioned_count: neo4j.isInt(mentionedCount) ? mentionedCount.toNumber() : mentionedCount || 0,
+        roles: roles || [],
+        has_primary: roles.includes("primary"),
+      };
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+/**
  * Create or get a video node
  */
 export async function createOrGetVideo(
@@ -573,6 +622,7 @@ export async function getGraphData(params?: {
   category?: string;
   limit?: number;
   includeSegments?: boolean;
+  roleFilter?: string;
 }) {
   const session = getSession();
 
@@ -586,6 +636,27 @@ export async function getGraphData(params?: {
       conceptQuery += ` AND c.category = $category`;
     }
 
+    // Add role filter - only include concepts that have been discussed in the specified role
+    if (params?.roleFilter && params.roleFilter !== "all") {
+      if (params.roleFilter === "primary") {
+        conceptQuery = `
+          MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
+          WHERE c.total_mentions >= $min_mentions
+            AND d.role = 'primary'
+            ${params?.category ? 'AND c.category = $category' : ''}
+          WITH DISTINCT c
+        `;
+      } else {
+        conceptQuery = `
+          MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
+          WHERE c.total_mentions >= $min_mentions
+            AND d.role = $role_filter
+            ${params?.category ? 'AND c.category = $category' : ''}
+          WITH DISTINCT c
+        `;
+      }
+    }
+
     conceptQuery += `
       RETURN c
       ORDER BY c.total_mentions DESC
@@ -597,6 +668,7 @@ export async function getGraphData(params?: {
       min_mentions: neo4j.int(params?.minMentions || 0),
       category: params?.category,
       limit: neo4j.int(params?.limit || 100),
+      role_filter: params?.roleFilter,
     });
 
     const concepts = conceptResult.records.map((record) => record.get("c").properties);

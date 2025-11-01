@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { getAllConcepts } from "@/lib/neo4j/queries";
+import { getAllConceptsWithRoles } from "@/lib/neo4j/queries";
 
 /**
  * GET /api/concepts
  *
- * Returns all concepts in the knowledge graph
+ * Returns all concepts in the knowledge graph with role statistics
  */
 export async function GET() {
   try {
-    const concepts = await getAllConcepts();
+    const concepts = await getAllConceptsWithRoles();
 
     return NextResponse.json({
       success: true,

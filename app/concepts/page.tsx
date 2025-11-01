@@ -12,7 +12,14 @@ interface Concept {
   importance_score: number;
   first_mentioned: string;
   last_mentioned: string;
+  primary_count: number;
+  supporting_count: number;
+  mentioned_count: number;
+  roles: string[];
+  has_primary: boolean;
 }
+
+type RoleFilter = "all" | "primary" | "supporting" | "mentioned";
 
 export default function ConceptsPage() {
   const [concepts, setConcepts] = useState<Concept[]>([]);
@@ -22,6 +29,7 @@ export default function ConceptsPage() {
   const [sortBy, setSortBy] = useState<"mentions" | "recent" | "name">(
     "mentions"
   );
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 
   useEffect(() => {
     fetchConcepts();
@@ -52,6 +60,11 @@ export default function ConceptsPage() {
           alias.toLowerCase().includes(searchTerm.toLowerCase())
         )
     )
+    .filter((concept) => {
+      if (roleFilter === "all") return true;
+      if (roleFilter === "primary") return concept.has_primary;
+      return concept.roles.includes(roleFilter);
+    })
     .sort((a, b) => {
       switch (sortBy) {
         case "mentions":
@@ -104,6 +117,17 @@ export default function ConceptsPage() {
         />
 
         <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+          className="px-4 py-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light focus:outline-none focus:border-accent-cool"
+        >
+          <option value="all">All Roles</option>
+          <option value="primary">Primary Only</option>
+          <option value="supporting">Supporting Only</option>
+          <option value="mentioned">Mentioned Only</option>
+        </select>
+
+        <select
           value={sortBy}
           onChange={(e) =>
             setSortBy(e.target.value as "mentions" | "recent" | "name")
@@ -127,9 +151,16 @@ export default function ConceptsPage() {
             href={`/concepts/${concept.concept_id}`}
             className="card hover:shadow-glow-cool hover:border-accent-cool/50 transition-all duration-300 group"
           >
-            <h3 className="text-lg font-semibold mb-2 text-text-light group-hover:text-accent-cool transition-colors">
-              {concept.canonical_name}
-            </h3>
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="text-lg font-semibold text-text-light group-hover:text-accent-cool transition-colors">
+                {concept.canonical_name}
+              </h3>
+              {concept.has_primary && (
+                <span className="px-2 py-1 text-xs bg-accent-cool/20 text-accent-cool rounded border border-accent-cool/30">
+                  Primary
+                </span>
+              )}
+            </div>
 
             {concept.aliases.length > 0 && (
               <div className="text-sm text-text-light/60 mb-2">
@@ -138,12 +169,30 @@ export default function ConceptsPage() {
               </div>
             )}
 
+            <div className="flex flex-wrap gap-1 mb-2">
+              {concept.primary_count > 0 && (
+                <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-400 rounded">
+                  {concept.primary_count}× primary
+                </span>
+              )}
+              {concept.supporting_count > 0 && (
+                <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded">
+                  {concept.supporting_count}× supporting
+                </span>
+              )}
+              {concept.mentioned_count > 0 && (
+                <span className="px-2 py-0.5 text-xs bg-gray-500/20 text-gray-400 rounded">
+                  {concept.mentioned_count}× mentioned
+                </span>
+              )}
+            </div>
+
             <div className="flex justify-between items-center text-sm">
               <span className="px-2 py-1 bg-accent-cool/20 text-accent-cool rounded">
                 {concept.category}
               </span>
               <span className="text-text-light/60">
-                {concept.total_mentions} mentions
+                {concept.total_mentions} total
               </span>
             </div>
 
