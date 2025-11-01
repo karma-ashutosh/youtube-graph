@@ -1,0 +1,111 @@
+You are analyzing a video transcript to create a topic-based content library. Your job is to break the transcript into coherent segments where each segment focuses on a single concept or teaching point.
+
+**CONTEXT:**
+- Video length: 20-40 minutes typical
+- Target: Building a knowledge graph for learning
+- Use case: Someone should be able to learn a specific concept from one segment
+
+**SEGMENTATION STRATEGY:**
+
+Aim for **5-12 minute segments** that are:
+- ✅ Long enough to develop a concept with depth
+- ✅ Short enough to focus on ONE main idea
+- ✅ Self-contained and understandable independently
+- ✅ Natural topic transitions (not mid-explanation)
+
+**RULES:**
+
+1. **Concept-Driven Segmentation**
+   - Each segment = ONE concept being taught/explained
+   - Break when the speaker finishes explaining one idea and moves to another
+   - Don't break in the middle of examples, stories, or explanations
+
+2. **Optimal Length**
+   - Target: 5-12 minutes per segment
+   - Minimum: 3 minutes (enough for depth)
+   - Maximum: 15 minutes (beyond this, likely multiple concepts)
+   - For 20-40 min videos: expect 3-6 segments
+
+3. **Natural Boundaries**
+   - Break at topic transitions: "Next, let's talk about...", "Another important concept...", "Moving on to..."
+   - After complete examples or case studies
+   - When speaker shifts from one framework element to another
+   - NOT in the middle of a story, definition, or explanation
+
+4. **Topic Hint Quality**
+   - Should clearly state WHAT concept is being taught
+   - Include the teaching approach (example: "Case study:", "Definition:", "How to:")
+   - Be specific, not generic (❌ "Marketing tips" ✅ "How to identify your target customer using workflow segmentation")
+
+**WHAT TO AVOID:**
+
+❌ Too granular (1-2 min segments) - Won't have depth
+❌ Too broad (20+ min segments) - Covers too many concepts
+❌ Breaking mid-example or mid-story
+❌ Vague topic hints ("Discussion of X" - what ABOUT X?)
+
+**EXAMPLES:**
+
+**GOOD Segmentation (5-12 min segments):**
+```
+Segment 1 (00:00-06:30): "Introduction to positioning and why it matters - defining positioning as answering 'who, what, why better'"
+Segment 2 (06:30-14:20): "Case study: Celsius energy drink's successful repositioning from weight loss to energy drink market"
+Segment 3 (14:20-22:45): "The three questions of positioning: who is your product for, what is it, why is it better"
+```
+
+**BAD Segmentation (too granular):**
+```
+Segment 1 (00:00-01:30): "Speaker introduction"  // ❌ Too short, not a concept
+Segment 2 (01:30-03:00): "Definition of positioning"  // ❌ Too short
+Segment 3 (03:00-04:15): "Why positioning matters"  // ❌ Should combine with #2
+```
+
+**BAD Segmentation (too broad):**
+```
+Segment 1 (00:00-25:00): "Overview of positioning strategy"  // ❌ Too long, many concepts
+```
+
+---
+
+**INPUT TRANSCRIPT:**
+"""
+{{transcript}}
+"""
+
+---
+
+**OUTPUT FORMAT (JSON):**
+
+```json
+{
+  "segments": [
+    {
+      "segment_id": 1,
+      "start_time": "00:00",
+      "end_time": "06:30",
+      "topic_hint": "Introduction to positioning: defining it as answering three core questions (who, what, why better) to achieve mental availability in customers' minds"
+    },
+    {
+      "segment_id": 2,
+      "start_time": "06:30",
+      "end_time": "14:20",
+      "topic_hint": "Case study: How Celsius energy drink achieved success through repositioning from weight loss drink to energy drink market without changing the product"
+    },
+    {
+      "segment_id": 3,
+      "start_time": "14:20",
+      "end_time": "22:45",
+      "topic_hint": "Deep dive into the first positioning question: 'Who is your product for?' using workflow-based segmentation instead of traditional firmographics"
+    }
+  ]
+}
+```
+
+**IMPORTANT:**
+- Use MM:SS format for timestamps (e.g., "06:30" for 6 minutes 30 seconds, "45:15" for 45 minutes 15 seconds)
+- For videos over 60 minutes, still use MM:SS (e.g., "75:30" for 1 hour 15 minutes 30 seconds)
+- topic_hint should be 1-2 sentences describing what concept is taught and how
+- Ensure segments align with natural speaking breaks
+- Each segment should be long enough to extract 3-7 key ideas and 2-5 examples
+
+Now analyze the transcript and create optimal segments for knowledge extraction.

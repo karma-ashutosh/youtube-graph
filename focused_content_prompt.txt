@@ -1,0 +1,207 @@
+
+Analyze this transcript segment and extract the **substantive concepts** that are actually explained or taught.
+
+**SEGMENT CONTEXT:**
+Text: {{segment_text}}
+Segment start: {{start_time}}
+Segment end: {{end_time}}
+Video outline: {{video_outline}}
+
+---
+
+## FOCUS: Quality over Quantity
+
+**Only extract concepts that are ACTUALLY EXPLAINED in this segment.**
+
+❌ **DO NOT include:**
+- Terms mentioned in passing without explanation
+- Prerequisites the speaker assumes you know
+- Buzzwords or jargon used casually (e.g., "B2B", "SaaS", "RevOps")
+- Brief references to other topics
+- Names of tools/companies unless they're used as teaching examples
+
+✅ **DO include:**
+- Concepts that get definitions, explanations, or examples
+- Ideas that are developed with some depth
+- Supporting concepts that are necessary to understand the main topic
+- Teaching points that add value
+
+---
+
+## EXTRACTION GUIDELINES
+
+### PRIMARY CONCEPT (Required)
+**What is the MAIN topic being explained or taught?**
+- There is ONE primary concept per segment
+- It should be explained with depth (`comprehensive` or `partial`)
+- This is what someone would learn from watching this segment
+
+**Coverage Depth (2 options only):**
+- `comprehensive` = Thoroughly explained with definitions, examples, nuance
+- `partial` = Explained with some depth but not exhaustive
+
+**Explanation Type (PICK ONE ONLY):**
+- `definition` = Defines what the concept is
+- `case_study` = Real-world example or company story
+- `how_to` = Step-by-step practical guidance
+- `comparison` = Contrasts with other concepts
+- `metaphor` = Uses analogy/metaphor to explain
+- `story` = Narrative or anecdote
+
+**IMPORTANT:** Choose the PRIMARY explanation approach. DO NOT use comma-separated values like "definition, comparison". Pick the ONE that best describes how the concept is taught.
+
+---
+
+### SUPPORTING CONCEPTS (Optional, 2-5 max)
+**What concepts are EXPLAINED to help understand the primary concept?**
+
+⚠️ **Strict criteria:**
+- Only include if the speaker actually EXPLAINS it (not just mentions)
+- Must have `comprehensive` or `partial` coverage
+- Should contribute meaningfully to understanding the primary concept
+
+For each supporting concept:
+1. **Name** - Clear, specific concept name
+2. **Role** - How it helps explain the primary concept (1-2 sentences)
+3. **Coverage** - Must be `comprehensive` or `partial`
+
+**Example of GOOD supporting concept:**
+```
+{
+  "name": "Mental Availability",
+  "role": "Explains the ultimate goal of good positioning: to ensure customers recall the product in their moment of need.",
+  "coverage_depth": "partial"
+}
+```
+
+**Example of BAD supporting concept (DON'T include):**
+```
+{
+  "name": "B2B",  // ❌ Just mentioned, not explained
+  "name": "SaaS", // ❌ Just a term used, not taught
+  "name": "Customer Service", // ❌ Only mentioned as a weakness
+}
+```
+
+---
+
+### KEY IDEAS / INSIGHTS (3-10)
+**Extract specific claims, insights, or advice that are TAUGHT in this segment.**
+
+Types:
+- `fact` = Objective, verifiable statement
+- `advice` = Actionable recommendation
+- `insight` = Non-obvious observation or analysis
+- `metric` = Specific number or measurement
+- `opinion` = Speaker's subjective view
+- `definition` = Formal definition of a term
+
+For each idea:
+1. State the idea clearly and completely
+2. Classify the type
+3. Mark if `novel` (not common knowledge)
+4. Confidence: `high`, `medium`, or `low`
+
+**Focus on:** Ideas that would be valuable takeaways for a learner
+
+---
+
+### EXAMPLES USED (If present)
+**Only include examples that ILLUSTRATE a concept being taught.**
+
+Types:
+- `real_company` = Named company/product used as teaching example
+- `personal_story` = Speaker's experience used to teach
+- `hypothetical` = Made-up scenario to illustrate a point
+- `metaphor` = Analogy that clarifies a concept
+- `data_point` = Research/statistic to support a point
+
+❌ **Don't include:**
+- Companies just named without explanation (e.g., "like Slack" in passing)
+- Brief references
+
+✅ **Do include:**
+- Case studies that teach something
+- Stories that illustrate a principle
+- Metaphors that clarify concepts
+
+For each example:
+1. Summarize what the example shows (2-3 sentences)
+2. Classify type
+3. Which concept does it illustrate?
+
+---
+
+## OUTPUT FORMAT (JSON)
+
+```json
+{
+  "primary_concept": {
+    "name": "Positioning",
+    "coverage_depth": "comprehensive",
+    "explanation_type": "definition"
+  },
+  "supporting_concepts": [
+    {
+      "name": "Mental Availability",
+      "role": "Explains the ultimate goal of good positioning: ensuring customers recall your product in their moment of need.",
+      "coverage_depth": "partial"
+    },
+    {
+      "name": "Repositioning",
+      "role": "Demonstrates the power of positioning by showing how changing market perception (without changing the product) can transform success.",
+      "coverage_depth": "partial"
+    }
+  ],
+  "key_ideas": [
+    {
+      "idea": "The root cause of confusing product messaging is a positioning problem, not simply a copywriting problem",
+      "type": "insight",
+      "is_novel": true,
+      "confidence": "high"
+    },
+    {
+      "idea": "Positioning involves answering three core questions: Who is your product for? What is it? Why is it better?",
+      "type": "definition",
+      "is_novel": false,
+      "confidence": "high"
+    },
+    {
+      "idea": "Large companies struggle with positioning due to internal politics and expensive branding agencies, while startups struggle due to the inherent difficulty of explaining new products",
+      "type": "insight",
+      "is_novel": true,
+      "confidence": "high"
+    }
+  ],
+  "examples": [
+    {
+      "example_text": "Celsius energy drink's journey from a struggling weight loss drink to a dominating energy drink, achieving success through repositioning without changing its core ingredients.",
+      "type": "real_company",
+      "concept_illustrated": "Repositioning"
+    },
+    {
+      "example_text": "The movie 'Inception' used as an analogy for the goal of positioning – getting an idea (your product) firmly planted in the customer's mind.",
+      "type": "metaphor",
+      "concept_illustrated": "Mental Availability"
+    }
+  ]
+}
+```
+
+---
+
+## QUALITY CHECKS
+
+Before submitting your analysis, verify:
+
+✅ Primary concept is actually EXPLAINED (not just mentioned)
+✅ Supporting concepts (if any) are TAUGHT, not just referenced
+✅ No buzzwords or passing mentions in the concepts list
+✅ Key ideas are actual LEARNINGS from the segment
+✅ Examples are used for TEACHING, not just name-dropping
+✅ Coverage depth is `comprehensive` or `partial` only
+✅ JSON is valid and parseable
+
+**Remember:** It's better to extract 3 well-explained concepts than 20 terms that were just mentioned in passing. Focus on what someone would LEARN from this segment.
+
+Begin analysis now.

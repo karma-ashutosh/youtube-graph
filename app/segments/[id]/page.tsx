@@ -11,6 +11,7 @@ export default function SegmentDetailPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transcriptExpanded, setTranscriptExpanded] = useState(false);
 
   useEffect(() => {
     if (segmentId) {
@@ -84,31 +85,58 @@ export default function SegmentDetailPage() {
         </p>
       </div>
 
-      {/* Video Info */}
+      {/* Video Info & Transcript */}
       <div className="card">
-        <h2 className="text-xl font-semibold mb-3 text-text-light">Video</h2>
-        <a
-          href={`${video.url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary inline-flex items-center"
-        >
-          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-          </svg>
-          Watch on YouTube
-        </a>
-      </div>
-
-      {/* Transcript */}
-      {segment.transcript && (
-        <div className="card bg-surface-dark border-accent-cool/30">
-          <h2 className="text-xl font-semibold mb-3 text-text-light">Transcript</h2>
-          <div className="text-text-light/80 leading-relaxed whitespace-pre-wrap">
-            {segment.transcript}
-          </div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-semibold text-text-light">Video</h2>
+          <a
+            href={`${video.url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary inline-flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+            </svg>
+            Watch on YouTube
+          </a>
         </div>
-      )}
+
+        {/* Transcript Collapsible */}
+        {segment.transcript && segment.transcript.trim() !== "" && (
+          <div className="mt-4">
+            <button
+              onClick={() => setTranscriptExpanded(!transcriptExpanded)}
+              className="flex items-center justify-between w-full p-3 bg-surface-dark rounded-lg border border-border-subtle hover:border-accent-cool/50 transition-all"
+            >
+              <span className="text-sm font-semibold text-text-light">Transcript</span>
+              <svg
+                className={`w-5 h-5 text-text-light/60 transition-transform ${
+                  transcriptExpanded ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {transcriptExpanded && (
+              <div className="mt-2 p-4 bg-primary-dark rounded-lg border border-border-subtle">
+                <p className="text-sm text-text-light/80 leading-relaxed whitespace-pre-wrap">
+                  {segment.transcript}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(!segment.transcript || segment.transcript.trim() === "") && (
+          <div className="mt-4 p-3 bg-surface-dark rounded-lg border border-border-subtle">
+            <p className="text-sm text-text-light/60 italic">No transcript available for this segment.</p>
+          </div>
+        )}
+      </div>
 
       {/* Primary Concepts */}
       {primaryConcepts.length > 0 && (

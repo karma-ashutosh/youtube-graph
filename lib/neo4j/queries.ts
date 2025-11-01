@@ -36,6 +36,55 @@ export async function getAllConcepts(): Promise<Concept[]> {
 }
 
 /**
+ * Get all concepts with role statistics (for UI filtering)
+ */
+export async function getAllConceptsWithRoles() {
+  const session = getSession();
+
+  try {
+    const result = await session.run(`
+      MATCH (c:Concept)
+      OPTIONAL MATCH (s:Segment)-[d:DISCUSSES]->(c)
+      WITH c,
+           sum(CASE WHEN d.role = 'primary' THEN 1 ELSE 0 END) as primary_count,
+           sum(CASE WHEN d.role = 'supporting' THEN 1 ELSE 0 END) as supporting_count,
+           sum(CASE WHEN d.role = 'mentioned' THEN 1 ELSE 0 END) as mentioned_count,
+           collect(DISTINCT d.role) as roles
+      RETURN c, primary_count, supporting_count, mentioned_count, roles
+      ORDER BY c.total_mentions DESC
+    `);
+
+    return result.records.map((record) => {
+      const node = record.get("c").properties;
+      const primaryCount = record.get("primary_count");
+      const supportingCount = record.get("supporting_count");
+      const mentionedCount = record.get("mentioned_count");
+      const roles = record.get("roles");
+
+      return {
+        concept_id: node.concept_id,
+        canonical_name: node.canonical_name,
+        aliases: node.aliases || [],
+        category: node.category || "Uncategorized",
+        first_mentioned: node.first_mentioned,
+        last_mentioned: node.last_mentioned,
+        total_mentions: neo4j.isInt(node.total_mentions)
+          ? node.total_mentions.toNumber()
+          : node.total_mentions || 0,
+        importance_score: node.importance_score || 0,
+        primary_count: neo4j.isInt(primaryCount) ? primaryCount.toNumber() : primaryCount || 0,
+        supporting_count: neo4j.isInt(supportingCount) ? supportingCount.toNumber() : supportingCount || 0,
+        mentioned_count: neo4j.isInt(mentionedCount) ? mentionedCount.toNumber() : mentionedCount || 0,
+        roles: roles || [],
+        has_primary: roles.includes("primary"),
+      };
+    });
+  } finally {
+    await session.close();
+  }
+}
+
+/**
  * Create or get a video node
  */
 export async function createOrGetVideo(
@@ -120,16 +169,18 @@ export async function createConcept(params: {
   try {
     await session.run(
       `
-      CREATE (c:Concept {
-        concept_id: $concept_id,
-        canonical_name: $canonical_name,
-        aliases: $aliases,
-        category: $category,
-        first_mentioned: datetime(),
-        last_mentioned: datetime(),
-        total_mentions: 1,
-        importance_score: 0.5
-      })
+      MERGE (c:Concept {concept_id: $concept_id})
+      ON CREATE SET
+        c.canonical_name = $canonical_name,
+        c.aliases = $aliases,
+        c.category = $category,
+        c.first_mentioned = datetime(),
+        c.last_mentioned = datetime(),
+        c.total_mentions = 1,
+        c.importance_score = 0.5
+      ON MATCH SET
+        c.last_mentioned = datetime(),
+        c.total_mentions = c.total_mentions + 1
       RETURN c
     `,
       {
@@ -334,29 +385,42 @@ export async function getConceptById(conceptId: string) {
   const session = getSession();
 
   try {
-    const result = await session.run(
+    // First get the main concept data
+    const mainResult = await session.run(
       `
       MATCH (c:Concept {concept_id: $concept_id})
 
       OPTIONAL MATCH (c)<-[d:DISCUSSES]-(s:Segment)-[:FROM_VIDEO]->(v:Video)
       OPTIONAL MATCH (c)<-[:ILLUSTRATES]-(e:Example)
       OPTIONAL MATCH (c)<-[:ABOUT]-(ki:KeyIdea)
-      OPTIONAL MATCH (c)-[r:RELATED_TO]-(related:Concept)
 
       RETURN c,
              collect(DISTINCT {segment: s, video: v, discusses: d}) as segments,
              collect(DISTINCT e) as examples,
-             collect(DISTINCT ki) as key_ideas,
-             collect(DISTINCT {concept: related, strength: r.strength}) as related_concepts
+             collect(DISTINCT ki) as key_ideas
       `,
       { concept_id: conceptId }
     );
 
-    if (result.records.length === 0) {
+    if (mainResult.records.length === 0) {
       return null;
     }
 
-    const record = result.records[0];
+    // Get related concepts through co-occurrence
+    const relatedResult = await session.run(
+      `
+      MATCH (c:Concept {concept_id: $concept_id})
+      MATCH (c)<-[:DISCUSSES]-(shared:Segment)-[:DISCUSSES]->(related:Concept)
+      WHERE c.concept_id <> related.concept_id
+      WITH related, count(DISTINCT shared) as strength
+      ORDER BY strength DESC
+      LIMIT 10
+      RETURN related, strength
+      `,
+      { concept_id: conceptId }
+    );
+
+    const record = mainResult.records[0];
     const concept = record.get("c").properties;
 
     // Helper function to convert Neo4j integers to numbers
@@ -374,12 +438,18 @@ export async function getConceptById(conceptId: string) {
       return obj;
     };
 
+    // Process related concepts
+    const relatedConcepts = relatedResult.records.map((rec) => ({
+      concept: convertIntegers(rec.get("related").properties),
+      strength: convertIntegers(rec.get("strength")),
+    }));
+
     return {
       concept: convertIntegers(concept),
       segments: convertIntegers(record.get("segments")),
       examples: record.get("examples").map((e: any) => convertIntegers(e?.properties)).filter(Boolean),
       keyIdeas: record.get("key_ideas").map((ki: any) => convertIntegers(ki?.properties)).filter(Boolean),
-      relatedConcepts: convertIntegers(record.get("related_concepts")),
+      relatedConcepts: relatedConcepts,
     };
   } finally {
     await session.close();
@@ -486,6 +556,37 @@ export async function getSegmentById(segmentId: string) {
 /**
  * Get a video by ID with all its segments
  */
+/**
+ * Get all videos with segment counts
+ */
+export async function getAllVideos() {
+  const session = getSession();
+
+  try {
+    const result = await session.run(`
+      MATCH (v:Video)
+      OPTIONAL MATCH (s:Segment)-[:FROM_VIDEO]->(v)
+      WITH v, count(s) as segment_count
+      ORDER BY v.created_at DESC
+      RETURN v, segment_count
+    `);
+
+    return result.records.map((record) => {
+      const video = record.get("v").properties;
+      const segmentCount = record.get("segment_count");
+
+      return {
+        video_id: video.video_id,
+        url: video.url,
+        created_at: video.created_at,
+        segment_count: neo4j.isInt(segmentCount) ? segmentCount.toNumber() : segmentCount || 0,
+      };
+    });
+  } finally {
+    await session.close();
+  }
+}
+
 export async function getVideoById(videoId: string) {
   const session = getSession();
 
@@ -540,6 +641,7 @@ export async function getGraphData(params?: {
   category?: string;
   limit?: number;
   includeSegments?: boolean;
+  roleFilter?: string;
 }) {
   const session = getSession();
 
@@ -553,6 +655,27 @@ export async function getGraphData(params?: {
       conceptQuery += ` AND c.category = $category`;
     }
 
+    // Add role filter - only include concepts that have been discussed in the specified role
+    if (params?.roleFilter && params.roleFilter !== "all") {
+      if (params.roleFilter === "primary") {
+        conceptQuery = `
+          MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
+          WHERE c.total_mentions >= $min_mentions
+            AND d.role = 'primary'
+            ${params?.category ? 'AND c.category = $category' : ''}
+          WITH DISTINCT c
+        `;
+      } else {
+        conceptQuery = `
+          MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
+          WHERE c.total_mentions >= $min_mentions
+            AND d.role = $role_filter
+            ${params?.category ? 'AND c.category = $category' : ''}
+          WITH DISTINCT c
+        `;
+      }
+    }
+
     conceptQuery += `
       RETURN c
       ORDER BY c.total_mentions DESC
@@ -564,6 +687,7 @@ export async function getGraphData(params?: {
       min_mentions: neo4j.int(params?.minMentions || 0),
       category: params?.category,
       limit: neo4j.int(params?.limit || 100),
+      role_filter: params?.roleFilter,
     });
 
     const concepts = conceptResult.records.map((record) => record.get("c").properties);
@@ -574,6 +698,33 @@ export async function getGraphData(params?: {
 
     // Get concept IDs for link query
     const conceptIds = concepts.map((c: any) => c.concept_id);
+
+    // Get role information for each concept
+    const roleQuery = `
+      MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
+      WHERE c.concept_id IN $concept_ids
+      WITH c.concept_id as concept_id,
+           collect(DISTINCT d.role) as roles,
+           sum(CASE WHEN d.role = 'primary' THEN 1 ELSE 0 END) as primary_count
+      RETURN concept_id, roles, primary_count
+    `;
+
+    const roleResult = await session.run(roleQuery, {
+      concept_ids: conceptIds,
+    });
+
+    // Create a map of concept_id -> role info
+    const roleMap = new Map();
+    roleResult.records.forEach((record) => {
+      const conceptId = record.get("concept_id");
+      const roles = record.get("roles");
+      const primaryCount = record.get("primary_count");
+      roleMap.set(conceptId, {
+        roles,
+        has_primary: roles.includes("primary"),
+        primary_count: neo4j.isInt(primaryCount) ? primaryCount.toNumber() : primaryCount || 0,
+      });
+    });
 
     // Find links between concepts (co-occurrence in segments)
     const linkQuery = `
@@ -597,14 +748,20 @@ export async function getGraphData(params?: {
       type: "concept-concept",
     }));
 
-    const nodes: GraphNode[] = concepts.map((c: any) => ({
-      id: c.concept_id,
-      label: c.canonical_name,
-      type: "concept",
-      mentions: neo4j.isInt(c.total_mentions) ? c.total_mentions.toNumber() : c.total_mentions || 0,
-      importance: c.importance_score || 0,
-      category: c.category || "Uncategorized",
-    }));
+    const nodes: GraphNode[] = concepts.map((c: any) => {
+      const roleInfo = roleMap.get(c.concept_id) || { roles: [], has_primary: false, primary_count: 0 };
+      return {
+        id: c.concept_id,
+        label: c.canonical_name,
+        type: "concept",
+        mentions: neo4j.isInt(c.total_mentions) ? c.total_mentions.toNumber() : c.total_mentions || 0,
+        importance: c.importance_score || 0,
+        category: c.category || "Uncategorized",
+        roles: roleInfo.roles,
+        has_primary: roleInfo.has_primary,
+        primary_count: roleInfo.primary_count,
+      };
+    });
 
     // If includeSegments is true, also add segment nodes and their links to concepts
     if (params?.includeSegments) {

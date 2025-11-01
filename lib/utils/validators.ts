@@ -12,6 +12,7 @@ export const AnalysisDataSchema = z.object({
       "comparison",
       "metaphor",
       "story",
+      "advice", // AI sometimes uses this
     ]),
   }),
   supporting_concepts: z.array(
@@ -27,11 +28,21 @@ export const AnalysisDataSchema = z.object({
       context: z.string(),
       coverage_depth: z.enum(["comprehensive", "partial", "reference_only", "surface"]),
     })
-  ),
+  ).optional(),
   key_ideas: z.array(
     z.object({
       idea: z.string(),
-      type: z.enum(["fact", "advice", "insight", "metric", "opinion", "definition"]),
+      type: z.enum([
+        "fact",
+        "advice",
+        "insight",
+        "metric",
+        "opinion",
+        "definition",
+        "observation",
+        "how_to", // AI sometimes uses this for procedural ideas
+        "comparison", // AI sometimes uses this for comparative ideas
+      ]),
       is_novel: z.boolean(),
       confidence: z.enum(["high", "medium", "low"]),
     })
@@ -45,6 +56,8 @@ export const AnalysisDataSchema = z.object({
         "metaphor",
         "hypothetical",
         "data_point",
+        "case_study", // AI sometimes uses this instead of real_company
+        "comparison", // AI sometimes uses this for comparative examples
       ]),
       concept_illustrated: z.string(),
     })
@@ -59,6 +72,7 @@ export const SegmentDataSchema = z.object({
   start_time: z.string(), // "00:03:54"
   end_time: z.string(), // "00:04:42"
   topic_hint: z.string(),
+  transcript: z.string().optional(), // Add transcript field
   analysis_json: z.union([z.string(), z.object({}).passthrough()]).transform((val) =>
     typeof val === 'string' ? val : JSON.stringify(val)
   ),

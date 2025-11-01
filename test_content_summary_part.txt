@@ -1,0 +1,106 @@
+{
+  "segments": [
+    {
+      "segment_id": 1,
+      "start_time": "00:00:00",
+      "end_time": "00:05:30",
+      "topic_hint": "Speaker's personal struggle to understand software messaging and realizing its vagueness."
+    },
+    {
+      "segment_id": 2,
+      "start_time": "00:05:30",
+      "end_time": "00:33:23",
+      "topic_hint": "Examples of confusing and vague software descriptions on company homepages, including 'Revenue orchestration platform' and 'Where work happens'."
+    },
+    {
+      "segment_id": 3,
+      "start_time": "00:33:23",
+      "end_time": "01:33:48",
+      "topic_hint": "The core problem is positioning, not copywriting, explaining different reasons for poor messaging in large vs. small companies."
+    },
+    {
+      "segment_id": 4,
+      "start_time": "01:33:48",
+      "end_time": "03:02:40",
+      "topic_hint": "Defining positioning as answering 'who, what, and why better' to achieve 'mental availability' in customers' minds."
+    },
+    {
+      "segment_id": 5,
+      "start_time": "03:02:40",
+      "end_time": "03:49:10",
+      "topic_hint": "Case study: Celsius's successful repositioning from a weight loss drink to an energy drink."
+    },
+    {
+      "segment_id": 6,
+      "start_time": "03:49:10",
+      "end_time": "06:02:18",
+      "topic_hint": "Additional examples of successful repositioning: YouTube, Notion, and Twitch."
+    },
+    {
+      "segment_id": 7,
+      "start_time": "06:02:18",
+      "end_time": "07:06:50",
+      "topic_hint": "Explaining why founders struggle with positioning due to being 'inside the bottle' and the disconnect between vision and customer perception (Miro example)."
+    },
+    {
+      "segment_id": 8,
+      "start_time": "07:06:50",
+      "end_time": "08:16:16",
+      "topic_hint": "Key signs indicating that a company might have a positioning problem."
+    },
+    {
+      "segment_id": 9,
+      "start_time": "08:16:16",
+      "end_time": "09:54:30",
+      "topic_hint": "Introducing Fletch (the speaker's company) and their process, highlighting the homepage as a crucial alignment tool for positioning."
+    },
+    {
+      "segment_id": 10,
+      "start_time": "09:54:30",
+      "end_time": "12:08:10",
+      "topic_hint": "Deep dive into the first positioning question: 'Who is your product for?' emphasizing workflow-based segmentation over traditional firmographics."
+    },
+    {
+      "segment_id": 11,
+      "start_time": "12:08:10",
+      "end_time": "15:37:34",
+      "topic_hint": "The impact of workflow granularity (high-level vs. low-level) on go-to-market strategy, pricing, and sales cycles, with examples like Calendly and Gainsight."
+    },
+    {
+      "segment_id": 12,
+      "start_time": "15:37:34",
+      "end_time": "20:15:30",
+      "topic_hint": "Completing the 'Who is your product for?' question by identifying competitive alternatives (e.g., Slack vs. email, Loom vs. meetings) and the specific problem being solved."
+    },
+    {
+      "segment_id": 13,
+      "start_time": "20:15:30",
+      "end_time": "24:18:20",
+      "topic_hint": "Addressing the second positioning question: 'What is your product?' – navigating the trade-offs of choosing mature vs. emerging product categories (Servikit example)."
+    },
+    {
+      "segment_id": 14,
+      "start_time": "24:18:20",
+      "end_time": "26:50:00",
+      "topic_hint": "Exploring the third positioning question: 'Why is your product better?' – distinguishing between differentiation by degree and binary differentiation (Superhuman, DuckDuckGo)."
+    },
+    {
+      "segment_id": 15,
+      "start_time": "26:50:00",
+      "end_time": "29:28:40",
+      "topic_hint": "Translating the core positioning statement into supporting arguments and feature-based messaging for a product's homepage."
+    },
+    {
+      "segment_id": 16,
+      "start_time": "29:28:40",
+      "end_time": "33:23:40",
+      "topic_hint": "Best practices for homepage structure, including the hero section, problem section, solution intro, and a 15-second product demo with highlights (feature, capability, benefit)."
+    },
+    {
+      "segment_id": 17,
+      "start_time": "33:23:40",
+      "end_time": "34:07:34",
+      "topic_hint": "Conclusion of the talk and call to action for future MicroCom events."
+    }
+  ]
+}

@@ -135,22 +135,30 @@ export default function ConceptDetailPage() {
                     Time: {seg.start_time} - {seg.end_time} (
                     {seg.duration_seconds}s)
                   </div>
-                  {vid && (
-                    <a
-                      href={`${vid.url}&t=${seg.start_time
-                        .split(":")
-                        .reduce(
-                          (acc: number, val: string, i: number) =>
-                            acc + parseInt(val) * Math.pow(60, 2 - i),
-                          0
-                        )}s`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm mt-2 inline-block"
+                  <div className="flex gap-3 mt-2">
+                    <Link
+                      href={`/segments/${seg.segment_id}`}
+                      className="text-accent-cool hover:glow-text-cool text-sm"
                     >
-                      Watch segment →
-                    </a>
-                  )}
+                      View segment →
+                    </Link>
+                    {vid && (
+                      <a
+                        href={`${vid.url}&t=${seg.start_time
+                          .split(":")
+                          .reduce(
+                            (acc: number, val: string, i: number) =>
+                              acc + parseInt(val) * Math.pow(60, 2 - i),
+                            0
+                          )}s`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-sm"
+                      >
+                        Watch segment →
+                      </a>
+                    )}
+                  </div>
                 </div>
               );
             })}
