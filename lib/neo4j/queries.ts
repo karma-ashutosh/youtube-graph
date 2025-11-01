@@ -488,6 +488,37 @@ export async function getSegmentById(segmentId: string) {
 /**
  * Get a video by ID with all its segments
  */
+/**
+ * Get all videos with segment counts
+ */
+export async function getAllVideos() {
+  const session = getSession();
+
+  try {
+    const result = await session.run(`
+      MATCH (v:Video)
+      OPTIONAL MATCH (s:Segment)-[:FROM_VIDEO]->(v)
+      WITH v, count(s) as segment_count
+      ORDER BY v.created_at DESC
+      RETURN v, segment_count
+    `);
+
+    return result.records.map((record) => {
+      const video = record.get("v").properties;
+      const segmentCount = record.get("segment_count");
+
+      return {
+        video_id: video.video_id,
+        url: video.url,
+        created_at: video.created_at,
+        segment_count: neo4j.isInt(segmentCount) ? segmentCount.toNumber() : segmentCount || 0,
+      };
+    });
+  } finally {
+    await session.close();
+  }
+}
+
 export async function getVideoById(videoId: string) {
   const session = getSession();
 

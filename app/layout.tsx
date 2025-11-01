@@ -53,6 +53,12 @@ export default function RootLayout({
                   Graph
                 </Link>
                 <Link
+                  href="/videos"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-text-light hover:text-accent-cool hover:glow-text-cool transition-all duration-200 rounded-lg hover:bg-accent-cool/5"
+                >
+                  Videos
+                </Link>
+                <Link
                   href="/concepts"
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-text-light hover:text-accent-cool hover:glow-text-cool transition-all duration-200 rounded-lg hover:bg-accent-cool/5"
                 >
