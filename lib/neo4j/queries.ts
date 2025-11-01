@@ -120,16 +120,18 @@ export async function createConcept(params: {
   try {
     await session.run(
       `
-      CREATE (c:Concept {
-        concept_id: $concept_id,
-        canonical_name: $canonical_name,
-        aliases: $aliases,
-        category: $category,
-        first_mentioned: datetime(),
-        last_mentioned: datetime(),
-        total_mentions: 1,
-        importance_score: 0.5
-      })
+      MERGE (c:Concept {concept_id: $concept_id})
+      ON CREATE SET
+        c.canonical_name = $canonical_name,
+        c.aliases = $aliases,
+        c.category = $category,
+        c.first_mentioned = datetime(),
+        c.last_mentioned = datetime(),
+        c.total_mentions = 1,
+        c.importance_score = 0.5
+      ON MATCH SET
+        c.last_mentioned = datetime(),
+        c.total_mentions = c.total_mentions + 1
       RETURN c
     `,
       {

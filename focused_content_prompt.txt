@@ -40,13 +40,15 @@ Video outline: {{video_outline}}
 - `comprehensive` = Thoroughly explained with definitions, examples, nuance
 - `partial` = Explained with some depth but not exhaustive
 
-**Explanation Type:**
+**Explanation Type (PICK ONE ONLY):**
 - `definition` = Defines what the concept is
 - `case_study` = Real-world example or company story
 - `how_to` = Step-by-step practical guidance
 - `comparison` = Contrasts with other concepts
 - `metaphor` = Uses analogy/metaphor to explain
 - `story` = Narrative or anecdote
+
+**IMPORTANT:** Choose the PRIMARY explanation approach. DO NOT use comma-separated values like "definition, comparison". Pick the ONE that best describes how the concept is taught.
 
 ---
 
