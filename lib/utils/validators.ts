@@ -27,11 +27,11 @@ export const AnalysisDataSchema = z.object({
       context: z.string(),
       coverage_depth: z.enum(["comprehensive", "partial", "reference_only", "surface"]),
     })
-  ),
+  ).optional(),
   key_ideas: z.array(
     z.object({
       idea: z.string(),
-      type: z.enum(["fact", "advice", "insight", "metric", "opinion", "definition"]),
+      type: z.enum(["fact", "advice", "insight", "metric", "opinion", "definition", "observation"]),
       is_novel: z.boolean(),
       confidence: z.enum(["high", "medium", "low"]),
     })

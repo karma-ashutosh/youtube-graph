@@ -29,7 +29,7 @@ export interface AnalysisData {
   }>;
   key_ideas: Array<{
     idea: string;
-    type: "fact" | "advice" | "insight" | "metric" | "opinion" | "definition";
+    type: "fact" | "advice" | "insight" | "metric" | "opinion" | "definition" | "observation";
     is_novel: boolean;
     confidence: "high" | "medium" | "low";
   }>;
