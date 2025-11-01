@@ -71,16 +71,16 @@ export default function ConceptsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading concepts...</div>
+        <div className="text-lg text-text-light">Loading concepts...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-        <h3 className="font-semibold text-red-700 dark:text-red-400">Error</h3>
-        <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+      <div className="card border-accent-hot bg-accent-hot/10">
+        <h3 className="font-semibold text-accent-hot glow-text-hot">Error</h3>
+        <p className="text-sm text-text-light/80">{error}</p>
       </div>
     );
   }
@@ -88,8 +88,8 @@ export default function ConceptsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Concepts</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">Concepts</h1>
+        <p className="text-text-light/80 mt-2">
           Browse and explore all concepts in the knowledge graph
         </p>
       </div>
@@ -100,7 +100,7 @@ export default function ConceptsPage() {
           placeholder="Search concepts..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+          className="flex-1 px-4 py-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light focus:outline-none focus:border-accent-cool"
         />
 
         <select
@@ -108,7 +108,7 @@ export default function ConceptsPage() {
           onChange={(e) =>
             setSortBy(e.target.value as "mentions" | "recent" | "name")
           }
-          className="px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+          className="px-4 py-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light focus:outline-none focus:border-accent-cool"
         >
           <option value="mentions">Most Mentioned</option>
           <option value="recent">Most Recent</option>
@@ -116,7 +116,7 @@ export default function ConceptsPage() {
         </select>
       </div>
 
-      <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="text-sm text-text-light/60">
         Showing {filteredAndSortedConcepts.length} of {concepts.length} concepts
       </div>
 
@@ -125,29 +125,29 @@ export default function ConceptsPage() {
           <Link
             key={concept.concept_id}
             href={`/concepts/${concept.concept_id}`}
-            className="border rounded-lg p-4 hover:shadow-lg transition-shadow"
+            className="card hover:shadow-glow-cool hover:border-accent-cool/50 transition-all duration-300 group"
           >
-            <h3 className="text-lg font-semibold mb-2">
+            <h3 className="text-lg font-semibold mb-2 text-text-light group-hover:text-accent-cool transition-colors">
               {concept.canonical_name}
             </h3>
 
             {concept.aliases.length > 0 && (
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <div className="text-sm text-text-light/60 mb-2">
                 aka: {concept.aliases.slice(0, 2).join(", ")}
                 {concept.aliases.length > 2 && "..."}
               </div>
             )}
 
             <div className="flex justify-between items-center text-sm">
-              <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+              <span className="px-2 py-1 bg-accent-cool/20 text-accent-cool rounded">
                 {concept.category}
               </span>
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-text-light/60">
                 {concept.total_mentions} mentions
               </span>
             </div>
 
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-xs text-text-light/40">
               Last mentioned:{" "}
               {new Date(concept.last_mentioned).toLocaleDateString()}
             </div>
@@ -156,7 +156,7 @@ export default function ConceptsPage() {
       </div>
 
       {filteredAndSortedConcepts.length === 0 && (
-        <div className="text-center text-gray-600 dark:text-gray-400 py-12">
+        <div className="text-center text-text-light/60 py-12">
           No concepts found matching your search.
         </div>
       )}

@@ -53,8 +53,8 @@ export default function UploadPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Upload Segments</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">Upload Segments</h1>
+        <p className="text-text-light/80 mt-2">
           Upload video transcript segments with AI-analyzed concepts to build
           the knowledge graph.
         </p>
@@ -62,44 +62,44 @@ export default function UploadPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <div className="border rounded-lg p-6 space-y-4">
+          <div className="card space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 text-text-light">
                 Upload JSON File
               </label>
               <input
                 type="file"
                 accept=".json"
                 onChange={handleFileUpload}
-                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                className="block w-full text-sm text-text-light border border-border-subtle rounded-lg cursor-pointer bg-surface-dark focus:outline-none focus:border-accent-cool"
               />
             </div>
 
-            <div className="text-center text-gray-500">or</div>
+            <div className="text-center text-text-light/50">or</div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 text-text-light">
                 Paste JSON Data
               </label>
               <textarea
                 value={jsonInput}
                 onChange={(e) => setJsonInput(e.target.value)}
                 placeholder="Paste your segment data JSON here..."
-                className="w-full h-64 p-3 border rounded-lg font-mono text-sm dark:bg-gray-800 dark:border-gray-700"
+                className="w-full h-64 p-3 border border-border-subtle rounded-lg font-mono text-sm bg-primary-dark text-text-light focus:outline-none focus:border-accent-cool"
               />
             </div>
 
             <button
               onClick={handleSubmit}
               disabled={!jsonInput || isProcessing}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="btn-primary w-full disabled:bg-gray-600 disabled:cursor-not-allowed disabled:shadow-none"
             >
               {isProcessing ? "Processing..." : "Ingest Segments"}
             </button>
           </div>
 
-          <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
-            <h3 className="font-semibold mb-2">Expected Format</h3>
+          <div className="card bg-primary-dark">
+            <h3 className="font-semibold mb-2 text-text-light">Expected Format</h3>
             <pre className="text-xs overflow-x-auto">
               {`[
   {
@@ -119,51 +119,51 @@ export default function UploadPage() {
 
         <div className="space-y-4">
           {error && (
-            <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-              <h3 className="font-semibold text-red-700 dark:text-red-400 mb-2">
+            <div className="card border-accent-hot bg-accent-hot/10">
+              <h3 className="font-semibold text-accent-hot mb-2 glow-text-hot">
                 Error
               </h3>
-              <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+              <p className="text-sm text-text-light/80">{error}</p>
             </div>
           )}
 
           {results && (
-            <div className="border border-green-500 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 space-y-3">
-              <h3 className="font-semibold text-green-700 dark:text-green-400">
+            <div className="card border-accent-cool bg-accent-cool/5 space-y-3">
+              <h3 className="font-semibold text-accent-cool glow-text-cool">
                 Processing Complete!
               </h3>
 
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-white dark:bg-gray-800 p-3 rounded">
-                  <div className="text-gray-600 dark:text-gray-400">
+                <div className="bg-surface-dark p-3 rounded border border-border-subtle">
+                  <div className="text-text-light/60">
                     Total Segments
                   </div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-2xl font-bold text-text-light">
                     {results.totalSegments}
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-3 rounded">
-                  <div className="text-gray-600 dark:text-gray-400">
+                <div className="bg-surface-dark p-3 rounded border border-border-subtle">
+                  <div className="text-text-light/60">
                     Successful
                   </div>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-accent-cool">
                     {results.successfulSegments}
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-3 rounded">
-                  <div className="text-gray-600 dark:text-gray-400">Failed</div>
-                  <div className="text-2xl font-bold text-red-600">
+                <div className="bg-surface-dark p-3 rounded border border-border-subtle">
+                  <div className="text-text-light/60">Failed</div>
+                  <div className="text-2xl font-bold text-accent-hot">
                     {results.failedSegments}
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-3 rounded">
-                  <div className="text-gray-600 dark:text-gray-400">
+                <div className="bg-surface-dark p-3 rounded border border-border-subtle">
+                  <div className="text-text-light/60">
                     Concepts Processed
                   </div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-2xl font-bold text-text-light">
                     {results.totalConceptsProcessed}
                   </div>
                 </div>
@@ -171,10 +171,10 @@ export default function UploadPage() {
 
               {results.errors && results.errors.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="font-semibold text-sm mb-2">Errors:</h4>
+                  <h4 className="font-semibold text-sm mb-2 text-text-light">Errors:</h4>
                   <div className="space-y-1 text-sm">
                     {results.errors.map((err: any, i: number) => (
-                      <div key={i} className="text-red-600 dark:text-red-400">
+                      <div key={i} className="text-accent-hot">
                         {err.segmentId}: {err.error}
                       </div>
                     ))}

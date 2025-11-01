@@ -60,16 +60,16 @@ export default function SegmentsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading segments...</div>
+        <div className="text-lg text-text-light">Loading segments...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-        <h3 className="font-semibold text-red-700 dark:text-red-400">Error</h3>
-        <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+      <div className="card border-accent-hot bg-accent-hot/10">
+        <h3 className="font-semibold text-accent-hot glow-text-hot">Error</h3>
+        <p className="text-sm text-text-light/80">{error}</p>
       </div>
     );
   }
@@ -77,8 +77,8 @@ export default function SegmentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Segments</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">Segments</h1>
+        <p className="text-text-light/80 mt-2">
           Browse all video segments in the knowledge graph
         </p>
       </div>
@@ -89,11 +89,11 @@ export default function SegmentsPage() {
           placeholder="Search segments..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+          className="flex-1 px-4 py-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light focus:outline-none focus:border-accent-cool"
         />
       </div>
 
-      <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="text-sm text-text-light/60">
         Showing {filteredSegments.length} of {segments.length} segments
       </div>
 
@@ -101,21 +101,21 @@ export default function SegmentsPage() {
         {filteredSegments.map((item) => (
           <div
             key={item.segment.segment_id}
-            className="border rounded-lg p-4 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+            className="card hover:shadow-glow-cool hover:border-accent-cool/50 transition-all duration-300"
           >
             <div className="flex justify-between items-start mb-3">
               <Link
                 href={`/segments/${item.segment.segment_id}`}
-                className="text-lg font-semibold hover:text-blue-600 dark:hover:text-blue-400"
+                className="text-lg font-semibold text-text-light hover:text-accent-cool transition-colors"
               >
                 {item.segment.topic_hint}
               </Link>
-              <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
+              <span className="text-xs px-2 py-1 bg-accent-cool/20 text-accent-cool rounded">
                 {item.segment.duration_seconds}s
               </span>
             </div>
 
-            <div className="flex gap-4 items-center text-sm text-gray-600 dark:text-gray-400 mb-3">
+            <div className="flex gap-4 items-center text-sm text-text-light/60 mb-3">
               <span>
                 {item.segment.start_time} - {item.segment.end_time}
               </span>
@@ -126,13 +126,13 @@ export default function SegmentsPage() {
                 href={`${item.video.url}&t=${getYouTubeTimestamp(item.segment.start_time)}s`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                className="btn-primary text-sm"
               >
                 Watch on YouTube →
               </a>
               <Link
                 href={`/segments/${item.segment.segment_id}`}
-                className="text-sm px-3 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="btn-secondary text-sm"
               >
                 View Details
               </Link>
@@ -142,7 +142,7 @@ export default function SegmentsPage() {
       </div>
 
       {filteredSegments.length === 0 && (
-        <div className="text-center text-gray-600 dark:text-gray-400 py-12">
+        <div className="text-center text-text-light/60 py-12">
           No segments found matching your search.
         </div>
       )}

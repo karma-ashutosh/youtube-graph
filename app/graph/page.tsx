@@ -96,16 +96,16 @@ export default function GraphPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading graph...</div>
+        <div className="text-lg text-text-light">Loading graph...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-        <h3 className="font-semibold text-red-700 dark:text-red-400">Error</h3>
-        <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+      <div className="card border-accent-hot bg-accent-hot/10">
+        <h3 className="font-semibold text-accent-hot glow-text-hot">Error</h3>
+        <p className="text-sm text-text-light/80">{error}</p>
       </div>
     );
   }
@@ -113,15 +113,15 @@ export default function GraphPage() {
   return (
     <div className="space-y-6 relative">
       <div>
-        <h1 className="text-3xl font-bold">Knowledge Graph</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">Knowledge Graph</h1>
+        <p className="text-text-light/80 mt-2">
           Interactive visualization of concept relationships. Click any node to see details.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium mb-1 text-text-light">
             Min Mentions: {minMentions}
           </label>
           <input
@@ -130,12 +130,12 @@ export default function GraphPage() {
             max="10"
             value={minMentions}
             onChange={(e) => setMinMentions(parseInt(e.target.value))}
-            className="w-full"
+            className="w-full accent-accent-cool"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
+          <label className="block text-sm font-medium mb-1 text-text-light">
             Max Nodes: {maxNodes}
           </label>
           <input
@@ -145,16 +145,16 @@ export default function GraphPage() {
             step="10"
             value={maxNodes}
             onChange={(e) => setMaxNodes(parseInt(e.target.value))}
-            className="w-full"
+            className="w-full accent-accent-cool"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Category</label>
+          <label className="block text-sm font-medium mb-1 text-text-light">Category</label>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+            className="w-full px-4 py-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light focus:outline-none focus:border-accent-cool"
           >
             <option value="">All Categories</option>
             <option value="Product">Product</option>
@@ -170,16 +170,16 @@ export default function GraphPage() {
               type="checkbox"
               checked={includeSegments}
               onChange={(e) => setIncludeSegments(e.target.checked)}
-              className="mr-2 w-4 h-4"
+              className="mr-2 w-4 h-4 accent-accent-cool"
             />
-            <span className="text-sm font-medium">Show Segments</span>
+            <span className="text-sm font-medium text-text-light">Show Segments</span>
           </label>
         </div>
 
         <div className="flex items-end">
           <button
             onClick={fetchGraphData}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="btn-secondary w-full"
           >
             Refresh
           </button>
@@ -187,8 +187,8 @@ export default function GraphPage() {
       </div>
 
       {graphData && (
-        <div className="border rounded-lg overflow-hidden" style={{ backgroundColor: '#f8f9fa' }}>
-          <div className="text-sm text-gray-600 dark:text-gray-400 p-3 border-b bg-white dark:bg-gray-800">
+        <div className="border border-border-subtle rounded-lg overflow-hidden bg-primary-dark">
+          <div className="text-sm text-text-light/80 p-3 border-b border-border-subtle bg-surface-dark">
             Showing {graphData.nodes.length} nodes and {graphData.links.length}{" "}
             links. Click on a concept to view details.
           </div>
@@ -198,17 +198,17 @@ export default function GraphPage() {
             graphData={graphData}
             width={1200}
             height={700}
-            backgroundColor="#f8f9fa"
+            backgroundColor="#060A14"
             nodeLabel="label"
             nodeColor={(node: any) => {
-              // Vibrant colors by category with good contrast
+              // Cybernetic color scheme
               const colors: { [key: string]: string } = {
-                Product: "#2563eb",      // Bright blue
-                Marketing: "#059669",    // Emerald green
-                Business: "#dc2626",     // Red
-                Uncategorized: "#7c3aed", // Purple
+                Product: "#79F8FF",      // Cyan cool
+                Marketing: "#FF4757",    // Hot red
+                Business: "#A855F7",     // Purple
+                Uncategorized: "#10B981", // Green
               };
-              return colors[node.category || "Uncategorized"] || "#7c3aed";
+              return colors[node.category || "Uncategorized"] || "#79F8FF";
             }}
             nodeVal={(node: any) => {
               // Size by mentions
@@ -303,17 +303,17 @@ export default function GraphPage() {
               }
             }}
             onNodeClick={handleNodeClick}
-            linkColor={() => "#94a3b8"}
+            linkColor={() => "#2D3748"}
             linkWidth={1.5}
             linkDirectionalParticles={2}
             linkDirectionalParticleWidth={2}
-            linkDirectionalParticleColor={() => "#64748b"}
+            linkDirectionalParticleColor={() => "#79F8FF"}
           />
         </div>
       )}
 
       {graphData && graphData.nodes.length === 0 && (
-        <div className="text-center text-gray-600 dark:text-gray-400 py-12">
+        <div className="text-center text-text-light/60 py-12">
           No data to display. Try adjusting the filters or upload some segments
           first.
         </div>
@@ -321,19 +321,19 @@ export default function GraphPage() {
 
       {/* Side Panel */}
       {selectedNode && (
-        <div className="fixed right-0 top-0 h-full w-96 bg-white dark:bg-gray-800 shadow-2xl border-l border-gray-200 dark:border-gray-700 overflow-y-auto z-50">
+        <div className="fixed right-0 top-0 h-full w-96 bg-surface-dark shadow-glow-cool border-l border-border-subtle overflow-y-auto z-50">
           <div className="p-6 space-y-4">
             {/* Header */}
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-bold">{selectedNode.label}</h2>
-                <span className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded mt-1 inline-block">
+                <h2 className="text-2xl font-bold text-text-light">{selectedNode.label}</h2>
+                <span className="text-xs px-2 py-1 bg-accent-cool/20 text-accent-cool rounded mt-1 inline-block">
                   {selectedNode.type}
                 </span>
               </div>
               <button
                 onClick={closeSidePanel}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-text-light/60 hover:text-accent-cool transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -343,7 +343,7 @@ export default function GraphPage() {
 
             {loadingDetails ? (
               <div className="flex items-center justify-center py-8">
-                <div className="text-gray-600 dark:text-gray-400">Loading details...</div>
+                <div className="text-text-light/60">Loading details...</div>
               </div>
             ) : nodeDetails ? (
               <div className="space-y-4">
@@ -496,20 +496,20 @@ export default function GraphPage() {
                     href={selectedNode.type === "segment" ? `/segments/${selectedNode.id}` : `/concepts/${selectedNode.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full px-4 py-2 bg-blue-600 text-white text-center rounded-lg hover:bg-blue-700 transition-colors"
+                    className="btn-primary block text-center"
                   >
                     View Full Details →
                   </a>
                   <button
                     onClick={closeSidePanel}
-                    className="block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-center rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="btn-secondary block w-full"
                   >
                     Close
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="text-gray-600 dark:text-gray-400">
+              <div className="text-text-light/60">
                 Unable to load details
               </div>
             )}

@@ -38,19 +38,19 @@ export default function ConceptDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading concept...</div>
+        <div className="text-lg text-text-light">Loading concept...</div>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-        <h3 className="font-semibold text-red-700 dark:text-red-400">Error</h3>
-        <p className="text-sm text-red-600 dark:text-red-300">
+      <div className="card border-accent-hot bg-accent-hot/10">
+        <h3 className="font-semibold text-accent-hot glow-text-hot">Error</h3>
+        <p className="text-sm text-text-light/80">
           {error || "Concept not found"}
         </p>
-        <Link href="/concepts" className="text-blue-600 hover:underline mt-2 inline-block">
+        <Link href="/concepts" className="text-accent-cool hover:text-accent-cool/80 hover:glow-text-cool mt-2 inline-block">
           Back to concepts
         </Link>
       </div>
@@ -64,54 +64,54 @@ export default function ConceptDetailPage() {
       <div>
         <Link
           href="/concepts"
-          className="text-blue-600 hover:underline text-sm mb-2 inline-block"
+          className="text-accent-cool hover:glow-text-cool text-sm mb-2 inline-block"
         >
           ← Back to concepts
         </Link>
-        <h1 className="text-3xl font-bold">{concept.canonical_name}</h1>
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">{concept.canonical_name}</h1>
 
         {concept.aliases && concept.aliases.length > 0 && (
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-text-light/70 mt-2">
             Also known as: {concept.aliases.join(", ")}
           </p>
         )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="border rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="card">
+          <div className="text-sm text-text-light/60">
             Category
           </div>
-          <div className="text-lg font-semibold">{concept.category}</div>
+          <div className="text-lg font-semibold text-text-light">{concept.category}</div>
         </div>
 
-        <div className="border rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="card">
+          <div className="text-sm text-text-light/60">
             Total Mentions
           </div>
-          <div className="text-lg font-semibold">{concept.total_mentions}</div>
+          <div className="text-lg font-semibold text-text-light">{concept.total_mentions}</div>
         </div>
 
-        <div className="border rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="card">
+          <div className="text-sm text-text-light/60">
             Importance
           </div>
-          <div className="text-lg font-semibold">
+          <div className="text-lg font-semibold text-accent-cool">
             {(concept.importance_score * 100).toFixed(0)}%
           </div>
         </div>
 
-        <div className="border rounded-lg p-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="card">
+          <div className="text-sm text-text-light/60">
             Segments
           </div>
-          <div className="text-lg font-semibold">{segments.length}</div>
+          <div className="text-lg font-semibold text-text-light">{segments.length}</div>
         </div>
       </div>
 
       {segments.length > 0 && (
-        <div className="border rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Video Segments</h2>
+        <div className="card">
+          <h2 className="text-2xl font-semibold mb-4 text-text-light">Video Segments</h2>
           <div className="space-y-3">
             {segments.map((item: any, i: number) => {
               const seg = item.segment?.properties;
@@ -159,8 +159,8 @@ export default function ConceptDetailPage() {
       )}
 
       {examples.length > 0 && (
-        <div className="border rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Examples</h2>
+        <div className="card">
+          <h2 className="text-2xl font-semibold mb-4 text-text-light">Examples</h2>
           <div className="space-y-3">
             {examples.map((example: any, i: number) => (
               <div
@@ -179,8 +179,8 @@ export default function ConceptDetailPage() {
       )}
 
       {keyIdeas.length > 0 && (
-        <div className="border rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Key Ideas</h2>
+        <div className="card">
+          <h2 className="text-2xl font-semibold mb-4 text-text-light">Key Ideas</h2>
           <div className="space-y-2">
             {keyIdeas.map((idea: any, i: number) => (
               <div key={i} className="border rounded p-3">
@@ -209,8 +209,8 @@ export default function ConceptDetailPage() {
       )}
 
       {relatedConcepts.length > 0 && (
-        <div className="border rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Related Concepts</h2>
+        <div className="card">
+          <h2 className="text-2xl font-semibold mb-4 text-text-light">Related Concepts</h2>
           <div className="flex flex-wrap gap-2">
             {relatedConcepts.map((item: any, i: number) => {
               const related = item.concept?.properties;

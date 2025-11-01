@@ -41,17 +41,17 @@ export default function QueryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Query Interface</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">Query Interface</h1>
+        <p className="text-text-light/80 mt-2">
           Execute Cypher queries against the knowledge graph
         </p>
       </div>
 
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-500 rounded-lg p-4">
-        <h3 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
+      <div className="card border-accent-cool/50 bg-accent-cool/5">
+        <h3 className="font-semibold text-accent-cool mb-2">
           Note
         </h3>
-        <p className="text-sm text-yellow-600 dark:text-yellow-300">
+        <p className="text-sm text-text-light/70">
           This is a simplified query interface. For production use, implement proper query
           validation and rate limiting. Use the Neo4j Browser for full query capabilities.
         </p>
@@ -59,7 +59,7 @@ export default function QueryPage() {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-text-light">
             Sample Queries (click to use)
           </label>
           <div className="space-y-2">
@@ -67,10 +67,10 @@ export default function QueryPage() {
               <button
                 key={i}
                 onClick={() => setQuery(sample.query)}
-                className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                className="w-full text-left p-3 card hover:border-accent-cool/50 transition-all duration-300"
               >
-                <div className="font-medium text-sm mb-1">{sample.label}</div>
-                <code className="text-xs text-gray-600 dark:text-gray-400">
+                <div className="font-medium text-sm mb-1 text-text-light">{sample.label}</div>
+                <code className="text-xs text-text-light/60">
                   {sample.query}
                 </code>
               </button>
@@ -79,67 +79,67 @@ export default function QueryPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-text-light">
             Cypher Query
           </label>
           <textarea
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="MATCH (c:Concept) RETURN c LIMIT 10"
-            className="w-full h-32 p-3 border rounded-lg font-mono text-sm dark:bg-gray-800 dark:border-gray-700"
+            className="w-full h-32 p-3 border border-border-subtle rounded-lg font-mono text-sm bg-surface-dark text-text-light focus:outline-none focus:border-accent-cool"
           />
         </div>
 
         <button
           onClick={handleExecuteQuery}
           disabled={!query || loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="btn-primary disabled:bg-gray-600 disabled:cursor-not-allowed disabled:shadow-none"
         >
           {loading ? "Executing..." : "Execute Query"}
         </button>
       </div>
 
       {error && (
-        <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-          <h3 className="font-semibold text-red-700 dark:text-red-400 mb-2">
+        <div className="card border-accent-hot bg-accent-hot/10">
+          <h3 className="font-semibold text-accent-hot mb-2 glow-text-hot">
             Error
           </h3>
-          <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
+          <p className="text-sm text-text-light/80">{error}</p>
         </div>
       )}
 
       {results && (
-        <div className="border rounded-lg p-4">
-          <h3 className="font-semibold mb-3">Results</h3>
-          <pre className="bg-gray-50 dark:bg-gray-800 p-4 rounded text-sm overflow-x-auto">
+        <div className="card">
+          <h3 className="font-semibold mb-3 text-text-light">Results</h3>
+          <pre className="bg-primary-dark p-4 rounded text-sm overflow-x-auto text-text-light border border-border-subtle">
             {JSON.stringify(results, null, 2)}
           </pre>
         </div>
       )}
 
-      <div className="border rounded-lg p-6 bg-gray-50 dark:bg-gray-800">
-        <h3 className="font-semibold mb-3">Quick Reference</h3>
-        <div className="space-y-2 text-sm">
+      <div className="card bg-surface-dark">
+        <h3 className="font-semibold mb-3 text-text-light">Quick Reference</h3>
+        <div className="space-y-2 text-sm text-text-light/70">
           <div>
-            <code className="text-xs bg-white dark:bg-gray-900 px-2 py-1 rounded">
+            <code className="text-xs bg-primary-dark px-2 py-1 rounded text-accent-cool border border-border-subtle">
               MATCH (c:Concept)
             </code>{" "}
             - Match concept nodes
           </div>
           <div>
-            <code className="text-xs bg-white dark:bg-gray-900 px-2 py-1 rounded">
+            <code className="text-xs bg-primary-dark px-2 py-1 rounded text-accent-cool border border-border-subtle">
               MATCH (s:Segment)-[:DISCUSSES]-&gt;(c:Concept)
             </code>{" "}
             - Match segments and their concepts
           </div>
           <div>
-            <code className="text-xs bg-white dark:bg-gray-900 px-2 py-1 rounded">
+            <code className="text-xs bg-primary-dark px-2 py-1 rounded text-accent-cool border border-border-subtle">
               WHERE c.total_mentions &gt; 5
             </code>{" "}
             - Filter by properties
           </div>
           <div>
-            <code className="text-xs bg-white dark:bg-gray-900 px-2 py-1 rounded">
+            <code className="text-xs bg-primary-dark px-2 py-1 rounded text-accent-cool border border-border-subtle">
               RETURN c ORDER BY c.total_mentions DESC LIMIT 10
             </code>{" "}
             - Return and sort results

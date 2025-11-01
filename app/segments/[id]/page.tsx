@@ -43,19 +43,19 @@ export default function SegmentDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading segment...</div>
+        <div className="text-lg text-text-light">Loading segment...</div>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="border border-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-        <h3 className="font-semibold text-red-700 dark:text-red-400">Error</h3>
-        <p className="text-sm text-red-600 dark:text-red-300">
+      <div className="card border-accent-hot bg-accent-hot/10">
+        <h3 className="font-semibold text-accent-hot glow-text-hot">Error</h3>
+        <p className="text-sm text-text-light/80">
           {error || "Segment not found"}
         </p>
-        <Link href="/segments" className="text-blue-600 hover:underline mt-2 inline-block">
+        <Link href="/segments" className="text-accent-cool hover:glow-text-cool mt-2 inline-block">
           Back to segments
         </Link>
       </div>
@@ -74,24 +74,24 @@ export default function SegmentDetailPage() {
       <div>
         <Link
           href="/segments"
-          className="text-blue-600 hover:underline text-sm mb-2 inline-block"
+          className="text-accent-cool hover:glow-text-cool text-sm mb-2 inline-block"
         >
           ← Back to segments
         </Link>
-        <h1 className="text-3xl font-bold">{segment.topic_hint}</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">{segment.topic_hint}</h1>
+        <p className="text-text-light/70 mt-2">
           {segment.start_time} - {segment.end_time} ({segment.duration_seconds}s)
         </p>
       </div>
 
       {/* Video Info */}
-      <div className="border rounded-lg p-6 bg-white dark:bg-gray-800">
-        <h2 className="text-xl font-semibold mb-3">Video</h2>
+      <div className="card">
+        <h2 className="text-xl font-semibold mb-3 text-text-light">Video</h2>
         <a
           href={`${video.url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          className="btn-primary inline-flex items-center"
         >
           <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
             <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
@@ -102,8 +102,8 @@ export default function SegmentDetailPage() {
 
       {/* Primary Concepts */}
       {primaryConcepts.length > 0 && (
-        <div className="border rounded-lg p-6 bg-white dark:bg-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Primary Concepts</h2>
+        <div className="card">
+          <h2 className="text-xl font-semibold mb-4 text-text-light">Primary Concepts</h2>
           <div className="space-y-3">
             {primaryConcepts.map((item: any, i: number) => {
               const concept = item.concept?.properties;
@@ -130,8 +130,8 @@ export default function SegmentDetailPage() {
 
       {/* Supporting Concepts */}
       {supportingConcepts.length > 0 && (
-        <div className="border rounded-lg p-6 bg-white dark:bg-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Supporting Concepts</h2>
+        <div className="card">
+          <h2 className="text-xl font-semibold mb-4 text-text-light">Supporting Concepts</h2>
           <div className="flex flex-wrap gap-2">
             {supportingConcepts.map((item: any, i: number) => {
               const concept = item.concept?.properties;
@@ -153,8 +153,8 @@ export default function SegmentDetailPage() {
 
       {/* Mentioned Concepts */}
       {mentionedConcepts.length > 0 && (
-        <div className="border rounded-lg p-6 bg-white dark:bg-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Mentioned Concepts</h2>
+        <div className="card">
+          <h2 className="text-xl font-semibold mb-4 text-text-light">Mentioned Concepts</h2>
           <div className="flex flex-wrap gap-2">
             {mentionedConcepts.map((item: any, i: number) => {
               const concept = item.concept?.properties;
@@ -176,8 +176,8 @@ export default function SegmentDetailPage() {
 
       {/* Examples */}
       {examples.length > 0 && (
-        <div className="border rounded-lg p-6 bg-white dark:bg-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Examples</h2>
+        <div className="card">
+          <h2 className="text-xl font-semibold mb-4 text-text-light">Examples</h2>
           <div className="space-y-3">
             {examples.map((example: any, i: number) => (
               <div
@@ -197,8 +197,8 @@ export default function SegmentDetailPage() {
 
       {/* Key Ideas */}
       {keyIdeas.length > 0 && (
-        <div className="border rounded-lg p-6 bg-white dark:bg-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Key Ideas</h2>
+        <div className="card">
+          <h2 className="text-xl font-semibold mb-4 text-text-light">Key Ideas</h2>
           <div className="space-y-2">
             {keyIdeas.map((idea: any, i: number) => (
               <div key={i} className="border rounded p-3 bg-gray-50 dark:bg-gray-900">
