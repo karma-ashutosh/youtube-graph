@@ -32,6 +32,7 @@ export async function ingestSegment(segment: SegmentData): Promise<{
       endTime,
       topicHint,
       videoUrl,
+      transcript,
     } = processSegmentData(segment);
 
     // Get existing concepts for normalization
@@ -48,6 +49,7 @@ export async function ingestSegment(segment: SegmentData): Promise<{
       endTime,
       durationSeconds: duration,
       topicHint,
+      transcript,
     });
 
     let conceptsProcessed = 0;

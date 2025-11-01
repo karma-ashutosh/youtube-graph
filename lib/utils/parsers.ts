@@ -100,5 +100,6 @@ export function processSegmentData(segment: SegmentData) {
     endTime: segment.end_time,
     topicHint: segment.topic_hint,
     videoUrl: segment.video_url,
+    transcript: segment.transcript,
   };
 }

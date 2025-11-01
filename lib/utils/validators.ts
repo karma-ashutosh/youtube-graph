@@ -31,7 +31,7 @@ export const AnalysisDataSchema = z.object({
   key_ideas: z.array(
     z.object({
       idea: z.string(),
-      type: z.enum(["fact", "advice", "insight", "metric", "opinion"]),
+      type: z.enum(["fact", "advice", "insight", "metric", "opinion", "definition"]),
       is_novel: z.boolean(),
       confidence: z.enum(["high", "medium", "low"]),
     })

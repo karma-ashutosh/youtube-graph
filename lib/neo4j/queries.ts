@@ -70,6 +70,7 @@ export async function createSegment(params: {
   endTime: string;
   durationSeconds: number;
   topicHint: string;
+  transcript?: string;
 }): Promise<void> {
   const session = getSession();
 
@@ -84,6 +85,7 @@ export async function createSegment(params: {
         end_time: $end_time,
         duration_seconds: $duration_seconds,
         topic_hint: $topic_hint,
+        transcript: $transcript,
         created_at: datetime()
       })
       CREATE (s)-[:FROM_VIDEO]->(v)
@@ -96,6 +98,7 @@ export async function createSegment(params: {
         end_time: params.endTime,
         duration_seconds: params.durationSeconds,
         topic_hint: params.topicHint,
+        transcript: params.transcript || "",
       }
     );
   } finally {
@@ -474,6 +477,55 @@ export async function getSegmentById(segmentId: string) {
       concepts: convertIntegers(record.get("concepts")),
       examples: record.get("examples").map((e: any) => convertIntegers(e?.properties)).filter(Boolean),
       keyIdeas: record.get("key_ideas").map((ki: any) => convertIntegers(ki?.properties)).filter(Boolean),
+    };
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Get a video by ID with all its segments
+ */
+export async function getVideoById(videoId: string) {
+  const session = getSession();
+
+  try {
+    const result = await session.run(
+      `
+      MATCH (v:Video {video_id: $video_id})
+      OPTIONAL MATCH (s:Segment)-[:FROM_VIDEO]->(v)
+      WITH v, s
+      ORDER BY s.start_time
+      RETURN v,
+             collect(s) as segments
+      `,
+      { video_id: videoId }
+    );
+
+    if (result.records.length === 0) {
+      return null;
+    }
+
+    const record = result.records[0];
+
+    // Helper function to convert Neo4j integers
+    const convertIntegers = (obj: any): any => {
+      if (!obj) return obj;
+      if (neo4j.isInt(obj)) return obj.toNumber();
+      if (Array.isArray(obj)) return obj.map(convertIntegers);
+      if (typeof obj === 'object') {
+        const converted: any = {};
+        for (const key in obj) {
+          converted[key] = convertIntegers(obj[key]);
+        }
+        return converted;
+      }
+      return obj;
+    };
+
+    return {
+      video: convertIntegers(record.get("v").properties),
+      segments: record.get("segments").map((s: any) => convertIntegers(s?.properties)).filter(Boolean),
     };
   } finally {
     await session.close();

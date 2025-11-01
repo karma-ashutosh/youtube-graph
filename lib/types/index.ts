@@ -6,6 +6,7 @@ export interface SegmentData {
   end_time: string; // "00:04:42"
   topic_hint: string;
   analysis_json: string; // JSON string, needs parsing
+  transcript?: string; // Original transcript text
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -28,7 +29,7 @@ export interface AnalysisData {
   }>;
   key_ideas: Array<{
     idea: string;
-    type: "fact" | "advice" | "insight" | "metric" | "opinion";
+    type: "fact" | "advice" | "insight" | "metric" | "opinion" | "definition";
     is_novel: boolean;
     confidence: "high" | "medium" | "low";
   }>;
@@ -56,6 +57,7 @@ export interface Segment {
   end_time: string;
   duration_seconds: number;
   topic_hint: string;
+  transcript?: string;
   created_at: Date;
 }
 

@@ -100,6 +100,16 @@ export default function SegmentDetailPage() {
         </a>
       </div>
 
+      {/* Transcript */}
+      {segment.transcript && (
+        <div className="card bg-surface-dark border-accent-cool/30">
+          <h2 className="text-xl font-semibold mb-3 text-text-light">Transcript</h2>
+          <div className="text-text-light/80 leading-relaxed whitespace-pre-wrap">
+            {segment.transcript}
+          </div>
+        </div>
+      )}
+
       {/* Primary Concepts */}
       {primaryConcepts.length > 0 && (
         <div className="card">
