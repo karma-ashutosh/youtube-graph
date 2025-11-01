@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
+import MicrosoftClarity from "@/components/analytics/Clarity";
 
 export const metadata: Metadata = {
   title: "YouTube Knowledge Graph",
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-primary-dark">
+        <MicrosoftClarity />
         <nav className="border-b border-border-subtle bg-surface-dark shadow-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-20">
