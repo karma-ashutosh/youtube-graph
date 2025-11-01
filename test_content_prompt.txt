@@ -1,0 +1,61 @@
+
+Analyze this transcript segment and identify all concepts discussed.
+Text: {{25.segment_text}}
+Segment start: {{25.start_time}}
+Segment end: {{25.end_time}}
+high level outline of the video: {{22.result}}
+
+EXTRACT:
+PRIMARY CONCEPT
+What is the MAIN topic being explained or taught?
+This should be the answer to "What is this segment about?"
+SUPPORTING CONCEPTS
+What concepts are used to EXPLAIN the primary concept?
+These provide context or build up to the main idea
+MENTIONED CONCEPTS
+What other concepts are briefly REFERENCED but not explained?
+These might be prerequisites or related ideas
+KEY IDEAS/FACTS
+Specific claims, data points, or insights
+Actionable advice
+Novel information (not common knowledge)
+EXAMPLES USED
+Case studies, stories, metaphors, analogies
+Classify: real_company | personal_story | hypothetical | metaphor
+OUTPUT FORMAT (JSON):
+{
+"primary_concept": {
+"name": "Product-Market Fit",
+"coverage_depth": "comprehensive | partial | surface",
+"explanation_type": "definition | case_study | how_to | comparison"
+},
+"supporting_concepts": [
+{
+"name": "Customer Retention",
+"role": "Used to explain how to measure PMF",
+"coverage_depth": "partial"
+}
+],
+"mentioned_concepts": [
+{
+"name": "Unit Economics",
+"context": "Mentioned as related to PMF validation",
+"coverage_depth": "reference_only"
+}
+],
+"key_ideas": [
+{
+"idea": "PMF means 40%+ users would be very disappointed if product disappeared",
+"type": "metric | advice | insight | fact",
+"is_novel": true,
+"confidence": "high | medium | low"
+}
+],
+"examples": [
+{
+"example_text": "Airbnb achieved PMF when hosts started earning meaningful income",
+"type": "real_company",
+"concept_illustrated": "Product-Market Fit"
+}
+]
+}
