@@ -1,4 +1,5 @@
 import neo4j, { Driver, Session } from "neo4j-driver";
+import { createVectorIndexes } from "./vector";
 
 let driver: Driver | null = null;
 
@@ -106,5 +107,13 @@ export async function initializeSchema(): Promise<void> {
     throw error;
   } finally {
     await session.close();
+  }
+
+  // Initialize vector indexes (separate session)
+  try {
+    await createVectorIndexes();
+  } catch (error) {
+    console.error("Failed to initialize vector indexes:", error);
+    // Don't throw - vector indexes are optional for basic functionality
   }
 }

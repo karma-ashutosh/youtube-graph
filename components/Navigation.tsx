@@ -9,6 +9,7 @@ export default function Navigation() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
+    { href: '/chat', label: 'Chat' },
     { href: '/upload', label: 'Upload' },
     { href: '/graph', label: 'Graph' },
     { href: '/videos', label: 'Videos' },
