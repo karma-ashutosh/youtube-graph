@@ -120,6 +120,7 @@ export async function createSegment(params: {
   durationSeconds: number;
   topicHint: string;
   transcript?: string;
+  embedding?: number[];
 }): Promise<void> {
   const session = getSession();
 
@@ -136,6 +137,7 @@ export async function createSegment(params: {
         topic_hint: $topic_hint,
         transcript: $transcript,
         created_at: datetime()
+        ${params.embedding ? ', embedding: $embedding' : ''}
       })
       CREATE (s)-[:FROM_VIDEO]->(v)
       RETURN s
@@ -148,6 +150,7 @@ export async function createSegment(params: {
         duration_seconds: params.durationSeconds,
         topic_hint: params.topicHint,
         transcript: params.transcript || "",
+        ...(params.embedding && { embedding: params.embedding }),
       }
     );
   } finally {
@@ -163,6 +166,7 @@ export async function createConcept(params: {
   canonicalName: string;
   aliases: string[];
   category?: string;
+  embedding?: number[];
 }): Promise<void> {
   const session = getSession();
 
@@ -178,6 +182,7 @@ export async function createConcept(params: {
         c.last_mentioned = datetime(),
         c.total_mentions = 1,
         c.importance_score = 0.5
+        ${params.embedding ? ', c.embedding = $embedding' : ''}
       ON MATCH SET
         c.last_mentioned = datetime(),
         c.total_mentions = c.total_mentions + 1
@@ -188,6 +193,7 @@ export async function createConcept(params: {
         canonical_name: params.canonicalName,
         aliases: params.aliases,
         category: params.category || "Uncategorized",
+        ...(params.embedding && { embedding: params.embedding }),
       }
     );
   } finally {

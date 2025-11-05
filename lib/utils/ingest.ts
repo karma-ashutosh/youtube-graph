@@ -11,6 +11,7 @@ import {
   createKeyIdea,
 } from "../neo4j/queries";
 import { normalizeConcept } from "../ai/normalize";
+import { generateEmbedding } from "../ai/embeddings";
 
 /**
  * Process a single segment and add it to the knowledge graph
@@ -41,7 +42,17 @@ export async function ingestSegment(segment: SegmentData): Promise<{
     // Step 1: Create or get video node
     await createOrGetVideo(videoId, videoUrl);
 
-    // Step 2: Create segment node
+    // Step 2: Create segment node with embedding
+    // Generate embedding from topic + transcript excerpt
+    let segmentEmbedding: number[] | undefined;
+    try {
+      const segmentText = `${topicHint}. ${transcript?.slice(0, 500) || ''}`;
+      segmentEmbedding = await generateEmbedding(segmentText);
+    } catch (error) {
+      console.error('Failed to generate segment embedding:', error);
+      // Continue without embedding - can be backfilled later
+    }
+
     await createSegment({
       segmentId,
       videoId,
@@ -50,6 +61,7 @@ export async function ingestSegment(segment: SegmentData): Promise<{
       durationSeconds: duration,
       topicHint,
       transcript,
+      embedding: segmentEmbedding,
     });
 
     let conceptsProcessed = 0;
@@ -169,11 +181,20 @@ async function processConceptNode(
   originalName: string
 ): Promise<void> {
   if (normalized.is_new) {
-    // Create new concept
+    // Create new concept with embedding
+    let conceptEmbedding: number[] | undefined;
+    try {
+      conceptEmbedding = await generateEmbedding(normalized.canonical_name);
+    } catch (error) {
+      console.error('Failed to generate concept embedding:', error);
+      // Continue without embedding - can be backfilled later
+    }
+
     await createConcept({
       conceptId: normalized.concept_id,
       canonicalName: normalized.canonical_name,
       aliases: originalName !== normalized.canonical_name ? [originalName] : [],
+      embedding: conceptEmbedding,
     });
   } else {
     // Update existing concept
