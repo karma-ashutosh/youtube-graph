@@ -2,17 +2,24 @@ version: '3.8'
 
 services:
   neo4j:
-    image: neo4j:latest
+    # Using Neo4j Enterprise for multi-database support (workspaces)
+    # Note: Requires accepting the Neo4j Enterprise license agreement
+    # For community edition, use: neo4j:latest (limited to single database)
+    image: neo4j:5.15-enterprise
     container_name: youtube-graph-neo4j
     ports:
       - "7474:7474"  # HTTP
       - "7687:7687"  # Bolt
     environment:
       - NEO4J_AUTH=neo4j/password123
+      # Accept Enterprise license (required for multi-database support)
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
       - NEO4J_PLUGINS=["apoc"]
       - NEO4J_dbms_memory_pagecache_size=512M
       - NEO4J_dbms_memory_heap_initial__size=512M
       - NEO4J_dbms_memory_heap_max__size=1G
+      # Enable multi-database support
+      - NEO4J_server_databases_default__to__read__only=false
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs

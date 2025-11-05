@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getAllConceptsWithRoles } from "@/lib/neo4j/queries";
+import { withWorkspace } from "@/lib/workspace-context";
 
 /**
  * GET /api/concepts
  *
  * Returns all concepts in the knowledge graph with role statistics
+ * Automatically scoped to the workspace specified in X-Workspace header or query param
  */
-export async function GET() {
+export const GET = withWorkspace(async () => {
   try {
     const concepts = await getAllConceptsWithRoles();
 
@@ -23,4 +25,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

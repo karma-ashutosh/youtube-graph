@@ -1,5 +1,6 @@
 import neo4j, { Driver, Session } from "neo4j-driver";
 import { createVectorIndexes } from "./vector";
+import { getCurrentWorkspace } from "../workspace-context";
 
 let driver: Driver | null = null;
 
@@ -25,10 +26,21 @@ export function getDriver(): Driver {
 }
 
 /**
- * Get a Neo4j session
+ * Get a Neo4j session scoped to the current workspace
+ * The workspace is retrieved from the async context set by the middleware
  */
 export function getSession(): Session {
-  return getDriver().session();
+  const workspace = getCurrentWorkspace();
+  return getDriver().session({
+    database: `workspace_${workspace}`,
+  });
+}
+
+/**
+ * Get a Neo4j session for the system database (for workspace management)
+ */
+export function getSystemSession(): Session {
+  return getDriver().session({ database: 'system' });
 }
 
 /**
@@ -58,9 +70,58 @@ export async function testConnection(): Promise<boolean> {
 }
 
 /**
- * Initialize database schema (constraints and indexes)
+ * List all available workspaces
+ */
+export async function listWorkspaces(): Promise<string[]> {
+  const session = getSystemSession();
+  try {
+    const result = await session.run('SHOW DATABASES');
+    return result.records
+      .map(r => r.get('name') as string)
+      .filter(name => name.startsWith('workspace_'))
+      .map(name => name.replace('workspace_', ''));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Create a new workspace (database)
+ */
+export async function createWorkspace(workspace: string): Promise<void> {
+  const session = getSystemSession();
+  try {
+    await session.run(`CREATE DATABASE workspace_${workspace} IF NOT EXISTS`);
+    console.log(`Workspace '${workspace}' created successfully`);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Delete a workspace (database)
+ * Cannot delete the default workspace
+ */
+export async function deleteWorkspace(workspace: string): Promise<void> {
+  if (workspace === 'default') {
+    throw new Error('Cannot delete default workspace');
+  }
+
+  const session = getSystemSession();
+  try {
+    await session.run(`DROP DATABASE workspace_${workspace} IF EXISTS`);
+    console.log(`Workspace '${workspace}' deleted successfully`);
+  } finally {
+    await session.close();
+  }
+}
+
+/**
+ * Initialize database schema (constraints and indexes) for the current workspace
+ * Note: This uses the workspace from the current async context
  */
 export async function initializeSchema(): Promise<void> {
+  const workspace = getCurrentWorkspace();
   const session = getSession();
 
   try {
@@ -101,7 +162,7 @@ export async function initializeSchema(): Promise<void> {
       FOR (s:Segment) ON (s.video_id)
     `);
 
-    console.log("Neo4j schema initialized successfully");
+    console.log(`Neo4j schema initialized successfully for workspace '${workspace}'`);
   } catch (error) {
     console.error("Failed to initialize schema:", error);
     throw error;

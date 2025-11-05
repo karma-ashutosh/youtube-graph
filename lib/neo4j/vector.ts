@@ -1,5 +1,6 @@
 import { getSession } from './client';
 import { generateEmbedding } from '../ai/embeddings';
+import { getCurrentWorkspace } from '../workspace-context';
 
 export interface SimilarConcept {
   concept_id: string;
@@ -27,16 +28,18 @@ export interface SimilarSegment {
 }
 
 /**
- * Initialize vector indexes (called from initializeSchema)
+ * Initialize vector indexes for the current workspace (called from initializeSchema)
+ * Creates workspace-specific index names for complete isolation
  */
 export async function createVectorIndexes(): Promise<void> {
+  const workspace = getCurrentWorkspace();
   const session = getSession();
 
   try {
-    // Create concept embeddings index
+    // Create concept embeddings index for this workspace
     await session.run(`
       CALL db.index.vector.createNodeIndex(
-        'concept_embeddings',
+        'concept_embeddings_${workspace}',
         'Concept',
         'embedding',
         768,
@@ -46,13 +49,13 @@ export async function createVectorIndexes(): Promise<void> {
       if (!err.message.includes('already exists')) {
         throw err;
       }
-      console.log('Concept vector index already exists');
+      console.log(`Concept vector index already exists for workspace '${workspace}'`);
     });
 
-    // Create segment embeddings index
+    // Create segment embeddings index for this workspace
     await session.run(`
       CALL db.index.vector.createNodeIndex(
-        'segment_embeddings',
+        'segment_embeddings_${workspace}',
         'Segment',
         'embedding',
         768,
@@ -62,33 +65,34 @@ export async function createVectorIndexes(): Promise<void> {
       if (!err.message.includes('already exists')) {
         throw err;
       }
-      console.log('Segment vector index already exists');
+      console.log(`Segment vector index already exists for workspace '${workspace}'`);
     });
 
-    console.log('Vector indexes initialized successfully');
+    console.log(`Vector indexes initialized successfully for workspace '${workspace}'`);
   } finally {
     await session.close();
   }
 }
 
 /**
- * Find similar concepts using vector search
+ * Find similar concepts using vector search (workspace-scoped)
  */
 export async function findSimilarConcepts(
   queryText: string,
   limit: number = 5,
   minSimilarity: number = 0.7
 ): Promise<SimilarConcept[]> {
+  const workspace = getCurrentWorkspace();
   const session = getSession();
 
   try {
     // Generate embedding for query
     const embedding = await generateEmbedding(queryText);
 
-    // Vector search
+    // Vector search using workspace-specific index
     const result = await session.run(`
       CALL db.index.vector.queryNodes(
-        'concept_embeddings',
+        'concept_embeddings_${workspace}',
         $limit,
         $embedding
       )
@@ -118,23 +122,24 @@ export async function findSimilarConcepts(
 }
 
 /**
- * Find similar segments using vector search
+ * Find similar segments using vector search (workspace-scoped)
  */
 export async function findSimilarSegments(
   queryText: string,
   limit: number = 10,
   minSimilarity: number = 0.6
 ): Promise<SimilarSegment[]> {
+  const workspace = getCurrentWorkspace();
   const session = getSession();
 
   try {
     // Generate embedding for query
     const embedding = await generateEmbedding(queryText);
 
-    // Vector search with related data
+    // Vector search with related data using workspace-specific index
     const result = await session.run(`
       CALL db.index.vector.queryNodes(
-        'segment_embeddings',
+        'segment_embeddings_${workspace}',
         $limit,
         $embedding
       )
