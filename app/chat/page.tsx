@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface Message {
@@ -26,6 +26,58 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [backfillStatus, setBackfillStatus] = useState<{ concepts: number; segments: number; total: number } | null>(null);
+  const [backfilling, setBackfilling] = useState(false);
+
+  const checkBackfillStatus = async () => {
+    try {
+      const response = await fetch('/api/backfill');
+      const data = await response.json();
+
+      if (data.success && data.status) {
+        setBackfillStatus({
+          concepts: data.status.concepts.needingEmbeddings,
+          segments: data.status.segments.needingEmbeddings,
+          total: data.status.total,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to check backfill status:', error);
+    }
+  };
+
+  const handleBackfill = async () => {
+    if (backfilling) return;
+
+    setBackfilling(true);
+
+    try {
+      const response = await fetch('/api/backfill', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to backfill embeddings');
+      }
+
+      alert(`Backfill complete!\nConcepts: ${data.results.concepts.processed}/${data.results.concepts.total}\nSegments: ${data.results.segments.processed}/${data.results.segments.total}`);
+
+      // Refresh status
+      await checkBackfillStatus();
+    } catch (error) {
+      console.error('Backfill error:', error);
+      alert('Failed to backfill embeddings. Check console for details.');
+    } finally {
+      setBackfilling(false);
+    }
+  };
+
+  // Check backfill status on page load
+  useEffect(() => {
+    checkBackfillStatus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,12 +128,34 @@ export default function ChatPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool mb-2">
-          Knowledge Graph Chat
-        </h1>
-        <p className="text-text-light/70">
-          Ask questions and get answers enhanced with insights from your video knowledge base
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool mb-2">
+              Knowledge Graph Chat
+            </h1>
+            <p className="text-text-light/70">
+              Ask questions and get answers enhanced with insights from your video knowledge base
+            </p>
+          </div>
+
+          {/* Backfill Button */}
+          {backfillStatus && backfillStatus.total > 0 && (
+            <button
+              onClick={handleBackfill}
+              disabled={backfilling}
+              className="px-4 py-2 bg-accent-warm/20 hover:bg-accent-warm/30 border border-accent-warm/50 hover:border-accent-warm rounded-lg text-sm text-accent-warm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {backfilling ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 border-2 border-accent-warm border-t-transparent rounded-full animate-spin"></div>
+                  Backfilling...
+                </span>
+              ) : (
+                <span>⚡ Backfill {backfillStatus.total} Embeddings</span>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}

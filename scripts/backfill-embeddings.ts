@@ -1,10 +1,13 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env tsx
 
 /**
  * Backfill script to generate embeddings for existing concepts and segments
  *
- * Usage: npx ts-node scripts/backfill-embeddings.ts
+ * Usage: npx tsx scripts/backfill-embeddings.ts
  */
+
+// IMPORTANT: Load environment variables BEFORE any other imports
+import "dotenv/config";
 
 import { getSession, closeDriver } from "../lib/neo4j/client";
 import { generateEmbedding } from "../lib/ai/embeddings";

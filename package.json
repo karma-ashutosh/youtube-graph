@@ -10,26 +10,28 @@
     "db:migrate": "ts-node scripts/migrate-db.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.0",
+    "@google/generative-ai": "^0.21.0",
+    "dotenv": "^17.2.3",
+    "lucide-react": "^0.292.0",
+    "neo4j-driver": "^5.15.0",
     "next": "^15.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "neo4j-driver": "^5.15.0",
-    "@anthropic-ai/sdk": "^0.27.0",
-    "@google/generative-ai": "^0.21.0",
-    "zod": "^3.22.4",
     "react-force-graph-2d": "^1.25.4",
-    "lucide-react": "^0.292.0"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "typescript": "^5",
+    "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "^15.0.0",
-    "tailwindcss": "^3.4.0",
     "postcss": "^8",
-    "autoprefixer": "^10.0.1",
-    "ts-node": "^10.9.2"
+    "tailwindcss": "^3.4.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5"
   }
 }
