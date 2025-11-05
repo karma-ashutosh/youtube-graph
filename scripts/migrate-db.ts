@@ -7,6 +7,12 @@
  * Usage: npx ts-node scripts/migrate-db.ts
  */
 
+// Hardcode environment variables for migration
+process.env.NEO4J_URI = "bolt://localhost:7687";
+process.env.NEO4J_USER = "neo4j";
+process.env.NEO4J_PASSWORD = "password123";
+process.env.GOOGLE_API_KEY = "AIzaSyC3BA3LTbqSOO54BDw5NxcnZXka2dmkHas";
+
 import { initializeSchema, closeDriver, testConnection } from "../lib/neo4j/client";
 
 async function migrate() {
