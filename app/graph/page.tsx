@@ -45,6 +45,7 @@ export default function GraphPage() {
 
   useEffect(() => {
     fetchGraphData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minMentions, selectedCategory, maxNodes, includeSegments, roleFilter]);
 
   const fetchGraphData = async () => {

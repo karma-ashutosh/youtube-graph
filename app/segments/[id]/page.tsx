@@ -17,6 +17,7 @@ export default function SegmentDetailPage() {
     if (segmentId) {
       fetchSegmentDetail();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [segmentId]);
 
   const fetchSegmentDetail = async () => {

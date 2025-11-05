@@ -16,6 +16,7 @@ export default function VideoDetailPage() {
     if (videoId) {
       fetchVideoDetail();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId]);
 
   const fetchVideoDetail = async () => {

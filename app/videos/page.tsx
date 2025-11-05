@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Video {
   video_id: string;
@@ -115,9 +116,11 @@ export default function VideosPage() {
                   {/* Thumbnail */}
                   {thumbnail && (
                     <div className="relative aspect-video bg-primary-dark">
-                      <img
+                      <Image
                         src={thumbnail}
                         alt="Video thumbnail"
+                        width={320}
+                        height={180}
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

@@ -165,7 +165,7 @@ export default function ChatPage() {
             <div className="text-6xl mb-4">💬</div>
             <h3 className="text-xl font-semibold text-text-light mb-2">Start a conversation</h3>
             <p className="text-text-light/60 mb-4">
-              Ask me anything! I'll provide answers using both general knowledge and specific insights from your videos.
+              Ask me anything! I&apos;ll provide answers using both general knowledge and specific insights from your videos.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <button

@@ -16,6 +16,7 @@ export default function ConceptDetailPage() {
     if (conceptId) {
       fetchConceptDetail();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conceptId]);
 
   const fetchConceptDetail = async () => {
