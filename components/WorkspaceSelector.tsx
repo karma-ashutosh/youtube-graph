@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 
 export function WorkspaceSelector() {
+  const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
   const [workspaces, setWorkspaces] = useState<string[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState('default');
   const [isLoading, setIsLoading] = useState(true);
@@ -92,41 +93,43 @@ export function WorkspaceSelector() {
         ))}
       </select>
 
-      {!showCreateForm ? (
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          + New
-        </button>
-      ) : (
-        <form onSubmit={handleCreateWorkspace} className="flex items-center gap-2">
-          <input
-            type="text"
-            value={newWorkspaceName}
-            onChange={(e) => setNewWorkspaceName(e.target.value)}
-            placeholder="workspace_name"
-            className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            pattern="[a-z0-9_]+"
-            required
-          />
+      {appMode === 'internal' && (
+        !showCreateForm ? (
           <button
-            type="submit"
-            className="px-2 py-1 text-sm bg-green-500 text-white rounded-md hover:bg-green-600"
+            onClick={() => setShowCreateForm(true)}
+            className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
-            Create
+            + New
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setShowCreateForm(false);
-              setNewWorkspaceName('');
-            }}
-            className="px-2 py-1 text-sm bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-        </form>
+        ) : (
+          <form onSubmit={handleCreateWorkspace} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newWorkspaceName}
+              onChange={(e) => setNewWorkspaceName(e.target.value)}
+              placeholder="workspace_name"
+              className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              pattern="[a-z0-9_]+"
+              required
+            />
+            <button
+              type="submit"
+              className="px-2 py-1 text-sm bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowCreateForm(false);
+                setNewWorkspaceName('');
+              }}
+              className="px-2 py-1 text-sm bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </form>
+        )
       )}
     </div>
   );

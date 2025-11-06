@@ -7,18 +7,22 @@ import { WorkspaceSelector } from './WorkspaceSelector';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/chat', label: 'Chat' },
-    { href: '/upload', label: 'Upload' },
-    { href: '/graph', label: 'Graph' },
-    { href: '/videos', label: 'Videos' },
-    { href: '/concepts', label: 'Concepts' },
-    { href: '/segments', label: 'Segments' },
-    { href: '/query', label: 'Query' },
-    { href: '/workspaces', label: 'Workspaces' },
+  const allNavLinks = [
+    { href: '/', label: 'Home', modes: ['internal', 'external'] },
+    { href: '/chat', label: 'Chat', modes: ['internal', 'external'] },
+    { href: '/upload', label: 'Upload', modes: ['internal'] },
+    { href: '/graph', label: 'Graph', modes: ['internal'] },
+    { href: '/videos', label: 'Videos', modes: ['internal', 'external'] },
+    { href: '/concepts', label: 'Concepts', modes: ['internal'] },
+    { href: '/segments', label: 'Segments', modes: ['internal'] },
+    { href: '/query', label: 'Query', modes: ['internal'] },
+    { href: '/workspaces', label: 'Workspaces', modes: ['internal'] },
   ];
+
+  // Filter nav links based on app mode
+  const navLinks = allNavLinks.filter(link => link.modes.includes(appMode));
 
   return (
     <nav className="border-b border-border-subtle bg-surface-dark shadow-xl">

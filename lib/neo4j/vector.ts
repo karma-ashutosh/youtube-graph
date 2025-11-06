@@ -2,6 +2,7 @@ import neo4j from 'neo4j-driver';
 import { getSession } from './client';
 import { generateEmbedding } from '../ai/embeddings';
 import { getCurrentWorkspace } from '../workspace-context';
+import { debugLogger } from '../debug-logger';
 
 export interface SimilarConcept {
   concept_id: string;
@@ -81,14 +82,31 @@ export async function createVectorIndexes(): Promise<void> {
 export async function findSimilarConcepts(
   queryText: string,
   limit: number = 5,
-  minSimilarity: number = 0.7
+  minSimilarity: number = 0.7,
+  requestId?: string
 ): Promise<SimilarConcept[]> {
   const workspace = getCurrentWorkspace();
   const session = getSession();
 
+  debugLogger.log("findSimilarConcepts", "start", {
+    requestId,
+    queryTextLength: queryText.length,
+    limit,
+    minSimilarity,
+    workspace,
+  });
+
   try {
     // Generate embedding for query
-    const embedding = await generateEmbedding(queryText);
+    const embeddingStart = Date.now();
+    const embedding = await generateEmbedding(queryText, requestId);
+    const embeddingDuration = Date.now() - embeddingStart;
+
+    debugLogger.log("findSimilarConcepts", "embedding_generated", {
+      requestId,
+      embeddingDimensions: embedding.length,
+      durationMs: embeddingDuration,
+    });
 
     // Vector search using shared index, filtered by workspace
     // Query more results to account for workspace filtering
@@ -96,6 +114,14 @@ export async function findSimilarConcepts(
     const queryLimit = neo4j.int(limit * 3);
     const finalLimit = neo4j.int(limit);
 
+    debugLogger.log("findSimilarConcepts", "vector_search_start", {
+      requestId,
+      queryLimit: limit * 3,
+      finalLimit: limit,
+      workspace,
+    });
+
+    const searchStart = Date.now();
     const result = await session.run(`
       CALL db.index.vector.queryNodes(
         'concept_embeddings',
@@ -114,8 +140,9 @@ export async function findSimilarConcepts(
       ORDER BY score DESC
       LIMIT $finalLimit
     `, { finalLimit, queryLimit, embedding, minSimilarity, workspace });
+    const searchDuration = Date.now() - searchStart;
 
-    return result.records.map(record => ({
+    const concepts = result.records.map(record => ({
       concept_id: record.get('concept_id'),
       canonical_name: record.get('canonical_name'),
       aliases: record.get('aliases') || [],
@@ -123,6 +150,18 @@ export async function findSimilarConcepts(
       total_mentions: record.get('total_mentions') || 0,
       similarity: record.get('similarity'),
     }));
+
+    debugLogger.log("findSimilarConcepts", "complete", {
+      requestId,
+      resultsFound: concepts.length,
+      durationMs: searchDuration,
+      similarityRange: concepts.length > 0 ? {
+        min: Math.min(...concepts.map(c => c.similarity)),
+        max: Math.max(...concepts.map(c => c.similarity)),
+      } : null,
+    });
+
+    return concepts;
   } finally {
     await session.close();
   }
@@ -134,14 +173,31 @@ export async function findSimilarConcepts(
 export async function findSimilarSegments(
   queryText: string,
   limit: number = 10,
-  minSimilarity: number = 0.6
+  minSimilarity: number = 0.6,
+  requestId?: string
 ): Promise<SimilarSegment[]> {
   const workspace = getCurrentWorkspace();
   const session = getSession();
 
+  debugLogger.log("findSimilarSegments", "start", {
+    requestId,
+    queryTextLength: queryText.length,
+    limit,
+    minSimilarity,
+    workspace,
+  });
+
   try {
     // Generate embedding for query
-    const embedding = await generateEmbedding(queryText);
+    const embeddingStart = Date.now();
+    const embedding = await generateEmbedding(queryText, requestId);
+    const embeddingDuration = Date.now() - embeddingStart;
+
+    debugLogger.log("findSimilarSegments", "embedding_generated", {
+      requestId,
+      embeddingDimensions: embedding.length,
+      durationMs: embeddingDuration,
+    });
 
     // Vector search with related data using shared index, filtered by workspace
     // Query more results to account for workspace filtering
@@ -149,6 +205,14 @@ export async function findSimilarSegments(
     const queryLimit = neo4j.int(limit * 3);
     const finalLimit = neo4j.int(limit);
 
+    debugLogger.log("findSimilarSegments", "vector_search_start", {
+      requestId,
+      queryLimit: limit * 3,
+      finalLimit: limit,
+      workspace,
+    });
+
+    const searchStart = Date.now();
     const result = await session.run(`
       CALL db.index.vector.queryNodes(
         'segment_embeddings',
@@ -178,8 +242,9 @@ export async function findSimilarSegments(
       ORDER BY score DESC
       LIMIT $finalLimit
     `, { finalLimit, queryLimit, embedding, minSimilarity, workspace });
+    const searchDuration = Date.now() - searchStart;
 
-    return result.records.map(record => ({
+    const segments = result.records.map(record => ({
       segment_id: record.get('segment_id'),
       topic_hint: record.get('topic_hint'),
       start_time: record.get('start_time'),
@@ -190,6 +255,19 @@ export async function findSimilarSegments(
       video_title: record.get('video_title'),
       concepts: record.get('concepts').filter((c: any) => c.id !== null),
     }));
+
+    debugLogger.log("findSimilarSegments", "complete", {
+      requestId,
+      resultsFound: segments.length,
+      durationMs: searchDuration,
+      similarityRange: segments.length > 0 ? {
+        min: Math.min(...segments.map(s => s.similarity)),
+        max: Math.max(...segments.map(s => s.similarity)),
+      } : null,
+      totalConceptsInSegments: segments.reduce((sum, s) => sum + s.concepts.length, 0),
+    });
+
+    return segments;
   } finally {
     await session.close();
   }
@@ -198,11 +276,25 @@ export async function findSimilarSegments(
 /**
  * Semantic search for chatbot RAG
  */
-export async function semanticSearch(question: string) {
+export async function semanticSearch(question: string, requestId?: string) {
+  debugLogger.log("semanticSearch", "start", {
+    requestId,
+    question,
+  });
+
+  const startTime = Date.now();
   const [concepts, segments] = await Promise.all([
-    findSimilarConcepts(question, 5, 0.6),
-    findSimilarSegments(question, 10, 0.6),
+    findSimilarConcepts(question, 5, 0.6, requestId),
+    findSimilarSegments(question, 10, 0.6, requestId),
   ]);
+  const duration = Date.now() - startTime;
+
+  debugLogger.log("semanticSearch", "complete", {
+    requestId,
+    conceptsFound: concepts.length,
+    segmentsFound: segments.length,
+    durationMs: duration,
+  });
 
   return { concepts, segments };
 }

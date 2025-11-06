@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { debugLogger } from "../debug-logger";
 
 const googleAI = process.env.GOOGLE_API_KEY
   ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
@@ -12,7 +13,7 @@ const embeddingCache = new Map<string, number[]>();
  * @param text - Text to embed
  * @returns 768-dimensional embedding vector
  */
-export async function generateEmbedding(text: string): Promise<number[]> {
+export async function generateEmbedding(text: string, requestId?: string): Promise<number[]> {
   if (!googleAI) {
     throw new Error("Google API key not configured");
   }
@@ -20,23 +21,55 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   // Normalize and cache key
   const cacheKey = text.toLowerCase().trim();
 
+  debugLogger.log("generateEmbedding", "start", {
+    requestId,
+    textLength: text.length,
+    cacheKey: cacheKey.slice(0, 50), // First 50 chars
+    cacheSize: embeddingCache.size,
+  });
+
   if (embeddingCache.has(cacheKey)) {
+    debugLogger.log("generateEmbedding", "cache_hit", {
+      requestId,
+      cacheKey: cacheKey.slice(0, 50),
+      embeddingDimensions: embeddingCache.get(cacheKey)!.length,
+    });
     return embeddingCache.get(cacheKey)!;
   }
+
+  debugLogger.log("generateEmbedding", "cache_miss", {
+    requestId,
+    cacheKey: cacheKey.slice(0, 50),
+    willCallAPI: true,
+  });
 
   try {
     const model = googleAI.getGenerativeModel({
       model: "text-embedding-004",
     });
 
+    const startTime = Date.now();
     const result = await model.embedContent(text);
     const embedding = result.embedding.values;
+    const duration = Date.now() - startTime;
 
     // Cache the result
     embeddingCache.set(cacheKey, embedding);
 
+    debugLogger.log("generateEmbedding", "complete", {
+      requestId,
+      embeddingDimensions: embedding.length,
+      durationMs: duration,
+      newCacheSize: embeddingCache.size,
+    });
+
     return embedding;
   } catch (error) {
+    debugLogger.log("generateEmbedding", "error", {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
     console.error("Error generating embedding:", error);
     throw error;
   }
@@ -48,13 +81,21 @@ export async function generateEmbedding(text: string): Promise<number[]> {
  * @returns Array of embedding vectors
  */
 export async function generateEmbeddings(
-  texts: string[]
+  texts: string[],
+  requestId?: string
 ): Promise<number[][]> {
-  const embeddings: number[][] = [];
+  debugLogger.log("generateEmbeddings", "start", {
+    requestId,
+    textCount: texts.length,
+  });
 
-  for (const text of texts) {
+  const embeddings: number[][] = [];
+  const startTime = Date.now();
+
+  for (let i = 0; i < texts.length; i++) {
+    const text = texts[i];
     try {
-      const embedding = await generateEmbedding(text);
+      const embedding = await generateEmbedding(text, requestId);
       embeddings.push(embedding);
 
       // Small delay to avoid rate limiting
@@ -63,8 +104,25 @@ export async function generateEmbeddings(
       console.error(`Failed to generate embedding for: ${text.slice(0, 50)}...`);
       // Push zero vector as fallback
       embeddings.push(new Array(768).fill(0));
+
+      debugLogger.log("generateEmbeddings", "item_error", {
+        requestId,
+        index: i,
+        textPreview: text.slice(0, 50),
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
+
+  const duration = Date.now() - startTime;
+
+  debugLogger.log("generateEmbeddings", "complete", {
+    requestId,
+    textCount: texts.length,
+    embeddingsGenerated: embeddings.length,
+    durationMs: duration,
+    averageDurationPerItem: duration / texts.length,
+  });
 
   return embeddings;
 }

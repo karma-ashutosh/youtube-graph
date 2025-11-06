@@ -2,14 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { apiGet, apiPost } from '@/lib/api-client';
+
+interface Concept {
+  name: string;
+  id: string;
+  role: string;
+}
+
+interface Segment {
+  segment_id: string;
+  topic_hint: string;
+  start_time: string;
+  end_time: string;
+  transcript: string;
+  similarity: number;
+  video_url: string;
+  video_title?: string;
+  concepts: Concept[];
+}
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   sources?: {
     concepts: any[];
-    segments: any[];
+    segments: Segment[];
   };
 }
 
@@ -29,6 +49,24 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [backfillStatus, setBackfillStatus] = useState<{ concepts: number; segments: number; total: number } | null>(null);
   const [backfilling, setBackfilling] = useState(false);
+  const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
+
+  // Helper function to categorize segments
+  const categorizeSegments = (segments: Segment[]) => {
+    const primary: Segment[] = [];
+    const reference: Segment[] = [];
+
+    segments.forEach(segment => {
+      const hasPrimaryConcept = segment.concepts?.some(c => c.role === 'primary');
+      if (hasPrimaryConcept) {
+        primary.push(segment);
+      } else {
+        reference.push(segment);
+      }
+    });
+
+    return { primary, reference };
+  };
 
   const checkBackfillStatus = async () => {
     try {
@@ -185,7 +223,31 @@ export default function ChatPage() {
               } border rounded-lg p-4`}
             >
               <div className="prose prose-invert prose-sm max-w-none">
-                <div className="whitespace-pre-wrap text-text-light">{msg.content}</div>
+                {msg.role === 'user' ? (
+                  <div className="whitespace-pre-wrap text-text-light">{msg.content}</div>
+                ) : (
+                  <div className="text-text-light">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-inside mb-4 space-y-1">{children}</ol>,
+                        li: ({ children }) => <li className="text-text-light">{children}</li>,
+                        strong: ({ children }) => <strong className="font-semibold text-accent-cool">{children}</strong>,
+                        em: ({ children }) => <em className="italic text-text-light/90">{children}</em>,
+                        code: ({ children }) => <code className="bg-primary-dark px-1.5 py-0.5 rounded text-accent-cool text-sm">{children}</code>,
+                        pre: ({ children }) => <pre className="bg-primary-dark p-3 rounded-lg overflow-x-auto mb-4">{children}</pre>,
+                        h1: ({ children }) => <h1 className="text-2xl font-bold text-text-light mb-3">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-xl font-bold text-text-light mb-2">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-lg font-semibold text-text-light mb-2">{children}</h3>,
+                        a: ({ href, children }) => <a href={href} className="text-accent-cool hover:text-accent-cool/80 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
 
               {/* Sources */}
@@ -195,33 +257,79 @@ export default function ChatPage() {
                     📚 Sources from Knowledge Graph
                   </div>
 
-                  {/* Concepts */}
-                  {msg.sources.concepts.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-xs text-text-light/60 mb-2">Related Concepts:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {msg.sources.concepts.map((concept) => (
-                          <Link
-                            key={concept.concept_id}
-                            href={`/concepts/${concept.concept_id}`}
-                            className="px-3 py-1 bg-accent-cool/10 hover:bg-accent-cool/20 border border-accent-cool/30 hover:border-accent-cool/50 rounded-full text-xs text-accent-cool transition-all"
-                          >
-                            {concept.canonical_name}
-                            <span className="ml-1 opacity-60">
-                              ({Math.round(concept.similarity * 100)}%)
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {appMode === 'internal' ? (
+                    // Internal mode: Show concepts + segments as before
+                    <>
+                      {/* Concepts */}
+                      {msg.sources.concepts.length > 0 && (
+                        <div className="mb-3">
+                          <div className="text-xs text-text-light/60 mb-2">Related Concepts:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {msg.sources.concepts.map((concept) => (
+                              <Link
+                                key={concept.concept_id}
+                                href={`/concepts/${concept.concept_id}`}
+                                className="px-3 py-1 bg-accent-cool/10 hover:bg-accent-cool/20 border border-accent-cool/30 hover:border-accent-cool/50 rounded-full text-xs text-accent-cool transition-all"
+                              >
+                                {concept.canonical_name}
+                                <span className="ml-1 opacity-60">
+                                  ({Math.round(concept.similarity * 100)}%)
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                  {/* Segments */}
-                  {msg.sources.segments.length > 0 && (
-                    <div>
-                      <div className="text-xs text-text-light/60 mb-2">Relevant Video Segments:</div>
-                      <div className="space-y-2">
-                        {msg.sources.segments.slice(0, 3).map((segment) => (
+                      {/* Segments */}
+                      {msg.sources.segments.length > 0 && (
+                        <div>
+                          <div className="text-xs text-text-light/60 mb-2">Relevant Video Segments:</div>
+                          <div className="space-y-2">
+                            {msg.sources.segments.slice(0, 3).map((segment) => (
+                              <div
+                                key={segment.segment_id}
+                                className="bg-primary-dark border border-border-subtle rounded-lg p-3"
+                              >
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div className="font-medium text-sm text-text-light">
+                                    {segment.topic_hint}
+                                  </div>
+                                  <div className="text-xs text-text-light/60 whitespace-nowrap">
+                                    {Math.round(segment.similarity * 100)}% match
+                                  </div>
+                                </div>
+                                {segment.video_title && (
+                                  <div className="text-xs text-text-light/60 mb-2">
+                                    {segment.video_title}
+                                  </div>
+                                )}
+                                <div className="text-xs text-text-light/70 line-clamp-2 mb-2">
+                                  {segment.transcript}
+                                </div>
+                                <a
+                                  href={`${segment.video_url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-accent-cool hover:text-accent-cool/80 transition-colors"
+                                >
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                                  </svg>
+                                  Watch at {segment.start_time}
+                                </a>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // External mode: Show only video segments (primary first, then reference)
+                    <>
+                      {msg.sources.segments.length > 0 && (() => {
+                        const { primary, reference } = categorizeSegments(msg.sources.segments);
+                        const renderSegment = (segment: Segment) => (
                           <div
                             key={segment.segment_id}
                             className="bg-primary-dark border border-border-subtle rounded-lg p-3"
@@ -229,9 +337,6 @@ export default function ChatPage() {
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <div className="font-medium text-sm text-text-light">
                                 {segment.topic_hint}
-                              </div>
-                              <div className="text-xs text-text-light/60 whitespace-nowrap">
-                                {Math.round(segment.similarity * 100)}% match
                               </div>
                             </div>
                             {segment.video_title && (
@@ -254,9 +359,30 @@ export default function ChatPage() {
                               Watch at {segment.start_time}
                             </a>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        );
+
+                        return (
+                          <div className="space-y-3">
+                            {primary.length > 0 && (
+                              <div>
+                                <div className="text-xs text-text-light/60 mb-2">Primary Sources:</div>
+                                <div className="space-y-2">
+                                  {primary.map(renderSegment)}
+                                </div>
+                              </div>
+                            )}
+                            {reference.length > 0 && (
+                              <div>
+                                <div className="text-xs text-text-light/60 mb-2">Additional References:</div>
+                                <div className="space-y-2">
+                                  {reference.map(renderSegment)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </>
                   )}
                 </div>
               )}

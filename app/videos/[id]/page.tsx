@@ -8,6 +8,7 @@ import { apiGet } from "@/lib/api-client";
 export default function VideoDetailPage() {
   const params = useParams();
   const videoId = params.id as string;
+  const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -98,12 +99,18 @@ export default function VideoDetailPage() {
               {/* Segment Header */}
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
-                  <Link
-                    href={`/segments/${segment.segment_id}`}
-                    className="text-lg font-semibold text-accent-cool hover:glow-text-cool"
-                  >
-                    Segment {i + 1}: {segment.topic_hint}
-                  </Link>
+                  {appMode === 'internal' ? (
+                    <Link
+                      href={`/segments/${segment.segment_id}`}
+                      className="text-lg font-semibold text-accent-cool hover:glow-text-cool"
+                    >
+                      Segment {i + 1}: {segment.topic_hint}
+                    </Link>
+                  ) : (
+                    <div className="text-lg font-semibold text-text-light">
+                      Segment {i + 1}: {segment.topic_hint}
+                    </div>
+                  )}
                   <p className="text-sm text-text-light/60 mt-1">
                     {segment.start_time} - {segment.end_time} ({segment.duration_seconds}s)
                   </p>
@@ -127,12 +134,14 @@ export default function VideoDetailPage() {
                   <div className="text-sm text-text-light/80 leading-relaxed line-clamp-4">
                     {segment.transcript}
                   </div>
-                  <Link
-                    href={`/segments/${segment.segment_id}`}
-                    className="text-xs text-accent-cool hover:glow-text-cool mt-2 inline-block"
-                  >
-                    View full details →
-                  </Link>
+                  {appMode === 'internal' && (
+                    <Link
+                      href={`/segments/${segment.segment_id}`}
+                      className="text-xs text-accent-cool hover:glow-text-cool mt-2 inline-block"
+                    >
+                      View full details →
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
