@@ -30,3 +30,14 @@ clarity_project_id = ""  # Microsoft Clarity project ID (optional)
 chat_debug_mode    = "false"
 app_mode           = "external"  # or "internal"
 allow_public_access = true
+
+# PostgreSQL Configuration
+pghost            = "your-postgres-host"  # e.g., from Neon
+pgdatabase        = "neondb"
+pguser            = "neondb_owner"
+pgpassword        = "your-postgres-password"
+pgsslmode         = "require"
+pgchannelbinding  = "require"
+
+# LLM Normalization
+use_llm_normalization = "false"  # Set to "true" to use LLM for semantic matching

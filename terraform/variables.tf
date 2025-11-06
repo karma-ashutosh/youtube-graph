@@ -125,3 +125,45 @@ variable "app_mode" {
   type        = string
   default     = "external"
 }
+
+# PostgreSQL Configuration
+variable "pghost" {
+  description = "PostgreSQL host"
+  type        = string
+}
+
+variable "pgdatabase" {
+  description = "PostgreSQL database name"
+  type        = string
+  default     = "neondb"
+}
+
+variable "pguser" {
+  description = "PostgreSQL user"
+  type        = string
+  default     = "neondb_owner"
+}
+
+variable "pgpassword" {
+  description = "PostgreSQL password"
+  type        = string
+  sensitive   = true
+}
+
+variable "pgsslmode" {
+  description = "PostgreSQL SSL mode"
+  type        = string
+  default     = "require"
+}
+
+variable "pgchannelbinding" {
+  description = "PostgreSQL channel binding"
+  type        = string
+  default     = "require"
+}
+
+variable "use_llm_normalization" {
+  description = "Use LLM for concept normalization"
+  type        = string
+  default     = "false"
+}

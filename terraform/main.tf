@@ -138,6 +138,41 @@ resource "google_cloud_run_v2_service" "youtube_graph" {
         value = var.app_mode
       }
 
+      env {
+        name  = "USE_LLM_NORMALIZATION"
+        value = var.use_llm_normalization
+      }
+
+      env {
+        name  = "PGHOST"
+        value = var.pghost
+      }
+
+      env {
+        name  = "PGDATABASE"
+        value = var.pgdatabase
+      }
+
+      env {
+        name  = "PGUSER"
+        value = var.pguser
+      }
+
+      env {
+        name  = "PGPASSWORD"
+        value = var.pgpassword
+      }
+
+      env {
+        name  = "PGSSLMODE"
+        value = var.pgsslmode
+      }
+
+      env {
+        name  = "PGCHANNELBINDING"
+        value = var.pgchannelbinding
+      }
+
       # Startup probe
       startup_probe {
         http_get {
