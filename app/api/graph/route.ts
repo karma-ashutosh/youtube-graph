@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGraphData } from "@/lib/neo4j/queries";
+import { withWorkspace } from "@/lib/workspace-context";
 
 /**
  * GET /api/graph
  *
  * Returns graph data for visualization
+ * Automatically scoped to the workspace specified in X-Workspace header or query param
  * Query params:
  * - minMentions: minimum number of mentions to include a concept
  * - category: filter by category
@@ -12,7 +14,7 @@ import { getGraphData } from "@/lib/neo4j/queries";
  * - includeSegments: whether to include segment nodes (true/false)
  * - roleFilter: filter by role (all/primary/supporting/mentioned)
  */
-export async function GET(request: NextRequest) {
+export const GET = withWorkspace(async (request: NextRequest) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const minMentions = searchParams.get("minMentions");
@@ -41,4 +43,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
