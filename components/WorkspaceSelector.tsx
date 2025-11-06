@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export function WorkspaceSelector() {
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
@@ -9,17 +10,28 @@ export function WorkspaceSelector() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
-    // Load current workspace from localStorage
-    const saved = localStorage.getItem('workspace');
-    if (saved) {
-      setCurrentWorkspace(saved);
+    // Check for workspace in URL query parameter first
+    const urlWorkspace = searchParams.get('workspace');
+
+    if (urlWorkspace && /^[a-z0-9_]+$/.test(urlWorkspace)) {
+      // Valid workspace in URL - use it and save to localStorage
+      setCurrentWorkspace(urlWorkspace);
+      localStorage.setItem('workspace', urlWorkspace);
+    } else {
+      // Load current workspace from localStorage
+      const saved = localStorage.getItem('workspace');
+      if (saved) {
+        setCurrentWorkspace(saved);
+      }
     }
 
     // Fetch available workspaces
     fetchWorkspaces();
-  }, []);
+  }, [searchParams]);
 
   const fetchWorkspaces = async () => {
     try {
@@ -37,8 +49,11 @@ export function WorkspaceSelector() {
   const handleWorkspaceChange = (workspace: string) => {
     setCurrentWorkspace(workspace);
     localStorage.setItem('workspace', workspace);
-    // Reload to fetch new workspace data
-    window.location.reload();
+
+    // Update URL with workspace query parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('workspace', workspace);
+    window.location.href = url.toString();
   };
 
   const handleCreateWorkspace = async (e: React.FormEvent) => {
