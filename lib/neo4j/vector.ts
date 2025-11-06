@@ -1,3 +1,4 @@
+import neo4j from 'neo4j-driver';
 import { getSession } from './client';
 import { generateEmbedding } from '../ai/embeddings';
 import { getCurrentWorkspace } from '../workspace-context';
@@ -28,47 +29,47 @@ export interface SimilarSegment {
 }
 
 /**
- * Initialize vector indexes for the current workspace (called from initializeSchema)
- * Creates workspace-specific index names for complete isolation
+ * Initialize vector indexes (shared across all workspaces)
+ * Workspace isolation is achieved through property filtering, not separate indices
+ * Note: Neo4j only allows one vector index per node label + property combination
  */
 export async function createVectorIndexes(): Promise<void> {
-  const workspace = getCurrentWorkspace();
   const session = getSession();
 
   try {
-    // Create concept embeddings index for this workspace
+    // Create concept embeddings index (shared across workspaces)
     await session.run(`
-      CALL db.index.vector.createNodeIndex(
-        'concept_embeddings_${workspace}',
-        'Concept',
-        'embedding',
-        768,
-        'cosine'
-      )
+      CREATE VECTOR INDEX concept_embeddings IF NOT EXISTS
+      FOR (c:Concept)
+      ON c.embedding
+      OPTIONS {indexConfig: {
+        \`vector.dimensions\`: 768,
+        \`vector.similarity_function\`: 'cosine'
+      }}
     `).catch((err) => {
-      if (!err.message.includes('already exists')) {
+      if (!err.message.includes('already exists') && !err.message.includes('equivalent index')) {
         throw err;
       }
-      console.log(`Concept vector index already exists for workspace '${workspace}'`);
+      console.log('Concept vector index already exists');
     });
 
-    // Create segment embeddings index for this workspace
+    // Create segment embeddings index (shared across workspaces)
     await session.run(`
-      CALL db.index.vector.createNodeIndex(
-        'segment_embeddings_${workspace}',
-        'Segment',
-        'embedding',
-        768,
-        'cosine'
-      )
+      CREATE VECTOR INDEX segment_embeddings IF NOT EXISTS
+      FOR (s:Segment)
+      ON s.embedding
+      OPTIONS {indexConfig: {
+        \`vector.dimensions\`: 768,
+        \`vector.similarity_function\`: 'cosine'
+      }}
     `).catch((err) => {
-      if (!err.message.includes('already exists')) {
+      if (!err.message.includes('already exists') && !err.message.includes('equivalent index')) {
         throw err;
       }
-      console.log(`Segment vector index already exists for workspace '${workspace}'`);
+      console.log('Segment vector index already exists');
     });
 
-    console.log(`Vector indexes initialized successfully for workspace '${workspace}'`);
+    console.log('Vector indexes initialized successfully');
   } finally {
     await session.close();
   }
@@ -89,15 +90,20 @@ export async function findSimilarConcepts(
     // Generate embedding for query
     const embedding = await generateEmbedding(queryText);
 
-    // Vector search using workspace-specific index
+    // Vector search using shared index, filtered by workspace
+    // Query more results to account for workspace filtering
+    // Use neo4j.int() to ensure integers are passed correctly
+    const queryLimit = neo4j.int(limit * 3);
+    const finalLimit = neo4j.int(limit);
+
     const result = await session.run(`
       CALL db.index.vector.queryNodes(
-        'concept_embeddings_${workspace}',
-        $limit,
+        'concept_embeddings',
+        $queryLimit,
         $embedding
       )
       YIELD node, score
-      WHERE score > $minSimilarity
+      WHERE score > $minSimilarity AND node.workspace = $workspace
       RETURN
         node.concept_id as concept_id,
         node.canonical_name as canonical_name,
@@ -106,7 +112,8 @@ export async function findSimilarConcepts(
         node.total_mentions as total_mentions,
         score as similarity
       ORDER BY score DESC
-    `, { limit, embedding, minSimilarity });
+      LIMIT $finalLimit
+    `, { finalLimit, queryLimit, embedding, minSimilarity, workspace });
 
     return result.records.map(record => ({
       concept_id: record.get('concept_id'),
@@ -136,15 +143,20 @@ export async function findSimilarSegments(
     // Generate embedding for query
     const embedding = await generateEmbedding(queryText);
 
-    // Vector search with related data using workspace-specific index
+    // Vector search with related data using shared index, filtered by workspace
+    // Query more results to account for workspace filtering
+    // Use neo4j.int() to ensure integers are passed correctly
+    const queryLimit = neo4j.int(limit * 3);
+    const finalLimit = neo4j.int(limit);
+
     const result = await session.run(`
       CALL db.index.vector.queryNodes(
-        'segment_embeddings_${workspace}',
-        $limit,
+        'segment_embeddings',
+        $queryLimit,
         $embedding
       )
       YIELD node, score
-      WHERE score > $minSimilarity
+      WHERE score > $minSimilarity AND node.workspace = $workspace
       MATCH (node)-[:FROM_VIDEO]->(v:Video)
       OPTIONAL MATCH (node)-[d:DISCUSSES]->(c:Concept)
       WITH node, score, v,
@@ -164,7 +176,8 @@ export async function findSimilarSegments(
         v.title as video_title,
         concepts
       ORDER BY score DESC
-    `, { limit, embedding, minSimilarity });
+      LIMIT $finalLimit
+    `, { finalLimit, queryLimit, embedding, minSimilarity, workspace });
 
     return result.records.map(record => ({
       segment_id: record.get('segment_id'),
