@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiPost } from "@/lib/api-client";
 
 export default function UploadPage() {
   const [jsonInput, setJsonInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [batchId, setBatchId] = useState<string | null>(null);
+  const [status, setStatus] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,18 +25,51 @@ export default function UploadPage() {
   const handleSubmit = async () => {
     setIsProcessing(true);
     setError(null);
-    setResults(null);
+    setStatus(null);
+    setBatchId(null);
 
     try {
       const data = JSON.parse(jsonInput);
-      const result = await apiPost<any>("/api/segments/ingest", data);
-      setResults(result);
+      const result = await apiPost<any>("/api/segments/batch", data);
+      setBatchId(result.batchId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error occurred");
-    } finally {
       setIsProcessing(false);
     }
   };
+
+  const handleRetry = async () => {
+    if (!batchId) return;
+    try {
+      await apiPost<any>(`/api/segments/batch/${batchId}/retry`, {});
+      setStatus(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Retry failed");
+    }
+  };
+
+  useEffect(() => {
+    if (!batchId) return;
+
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(`/api/segments/batch/${batchId}`);
+        const data = await response.json();
+        setStatus(data);
+
+        if (data.isDone) {
+          setIsProcessing(false);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
+
+    pollStatus();
+    const interval = setInterval(pollStatus, 2000);
+
+    return () => clearInterval(interval);
+  }, [batchId]);
 
   return (
     <div className="space-y-6">
@@ -114,55 +148,75 @@ export default function UploadPage() {
             </div>
           )}
 
-          {results && (
+          {status && (
             <div className="card border-accent-cool bg-accent-cool/5 space-y-3">
               <h3 className="font-semibold text-accent-cool glow-text-cool">
-                Processing Complete!
+                {status.isDone ? "Processing Complete!" : "Processing..."}
               </h3>
+
+              {!status.isDone && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-text-light">
+                    <span>Progress</span>
+                    <span>{status.progress}%</span>
+                  </div>
+                  <div className="w-full bg-surface-dark rounded-full h-3 border border-border-subtle">
+                    <div
+                      className="bg-accent-cool h-full rounded-full transition-all duration-300"
+                      style={{ width: `${status.progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="bg-surface-dark p-3 rounded border border-border-subtle">
-                  <div className="text-text-light/60">
-                    Total Segments
-                  </div>
+                  <div className="text-text-light/60">Total</div>
                   <div className="text-2xl font-bold text-text-light">
-                    {results.totalSegments}
+                    {status.total}
                   </div>
                 </div>
 
                 <div className="bg-surface-dark p-3 rounded border border-border-subtle">
-                  <div className="text-text-light/60">
-                    Successful
-                  </div>
+                  <div className="text-text-light/60">Completed</div>
                   <div className="text-2xl font-bold text-accent-cool">
-                    {results.successfulSegments}
+                    {status.completed}
                   </div>
                 </div>
 
                 <div className="bg-surface-dark p-3 rounded border border-border-subtle">
                   <div className="text-text-light/60">Failed</div>
                   <div className="text-2xl font-bold text-accent-hot">
-                    {results.failedSegments}
+                    {status.failed}
                   </div>
                 </div>
 
                 <div className="bg-surface-dark p-3 rounded border border-border-subtle">
-                  <div className="text-text-light/60">
-                    Concepts Processed
-                  </div>
-                  <div className="text-2xl font-bold text-text-light">
-                    {results.totalConceptsProcessed}
+                  <div className="text-text-light/60">Pending</div>
+                  <div className="text-2xl font-bold text-text-light/60">
+                    {status.pending + status.processing}
                   </div>
                 </div>
               </div>
 
-              {results.errors && results.errors.length > 0 && (
+              {status.failed > 0 && status.isDone && (
+                <button
+                  onClick={handleRetry}
+                  className="btn-primary w-full"
+                >
+                  Retry Failed Segments ({status.failed})
+                </button>
+              )}
+
+              {status.errors && status.errors.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="font-semibold text-sm mb-2 text-text-light">Errors:</h4>
-                  <div className="space-y-1 text-sm">
-                    {results.errors.map((err: any, i: number) => (
+                  <h4 className="font-semibold text-sm mb-2 text-text-light">
+                    Failed Segments:
+                  </h4>
+                  <div className="space-y-1 text-sm max-h-48 overflow-y-auto">
+                    {status.errors.map((err: any, i: number) => (
                       <div key={i} className="text-accent-hot">
-                        {err.segmentId}: {err.error}
+                        Segment {err.segment_index}: {err.error}
                       </div>
                     ))}
                   </div>
