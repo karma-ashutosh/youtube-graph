@@ -4,10 +4,10 @@ import { ingestSegment } from "@/lib/utils/ingest";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const batchId = params.id;
+    const { id: batchId } = await params;
     const client = await pool.connect();
 
     try {
