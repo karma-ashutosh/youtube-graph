@@ -71,9 +71,9 @@ echo -e "${YELLOW}Step 3: Configuring Docker authentication...${NC}"
 gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
 # Step 4: Build Docker image
-echo -e "${YELLOW}Step 4: Building Docker image...${NC}"
+echo -e "${YELLOW}Step 4: Building Docker image (AMD64 for Cloud Run)...${NC}"
 IMAGE_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${TAG}"
-docker build -t "$IMAGE_URL" .
+docker build --platform linux/amd64 -t "$IMAGE_URL" .
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Docker build failed${NC}"
@@ -103,7 +103,7 @@ if [ "$TAG" != "latest" ]; then
 fi
 
 terraform init
-terraform apply
+terraform apply -auto-approve
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Terraform deployment failed${NC}"
