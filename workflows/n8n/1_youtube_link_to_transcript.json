@@ -1,0 +1,259 @@
+{
+  "name": "YouTube Link to Transcript",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": { "__rl": true, "mode": "list", "value": "YOUR_SPREADSHEET_ID" },
+        "sheetName": { "__rl": true, "mode": "list", "value": "gid=0" },
+        "range": "A:Z",
+        "options": {
+          "dataLocationOnSheet": "headerRow"
+        }
+      },
+      "id": "1",
+      "name": "Watch Google Sheet URLs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [240, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as count FROM public.youtube_videos WHERE url = '{{ $json.URL }}'",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Check if URL exists",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_POSTGRES_CREDENTIAL_ID",
+          "name": "NeonDB PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.count }}",
+              "operation": "equals",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "URL does not exist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/CTQcdDtqW5dvELvur/runs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "startUrls",
+              "value": "=[{\"url\": \"{{ $('Watch Google Sheet URLs').item.json.URL }}\"}]"
+            },
+            {
+              "name": "language",
+              "value": "Default"
+            },
+            {
+              "name": "includeTimestamps",
+              "value": "Yes"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "4",
+      "name": "Run Apify YouTube Transcript Actor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 220],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_APIFY_CREDENTIAL_ID",
+          "name": "Apify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "seconds",
+        "amount": 10
+      },
+      "id": "5",
+      "name": "Wait for Apify to complete",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1120, 220],
+      "webhookId": "wait-apify"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/datasets/{{ $json.defaultDatasetId }}/items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "format",
+                "value": "json"
+              },
+              {
+                "name": "clean",
+                "value": "true"
+              }
+            ]
+          }
+        }
+      },
+      "id": "6",
+      "name": "Fetch Transcript Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1340, 220],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_APIFY_CREDENTIAL_ID",
+          "name": "Apify API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": { "__rl": true, "mode": "list", "value": "public" },
+        "table": { "__rl": true, "mode": "list", "value": "youtube_videos" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ $json[0].url }}",
+            "video_title": "={{ $json[0].videoTitle }}",
+            "channel_name": "={{ $json[0].channelName }}",
+            "channel_subscription": "={{ $json[0].channelSubscription }}",
+            "views": "={{ $json[0].views }}",
+            "video_post_date": "={{ $json[0].videoPostDate }}",
+            "transcript": "={{ $json[0].transcript }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "7",
+      "name": "Insert Video to Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1560, 220],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_POSTGRES_CREDENTIAL_ID",
+          "name": "NeonDB PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Watch Google Sheet URLs": {
+      "main": [
+        [
+          {
+            "node": "Check if URL exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if URL exists": {
+      "main": [
+        [
+          {
+            "node": "URL does not exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL does not exist": {
+      "main": [
+        [
+          {
+            "node": "Run Apify YouTube Transcript Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Apify YouTube Transcript Actor": {
+      "main": [
+        [
+          {
+            "node": "Wait for Apify to complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Apify to complete": {
+      "main": [
+        [
+          {
+            "node": "Fetch Transcript Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Transcript Data": {
+      "main": [
+        [
+          {
+            "node": "Insert Video to Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-06T00:00:00.000Z",
+  "versionId": "1"
+}

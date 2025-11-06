@@ -1,0 +1,285 @@
+{
+  "name": "YouTube Transcript to Content Segments",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "id": "1",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM public.youtube_videos WHERE segments_created = false ORDER BY id ASC LIMIT 6",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Get Unprocessed Videos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [460, 300],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_POSTGRES_CREDENTIAL_ID",
+          "name": "NeonDB PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "={{ $env.GEMINI_MODEL || 'gemini-2.5-flash' }}",
+        "text": "=You are analyzing a video transcript to create a topic-based content library. Your job is to break the transcript into coherent segments where each segment focuses on a single concept or teaching point.\n\n**CONTEXT:**\n- Video length: 20-40 minutes typical\n- Target: Building a knowledge graph for learning\n- Use case: Someone should be able to learn a specific concept from one segment\n\n**SEGMENTATION STRATEGY:**\n\nAim for **5-12 minute segments** that are:\n- ✅ Long enough to develop a concept with depth\n- ✅ Short enough to focus on ONE main idea\n- ✅ Self-contained and understandable independently\n- ✅ Natural topic transitions (not mid-explanation)\n\n**INPUT TRANSCRIPT:**\n\"\"\"\n{{ $json.transcript }}\n\"\"\"\n\n**OUTPUT FORMAT (JSON):**\n\n```json\n{\n  \"segments\": [\n    {\n      \"segment_id\": 1,\n      \"start_time\": \"00:00\",\n      \"end_time\": \"06:30\",\n      \"topic_hint\": \"Introduction to positioning: defining it as answering three core questions (who, what, why better) to achieve mental availability in customers' minds\"\n    }\n  ]\n}\n```\n\nNow analyze the transcript and create optimal segments for knowledge extraction. Ensure that response is in valid json format.",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Segment Transcript with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GOOGLE_API_CREDENTIAL_ID",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const transcript = $input.item.json.transcript;\nconst segmentsJson = $input.item.json.response;\n\n// Parse Gemini response\nlet segments;\ntry {\n  // Remove markdown code blocks if present\n  const cleanJson = segmentsJson\n    .replace(/```json\\n?/g, '')\n    .replace(/```\\n?/g, '')\n    .trim();\n  \n  const parsed = JSON.parse(cleanJson);\n  segments = parsed.segments;\n} catch (error) {\n  throw new Error(`Failed to parse segments JSON: ${error.message}`);\n}\n\n// Function to extract transcript text for a time range\nfunction extractSegmentText(transcript, startTime, endTime) {\n  // Convert MM:SS to seconds\n  function timeToSeconds(timeStr) {\n    const parts = timeStr.split(':').map(Number);\n    if (parts.length === 2) {\n      return parts[0] * 60 + parts[1];\n    } else if (parts.length === 3) {\n      return parts[0] * 3600 + parts[1] * 60 + parts[2];\n    }\n    return 0;\n  }\n  \n  const startSec = timeToSeconds(startTime);\n  const endSec = timeToSeconds(endTime);\n  \n  // Parse transcript and extract relevant portion\n  // This is a simplified version - adjust based on your transcript format\n  const lines = transcript.split('\\n');\n  let segmentText = '';\n  \n  for (const line of lines) {\n    // Try to extract timestamp from line (assuming format like [00:00] or similar)\n    const timestampMatch = line.match(/\\[(\\d{1,2}:\\d{2}(?::\\d{2})?)\\]/);\n    if (timestampMatch) {\n      const lineSec = timeToSeconds(timestampMatch[1]);\n      if (lineSec >= startSec && lineSec <= endSec) {\n        segmentText += line.replace(/\\[.*?\\]/, '').trim() + ' ';\n      }\n    } else {\n      // If no timestamp, include all text (fallback)\n      segmentText += line.trim() + ' ';\n    }\n  }\n  \n  // If no timestamped extraction worked, split by proportions\n  if (!segmentText.trim()) {\n    const totalLength = transcript.length;\n    const segmentRatio = (endSec - startSec) / (endSec);\n    const startPos = Math.floor((startSec / endSec) * totalLength);\n    const endPos = Math.floor((endSec / endSec) * totalLength);\n    segmentText = transcript.substring(startPos, endPos);\n  }\n  \n  return segmentText.trim();\n}\n\n// Process each segment\nconst output = [];\nfor (const segment of segments) {\n  const segmentText = extractSegmentText(\n    transcript,\n    segment.start_time,\n    segment.end_time\n  );\n  \n  output.push({\n    segment_id: segment.segment_id,\n    start_time: segment.start_time,\n    end_time: segment.end_time,\n    topic_hint: segment.topic_hint,\n    segment_text: segmentText,\n    video_id: $input.item.json.id,\n    video_url: $input.item.json.url,\n    video_title: $input.item.json.video_title\n  });\n}\n\nreturn output.map(item => ({ json: item }));"
+      },
+      "id": "4",
+      "name": "Process Segments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {},
+      "id": "5",
+      "name": "Loop Over Segments",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "model": "={{ $env.GEMINI_MODEL || 'gemini-2.5-flash' }}",
+        "text": "=Analyze this transcript segment and extract the **substantive concepts** that are actually explained or taught.\n\n**SEGMENT CONTEXT:**\nText: {{ $json.segment_text }}\nSegment start: {{ $json.start_time }}\nSegment end: {{ $json.end_time }}\nTopic: {{ $json.topic_hint }}\n\n**OUTPUT FORMAT (JSON):**\n\n```json\n{\n  \"primary_concept\": {\n    \"name\": \"Positioning\",\n    \"coverage_depth\": \"comprehensive\",\n    \"explanation_type\": \"definition\"\n  },\n  \"supporting_concepts\": [\n    {\n      \"name\": \"Mental Availability\",\n      \"role\": \"Explains the ultimate goal of good positioning\",\n      \"coverage_depth\": \"partial\"\n    }\n  ],\n  \"key_ideas\": [\n    {\n      \"idea\": \"The root cause of confusing product messaging is a positioning problem\",\n      \"type\": \"insight\",\n      \"is_novel\": true,\n      \"confidence\": \"high\"\n    }\n  ],\n  \"examples\": [\n    {\n      \"example_text\": \"Celsius energy drink's repositioning journey\",\n      \"type\": \"real_company\",\n      \"concept_illustrated\": \"Repositioning\"\n    }\n  ]\n}\n```\n\nBegin analysis now. Ensure valid JSON output.",
+        "options": {}
+      },
+      "id": "6",
+      "name": "Analyze Segment with Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_GOOGLE_API_CREDENTIAL_ID",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean JSON response from Gemini\nlet analysisJson = $input.item.json.response;\n\n// Remove markdown code blocks\nanalysisJson = analysisJson\n  .replace(/```json\\n?/g, '')\n  .replace(/```\\n?/g, '')\n  .trim();\n\n// Validate JSON\ntry {\n  JSON.parse(analysisJson);\n} catch (error) {\n  throw new Error(`Invalid JSON from Gemini: ${error.message}`);\n}\n\nreturn {\n  json: {\n    ...($input.item.json),\n    analysis_json: analysisJson\n  }\n};"
+      },
+      "id": "7",
+      "name": "Clean JSON Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": { "__rl": true, "mode": "list", "value": "public" },
+        "table": { "__rl": true, "mode": "list", "value": "content_segments" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "video_url": "={{ $json.video_url }}",
+            "start_time": "=00:{{ $json.start_time }}",
+            "end_time": "=00:{{ $json.end_time }}",
+            "topic_hint": "={{ $json.topic_hint }}",
+            "transcript": "={{ $json.segment_text }}",
+            "analysis_json": "={{ $json.analysis_json }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "8",
+      "name": "Insert Segment to Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1780, 300],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_POSTGRES_CREDENTIAL_ID",
+          "name": "NeonDB PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $('Loop Over Segments').item.json.done }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "9",
+      "name": "Check if Loop Done",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE public.youtube_videos SET segments_created = true WHERE id = {{ $('Get Unprocessed Videos').item.json.id }}",
+        "options": {}
+      },
+      "id": "10",
+      "name": "Mark Video as Processed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [2220, 200],
+      "credentials": {
+        "postgres": {
+          "id": "YOUR_POSTGRES_CREDENTIAL_ID",
+          "name": "NeonDB PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Unprocessed Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Unprocessed Videos": {
+      "main": [
+        [
+          {
+            "node": "Segment Transcript with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Segment Transcript with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Process Segments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Segments": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Segments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Segments": {
+      "main": [
+        [
+          {
+            "node": "Analyze Segment with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Segment with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Clean JSON Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean JSON Response": {
+      "main": [
+        [
+          {
+            "node": "Insert Segment to Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Segment to Database": {
+      "main": [
+        [
+          {
+            "node": "Check if Loop Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Loop Done": {
+      "main": [
+        [
+          {
+            "node": "Mark Video as Processed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Segments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-06T00:00:00.000Z",
+  "versionId": "1"
+}

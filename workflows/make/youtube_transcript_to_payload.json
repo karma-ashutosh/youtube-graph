@@ -1,0 +1,1840 @@
+{
+    "name": "Youtube Link Parser and content classifier",
+    "flow": [
+        {
+            "id": 17,
+            "module": "postgres:SelectFromTable",
+            "version": 2,
+            "parameters": {
+                "table": "\"public\".\"youtube_videos\"",
+                "account": 12721065,
+                "continueWhenNoRes": false,
+                "isToManageDataInSharedTransaction": true
+            },
+            "mapper": {
+                "sort": [
+                    {
+                        "order": "asc",
+                        "column": "id"
+                    }
+                ],
+                "limit": "6",
+                "where": [
+                    [
+                        {
+                            "a": "segments_created",
+                            "b": "{{false}}",
+                            "o": "equal"
+                        },
+                        {
+                            "a": "id",
+                            "b": "14",
+                            "o": "equal"
+                        }
+                    ],
+                    [
+                        {
+                            "a": "segments_created",
+                            "b": "{{false}}",
+                            "o": "equal"
+                        },
+                        {
+                            "a": "id",
+                            "b": "18",
+                            "o": "equal"
+                        }
+                    ],
+                    [
+                        {
+                            "a": "segments_created",
+                            "b": "{{false}}",
+                            "o": "equal"
+                        },
+                        {
+                            "a": "id",
+                            "b": "29",
+                            "o": "greater"
+                        }
+                    ]
+                ]
+            },
+            "metadata": {
+                "designer": {
+                    "x": -300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "sort": {
+                            "items": [
+                                {
+                                    "order": {
+                                        "mode": "chose",
+                                        "label": "Ascending"
+                                    },
+                                    "column": {
+                                        "mode": "chose",
+                                        "label": "id"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "parameters": {
+                        "table": {
+                            "label": "public.youtube_videos"
+                        },
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "postgres"
+                            },
+                            "label": "NEONDB Posgresql (neondb_owner@ep-purple-fire-ag5mwkps-pooler.c-2.eu-central-1.aws.neon.tech:5432/neondb)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:postgres",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "continueWhenNoRes",
+                        "type": "boolean",
+                        "label": "Continue the execution of the route even if the module returns no rows",
+                        "required": true
+                    },
+                    {
+                        "name": "isToManageDataInSharedTransaction",
+                        "type": "boolean",
+                        "label": "Manage data within the shared transaction",
+                        "required": true
+                    },
+                    {
+                        "name": "table",
+                        "type": "select",
+                        "label": "Table",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "where",
+                        "type": "filter",
+                        "label": "Filter",
+                        "options": {
+                            "store": [
+                                {
+                                    "label": "id",
+                                    "value": "id"
+                                },
+                                {
+                                    "label": "channel_name",
+                                    "value": "channel_name"
+                                },
+                                {
+                                    "label": "channel_subscription",
+                                    "value": "channel_subscription"
+                                },
+                                {
+                                    "label": "video_title",
+                                    "value": "video_title"
+                                },
+                                {
+                                    "label": "url",
+                                    "value": "url"
+                                },
+                                {
+                                    "label": "views",
+                                    "value": "views"
+                                },
+                                {
+                                    "label": "video_post_date",
+                                    "value": "video_post_date"
+                                },
+                                {
+                                    "label": "transcript",
+                                    "value": "transcript"
+                                },
+                                {
+                                    "label": "created_at",
+                                    "value": "created_at"
+                                },
+                                {
+                                    "label": "updated_at",
+                                    "value": "updated_at"
+                                },
+                                {
+                                    "label": "segments_created",
+                                    "value": "segments_created"
+                                }
+                            ],
+                            "operators": [
+                                {
+                                    "label": "Basic",
+                                    "options": [
+                                        {
+                                            "label": "Is not null",
+                                            "value": "exist"
+                                        },
+                                        {
+                                            "label": "Is null",
+                                            "value": "notexist"
+                                        },
+                                        {
+                                            "label": "Equal to",
+                                            "value": "equal"
+                                        },
+                                        {
+                                            "label": "Not equal to",
+                                            "value": "notequal"
+                                        },
+                                        {
+                                            "label": "Greater than",
+                                            "value": "greater"
+                                        },
+                                        {
+                                            "label": "Greater than or equal to",
+                                            "value": "greaterorequal"
+                                        },
+                                        {
+                                            "label": "Less than",
+                                            "value": "less"
+                                        },
+                                        {
+                                            "label": "Less than or equal to",
+                                            "value": "lessorequal"
+                                        },
+                                        {
+                                            "label": "Contains",
+                                            "value": "contain"
+                                        },
+                                        {
+                                            "label": "Does not contain",
+                                            "value": "notcontain"
+                                        },
+                                        {
+                                            "label": "Starts with",
+                                            "value": "startwith"
+                                        },
+                                        {
+                                            "label": "Does not start with",
+                                            "value": "notstartwith"
+                                        },
+                                        {
+                                            "label": "Ends with",
+                                            "value": "endwith"
+                                        },
+                                        {
+                                            "label": "Does not end with",
+                                            "value": "notendwith"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "spec": [
+                            {
+                                "name": "column",
+                                "type": "select",
+                                "label": "Column",
+                                "dynamic": true,
+                                "options": [],
+                                "required": true
+                            },
+                            {
+                                "name": "order",
+                                "type": "select",
+                                "label": "Order",
+                                "options": [
+                                    {
+                                        "label": "Ascending",
+                                        "value": "asc"
+                                    },
+                                    {
+                                        "label": "Descending",
+                                        "value": "desc"
+                                    }
+                                ],
+                                "required": true
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Sort"
+                    },
+                    {
+                        "name": "limit",
+                        "type": "uinteger",
+                        "label": "Limit"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "__IMTLENGTH__",
+                        "type": "uinteger",
+                        "label": "Total number of bundles"
+                    },
+                    {
+                        "name": "__IMTINDEX__",
+                        "type": "uinteger",
+                        "label": "Bundle order position"
+                    },
+                    {
+                        "name": "id",
+                        "type": "integer",
+                        "label": "id",
+                        "required": false
+                    },
+                    {
+                        "name": "channel_name",
+                        "type": "text",
+                        "label": "channel_name",
+                        "required": false
+                    },
+                    {
+                        "name": "channel_subscription",
+                        "type": "text",
+                        "label": "channel_subscription",
+                        "required": false
+                    },
+                    {
+                        "name": "video_title",
+                        "type": "text",
+                        "label": "video_title",
+                        "required": false
+                    },
+                    {
+                        "name": "url",
+                        "type": "text",
+                        "label": "url",
+                        "required": false
+                    },
+                    {
+                        "name": "views",
+                        "type": "text",
+                        "label": "views",
+                        "required": false
+                    },
+                    {
+                        "name": "video_post_date",
+                        "type": "text",
+                        "label": "video_post_date",
+                        "required": false
+                    },
+                    {
+                        "name": "transcript",
+                        "type": "text",
+                        "label": "transcript",
+                        "required": false
+                    },
+                    {
+                        "name": "created_at",
+                        "type": "text",
+                        "label": "created_at",
+                        "required": false
+                    },
+                    {
+                        "name": "updated_at",
+                        "type": "text",
+                        "label": "updated_at",
+                        "required": false
+                    },
+                    {
+                        "name": "segments_created",
+                        "type": "text",
+                        "label": "segments_created",
+                        "required": false
+                    }
+                ]
+            }
+        },
+        {
+            "id": 22,
+            "module": "gemini-ai:createACompletionGeminiPro",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 12723512
+            },
+            "mapper": {
+                "model": "gemini-2.5-flash",
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [
+                            {
+                                "text": "You are analyzing a video transcript to create a topic-based content library. Your job is to break the transcript into coherent segments where each segment focuses on a single concept or teaching point.\n\n**CONTEXT:**\n- Video length: 20-40 minutes typical\n- Target: Building a knowledge graph for learning\n- Use case: Someone should be able to learn a specific concept from one segment\n\n**SEGMENTATION STRATEGY:**\n\nAim for **5-12 minute segments** that are:\n- ✅ Long enough to develop a concept with depth\n- ✅ Short enough to focus on ONE main idea\n- ✅ Self-contained and understandable independently\n- ✅ Natural topic transitions (not mid-explanation)\n\n**RULES:**\n\n1. **Concept-Driven Segmentation**\n   - Each segment = ONE concept being taught/explained\n   - Break when the speaker finishes explaining one idea and moves to another\n   - Don't break in the middle of examples, stories, or explanations\n\n2. **Optimal Length**\n   - Target: 5-12 minutes per segment\n   - Minimum: 3 minutes (enough for depth)\n   - Maximum: 15 minutes (beyond this, likely multiple concepts)\n   - For 20-40 min videos: expect 3-6 segments\n\n3. **Natural Boundaries**\n   - Break at topic transitions: \"Next, let's talk about...\", \"Another important concept...\", \"Moving on to...\"\n   - After complete examples or case studies\n   - When speaker shifts from one framework element to another\n   - NOT in the middle of a story, definition, or explanation\n\n4. **Topic Hint Quality**\n   - Should clearly state WHAT concept is being taught\n   - Include the teaching approach (example: \"Case study:\", \"Definition:\", \"How to:\")\n   - Be specific, not generic (❌ \"Marketing tips\" ✅ \"How to identify your target customer using workflow segmentation\")\n\n**WHAT TO AVOID:**\n\n❌ Too granular (1-2 min segments) - Won't have depth\n❌ Too broad (20+ min segments) - Covers too many concepts\n❌ Breaking mid-example or mid-story\n❌ Vague topic hints (\"Discussion of X\" - what ABOUT X?)\n\n**EXAMPLES:**\n\n**GOOD Segmentation (5-12 min segments):**\n```\nSegment 1 (00:00-06:30): \"Introduction to positioning and why it matters - defining positioning as answering 'who, what, why better'\"\nSegment 2 (06:30-14:20): \"Case study: Celsius energy drink's successful repositioning from weight loss to energy drink market\"\nSegment 3 (14:20-22:45): \"The three questions of positioning: who is your product for, what is it, why is it better\"\n```\n\n**BAD Segmentation (too granular):**\n```\nSegment 1 (00:00-01:30): \"Speaker introduction\"  // ❌ Too short, not a concept\nSegment 2 (01:30-03:00): \"Definition of positioning\"  // ❌ Too short\nSegment 3 (03:00-04:15): \"Why positioning matters\"  // ❌ Should combine with #2\n```\n\n**BAD Segmentation (too broad):**\n```\nSegment 1 (00:00-25:00): \"Overview of positioning strategy\"  // ❌ Too long, many concepts\n```\n\n---\n\n**INPUT TRANSCRIPT:**\n\"\"\"\n{{17.transcript}}\n\"\"\"\n\n---\n\n**OUTPUT FORMAT (JSON):**\n\n```json\n{\n  \"segments\": [\n    {\n      \"segment_id\": 1,\n      \"start_time\": \"00:00\",\n      \"end_time\": \"06:30\",\n      \"topic_hint\": \"Introduction to positioning: defining it as answering three core questions (who, what, why better) to achieve mental availability in customers' minds\"\n    },\n    {\n      \"segment_id\": 2,\n      \"start_time\": \"06:30\",\n      \"end_time\": \"14:20\",\n      \"topic_hint\": \"Case study: How Celsius energy drink achieved success through repositioning from weight loss drink to energy drink market without changing the product\"\n    },\n    {\n      \"segment_id\": 3,\n      \"start_time\": \"14:20\",\n      \"end_time\": \"22:45\",\n      \"topic_hint\": \"Deep dive into the first positioning question: 'Who is your product for?' using workflow-based segmentation instead of traditional firmographics\"\n    }\n  ]\n}\n```\n\n**IMPORTANT:**\n- Use MM:SS format for timestamps (e.g., \"06:30\" for 6 minutes 30 seconds, \"45:15\" for 45 minutes 15 seconds)\n- For videos over 60 minutes, still use MM:SS (e.g., \"75:30\" for 1 hour 15 minutes 30 seconds)\n- topic_hint should be 1-2 sentences describing what concept is taught and how\n- Ensure segments align with natural speaking breaks\n- Each segment should be long enough to extract 3-7 key ideas and 2-5 examples\n\nNow analyze the transcript and create optimal segments for knowledge extraction.\nEnsure that response is in valid json format\n",
+                                "type": "text"
+                            }
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "thinkingConfig": {},
+                    "responseModalities": [
+                        "text"
+                    ]
+                },
+                "system_instruction": {}
+            },
+            "metadata": {
+                "designer": {
+                    "x": 45,
+                    "y": -5
+                },
+                "restore": {
+                    "expect": {
+                        "model": {
+                            "mode": "chose",
+                            "label": "Gemini 2.5 Flash"
+                        },
+                        "contents": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "role": {
+                                        "mode": "chose",
+                                        "label": "User"
+                                    },
+                                    "parts": {
+                                        "mode": "chose",
+                                        "items": [
+                                            {
+                                                "type": {
+                                                    "mode": "chose",
+                                                    "label": "Text"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "url_context": {
+                            "mode": "chose"
+                        },
+                        "code_execution": {
+                            "mode": "chose"
+                        },
+                        "safetySettings": {
+                            "mode": "chose"
+                        },
+                        "generationConfig": {
+                            "nested": {
+                                "stopSequences": {
+                                    "mode": "chose"
+                                },
+                                "thinkingConfig": {
+                                    "nested": {
+                                        "include_thoughts": {
+                                            "mode": "chose"
+                                        }
+                                    }
+                                },
+                                "responseMimeType": {
+                                    "mode": "chose",
+                                    "label": "Empty"
+                                },
+                                "responseModalities": {
+                                    "mode": "chose"
+                                }
+                            }
+                        },
+                        "system_instruction": {
+                            "nested": {
+                                "parts": {
+                                    "mode": "chose"
+                                }
+                            }
+                        },
+                        "google_maps_context": {
+                            "mode": "chose"
+                        },
+                        "google_search_context": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "gemini-ai-q9zyjp"
+                            },
+                            "label": "My Gemini AI connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:gemini-ai-q9zyjp",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "model",
+                        "type": "select",
+                        "label": "AI Model",
+                        "required": true
+                    },
+                    {
+                        "name": "contents",
+                        "spec": [
+                            {
+                                "name": "role",
+                                "type": "select",
+                                "label": "Role",
+                                "options": [
+                                    {
+                                        "label": "User",
+                                        "value": "user"
+                                    },
+                                    {
+                                        "label": "Model",
+                                        "value": "model"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "parts",
+                                "spec": [
+                                    {
+                                        "name": "type",
+                                        "type": "select",
+                                        "label": "Message Type",
+                                        "options": [
+                                            {
+                                                "label": "Text",
+                                                "value": "text",
+                                                "nested": [
+                                                    {
+                                                        "name": "text",
+                                                        "type": "text",
+                                                        "label": "Text",
+                                                        "required": false
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "label": "File",
+                                                "value": "file",
+                                                "nested": [
+                                                    {
+                                                        "name": "file_data",
+                                                        "spec": [
+                                                            {
+                                                                "name": "mime_type",
+                                                                "type": "text",
+                                                                "label": "Mime Type",
+                                                                "required": false
+                                                            },
+                                                            {
+                                                                "help": "You get this from the 'Upload a File' module.",
+                                                                "name": "file_uri",
+                                                                "type": "text",
+                                                                "label": "File URI",
+                                                                "required": false
+                                                            }
+                                                        ],
+                                                        "type": "collection",
+                                                        "label": "File Data",
+                                                        "required": false
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "type": "array",
+                                "label": "Parts"
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Messages",
+                        "required": true
+                    },
+                    {
+                        "name": "system_instruction",
+                        "spec": [
+                            {
+                                "name": "parts",
+                                "spec": {
+                                    "name": "value",
+                                    "spec": [
+                                        {
+                                            "name": "text",
+                                            "type": "text",
+                                            "label": "Value"
+                                        }
+                                    ],
+                                    "type": "collection",
+                                    "label": "Prompt"
+                                },
+                                "type": "array",
+                                "label": "Prompts"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "System Instructions"
+                    },
+                    {
+                        "name": "safetySettings",
+                        "spec": [
+                            {
+                                "name": "category",
+                                "type": "select",
+                                "label": "Category",
+                                "options": [
+                                    {
+                                        "label": "Harassment content",
+                                        "value": "HARM_CATEGORY_HARASSMENT"
+                                    },
+                                    {
+                                        "label": "Hate speech and content",
+                                        "value": "HARM_CATEGORY_HATE_SPEECH"
+                                    },
+                                    {
+                                        "label": "Sexually explicit content.",
+                                        "value": "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+                                    },
+                                    {
+                                        "label": "Dangerous content:",
+                                        "value": "HARM_CATEGORY_DANGEROUS_CONTENT"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "threshold",
+                                "type": "select",
+                                "label": "Threshold",
+                                "options": [
+                                    {
+                                        "label": "Block low and above.",
+                                        "value": "BLOCK_LOW_AND_ABOVE"
+                                    },
+                                    {
+                                        "label": "Block medium and above.",
+                                        "value": "BLOCK_MEDIUM_AND_ABOVE"
+                                    },
+                                    {
+                                        "label": "Block only high.",
+                                        "value": "BLOCK_ONLY_HIGH"
+                                    },
+                                    {
+                                        "label": "Block none.",
+                                        "value": "BLOCK_NONE"
+                                    }
+                                ]
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Safety Settings"
+                    },
+                    {
+                        "name": "generationConfig",
+                        "spec": [
+                            {
+                                "name": "stopSequences",
+                                "spec": {
+                                    "name": "value",
+                                    "type": "text",
+                                    "label": "Stop Sequence"
+                                },
+                                "type": "array",
+                                "label": "Stop Sequences"
+                            },
+                            {
+                                "name": "responseModalities",
+                                "type": "select",
+                                "label": "Response Modalities",
+                                "multiple": true,
+                                "validate": {
+                                    "enum": [
+                                        "text",
+                                        "image"
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "maxOutputTokens",
+                                "type": "number",
+                                "label": "Max Output Tokens"
+                            },
+                            {
+                                "name": "temperature",
+                                "type": "number",
+                                "label": "Temperature",
+                                "validate": {
+                                    "max": 1,
+                                    "min": 0
+                                }
+                            },
+                            {
+                                "name": "topP",
+                                "type": "number",
+                                "label": "Top P",
+                                "validate": {
+                                    "max": 1,
+                                    "min": 0
+                                }
+                            },
+                            {
+                                "name": "topK",
+                                "type": "number",
+                                "label": "Top K"
+                            },
+                            {
+                                "name": "thinkingConfig",
+                                "spec": [
+                                    {
+                                        "name": "thinkingBudget",
+                                        "type": "number",
+                                        "label": "Thinking Budget"
+                                    },
+                                    {
+                                        "name": "include_thoughts",
+                                        "type": "boolean",
+                                        "label": "Include Thoughts"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Thinking Config"
+                            },
+                            {
+                                "name": "responseMimeType",
+                                "type": "select",
+                                "label": "Response Format"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "Generation configurations"
+                    },
+                    {
+                        "name": "tools",
+                        "type": "any",
+                        "label": "Tools"
+                    },
+                    {
+                        "name": "tool_config",
+                        "type": "any",
+                        "label": "Tool Config"
+                    },
+                    {
+                        "name": "url_context",
+                        "type": "boolean",
+                        "label": "URL Context"
+                    },
+                    {
+                        "name": "google_search_context",
+                        "type": "boolean",
+                        "label": "Google Search Grounding"
+                    },
+                    {
+                        "name": "code_execution",
+                        "type": "boolean",
+                        "label": "Code Execution"
+                    },
+                    {
+                        "name": "google_maps_context",
+                        "type": "boolean",
+                        "label": "Google Maps Grounding"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 24,
+            "module": "custom-js:executestoredfunction",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 12723112,
+                "returnValueType": "collection"
+            },
+            "mapper": {
+                "summary": "{{22.candidates[].content.parts[].text}}",
+                "transcript": "{{17.transcript}}",
+                "selectedFunctionId": "3LSfJy"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 345,
+                    "y": -5
+                },
+                "restore": {
+                    "expect": {
+                        "selectedFunctionId": {
+                            "label": "restamp",
+                            "nested": [
+                                {
+                                    "name": "transcript",
+                                    "type": "text",
+                                    "label": "transcript"
+                                },
+                                {
+                                    "name": "summary",
+                                    "type": "text",
+                                    "label": "summary"
+                                }
+                            ]
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "custom-js2"
+                            },
+                            "label": "My Custom JS V2 connection"
+                        },
+                        "returnValueType": {
+                            "label": "Object"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:custom-js2",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "returnValueType",
+                        "type": "select",
+                        "label": "Return Type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "text",
+                                "collection",
+                                "array",
+                                "binary"
+                            ]
+                        }
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "selectedFunctionId",
+                        "type": "select",
+                        "label": "Select a function",
+                        "required": true
+                    },
+                    {
+                        "name": "transcript",
+                        "type": "text"
+                    },
+                    {
+                        "name": "summary",
+                        "type": "text"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "output",
+                        "type": "collection",
+                        "label": "Output"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 25,
+            "module": "builtin:BasicFeeder",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "array": "{{24.output.segments}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 645,
+                    "y": -5
+                },
+                "restore": {
+                    "expect": {
+                        "array": {
+                            "mode": "edit"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "mode": "edit",
+                        "name": "array",
+                        "spec": [],
+                        "type": "array",
+                        "label": "Array"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 26,
+            "module": "gemini-ai:createACompletionGeminiPro",
+            "version": 1,
+            "parameters": {
+                "__IMTCONN__": 12723512
+            },
+            "mapper": {
+                "model": "gemini-2.5-flash",
+                "contents": [
+                    {
+                        "role": "user",
+                        "parts": [
+                            {
+                                "text": "\nAnalyze this transcript segment and extract the **substantive concepts** that are actually explained or taught.\n\n**SEGMENT CONTEXT:**\nText: {{25.segment_text}}\nSegment start: {{25.start_time}}\nSegment end: {{25.end_time}}\nVideo outline: {{22.result}}\n\n---\n\n## FOCUS: Quality over Quantity\n\n**Only extract concepts that are ACTUALLY EXPLAINED in this segment.**\n\n❌ **DO NOT include:**\n- Terms mentioned in passing without explanation\n- Prerequisites the speaker assumes you know\n- Buzzwords or jargon used casually (e.g., \"B2B\", \"SaaS\", \"RevOps\")\n- Brief references to other topics\n- Names of tools/companies unless they're used as teaching examples\n\n✅ **DO include:**\n- Concepts that get definitions, explanations, or examples\n- Ideas that are developed with some depth\n- Supporting concepts that are necessary to understand the main topic\n- Teaching points that add value\n\n---\n\n## EXTRACTION GUIDELINES\n\n### PRIMARY CONCEPT (Required)\n**What is the MAIN topic being explained or taught?**\n- There is ONE primary concept per segment\n- It should be explained with depth (`comprehensive` or `partial`)\n- This is what someone would learn from watching this segment\n\n**Coverage Depth (2 options only):**\n- `comprehensive` = Thoroughly explained with definitions, examples, nuance\n- `partial` = Explained with some depth but not exhaustive\n\n**Explanation Type:**\n- `definition` = Defines what the concept is\n- `case_study` = Real-world example or company story\n- `how_to` = Step-by-step practical guidance\n- `comparison` = Contrasts with other concepts\n- `metaphor` = Uses analogy/metaphor to explain\n- `story` = Narrative or anecdote\n\n---\n\n### SUPPORTING CONCEPTS (Optional, 2-5 max)\n**What concepts are EXPLAINED to help understand the primary concept?**\n\n⚠️ **Strict criteria:**\n- Only include if the speaker actually EXPLAINS it (not just mentions)\n- Must have `comprehensive` or `partial` coverage\n- Should contribute meaningfully to understanding the primary concept\n\nFor each supporting concept:\n1. **Name** - Clear, specific concept name\n2. **Role** - How it helps explain the primary concept (1-2 sentences)\n3. **Coverage** - Must be `comprehensive` or `partial`\n\n**Example of GOOD supporting concept:**\n```\n{\n  \"name\": \"Mental Availability\",\n  \"role\": \"Explains the ultimate goal of good positioning: to ensure customers recall the product in their moment of need.\",\n  \"coverage_depth\": \"partial\"\n}\n```\n\n**Example of BAD supporting concept (DON'T include):**\n```\n{\n  \"name\": \"B2B\",  // ❌ Just mentioned, not explained\n  \"name\": \"SaaS\", // ❌ Just a term used, not taught\n  \"name\": \"Customer Service\", // ❌ Only mentioned as a weakness\n}\n```\n\n---\n\n### KEY IDEAS / INSIGHTS (3-10)\n**Extract specific claims, insights, or advice that are TAUGHT in this segment.**\n\nTypes:\n- `fact` = Objective, verifiable statement\n- `advice` = Actionable recommendation\n- `insight` = Non-obvious observation or analysis\n- `metric` = Specific number or measurement\n- `opinion` = Speaker's subjective view\n- `definition` = Formal definition of a term\n\nFor each idea:\n1. State the idea clearly and completely\n2. Classify the type\n3. Mark if `novel` (not common knowledge)\n4. Confidence: `high`, `medium`, or `low`\n\n**Focus on:** Ideas that would be valuable takeaways for a learner\n\n---\n\n### EXAMPLES USED (If present)\n**Only include examples that ILLUSTRATE a concept being taught.**\n\nTypes:\n- `real_company` = Named company/product used as teaching example\n- `personal_story` = Speaker's experience used to teach\n- `hypothetical` = Made-up scenario to illustrate a point\n- `metaphor` = Analogy that clarifies a concept\n- `data_point` = Research/statistic to support a point\n\n❌ **Don't include:**\n- Companies just named without explanation (e.g., \"like Slack\" in passing)\n- Brief references\n\n✅ **Do include:**\n- Case studies that teach something\n- Stories that illustrate a principle\n- Metaphors that clarify concepts\n\nFor each example:\n1. Summarize what the example shows (2-3 sentences)\n2. Classify type\n3. Which concept does it illustrate?\n\n---\n\n## OUTPUT FORMAT (JSON)\n\n```json\n{\n  \"primary_concept\": {\n    \"name\": \"Positioning\",\n    \"coverage_depth\": \"comprehensive\",\n    \"explanation_type\": \"definition\"\n  },\n  \"supporting_concepts\": [\n    {\n      \"name\": \"Mental Availability\",\n      \"role\": \"Explains the ultimate goal of good positioning: ensuring customers recall your product in their moment of need.\",\n      \"coverage_depth\": \"partial\"\n    },\n    {\n      \"name\": \"Repositioning\",\n      \"role\": \"Demonstrates the power of positioning by showing how changing market perception (without changing the product) can transform success.\",\n      \"coverage_depth\": \"partial\"\n    }\n  ],\n  \"key_ideas\": [\n    {\n      \"idea\": \"The root cause of confusing product messaging is a positioning problem, not simply a copywriting problem\",\n      \"type\": \"insight\",\n      \"is_novel\": true,\n      \"confidence\": \"high\"\n    },\n    {\n      \"idea\": \"Positioning involves answering three core questions: Who is your product for? What is it? Why is it better?\",\n      \"type\": \"definition\",\n      \"is_novel\": false,\n      \"confidence\": \"high\"\n    },\n    {\n      \"idea\": \"Large companies struggle with positioning due to internal politics and expensive branding agencies, while startups struggle due to the inherent difficulty of explaining new products\",\n      \"type\": \"insight\",\n      \"is_novel\": true,\n      \"confidence\": \"high\"\n    }\n  ],\n  \"examples\": [\n    {\n      \"example_text\": \"Celsius energy drink's journey from a struggling weight loss drink to a dominating energy drink, achieving success through repositioning without changing its core ingredients.\",\n      \"type\": \"real_company\",\n      \"concept_illustrated\": \"Repositioning\"\n    },\n    {\n      \"example_text\": \"The movie 'Inception' used as an analogy for the goal of positioning – getting an idea (your product) firmly planted in the customer's mind.\",\n      \"type\": \"metaphor\",\n      \"concept_illustrated\": \"Mental Availability\"\n    }\n  ]\n}\n```\n\n---\n\n## QUALITY CHECKS\n\nBefore submitting your analysis, verify:\n\n✅ Primary concept is actually EXPLAINED (not just mentioned)\n✅ Supporting concepts (if any) are TAUGHT, not just referenced\n✅ No buzzwords or passing mentions in the concepts list\n✅ Key ideas are actual LEARNINGS from the segment\n✅ Examples are used for TEACHING, not just name-dropping\n✅ Coverage depth is `comprehensive` or `partial` only\n✅ JSON is valid and parseable\n\n**Remember:** It's better to extract 3 well-explained concepts than 20 terms that were just mentioned in passing. Focus on what someone would LEARN from this segment.\n\nBegin analysis now.\n",
+                                "type": "text"
+                            }
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "thinkingConfig": {}
+                },
+                "system_instruction": {}
+            },
+            "metadata": {
+                "designer": {
+                    "x": 939,
+                    "y": 5
+                },
+                "restore": {
+                    "expect": {
+                        "model": {
+                            "mode": "chose",
+                            "label": "Gemini 2.5 Flash"
+                        },
+                        "contents": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "role": {
+                                        "mode": "chose",
+                                        "label": "User"
+                                    },
+                                    "parts": {
+                                        "mode": "chose",
+                                        "items": [
+                                            {
+                                                "type": {
+                                                    "mode": "chose",
+                                                    "label": "Text"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        "url_context": {
+                            "mode": "chose"
+                        },
+                        "code_execution": {
+                            "mode": "chose"
+                        },
+                        "safetySettings": {
+                            "mode": "chose"
+                        },
+                        "generationConfig": {
+                            "nested": {
+                                "stopSequences": {
+                                    "mode": "chose"
+                                },
+                                "thinkingConfig": {
+                                    "nested": {
+                                        "include_thoughts": {
+                                            "mode": "chose"
+                                        }
+                                    }
+                                },
+                                "responseMimeType": {
+                                    "mode": "chose",
+                                    "label": "Empty"
+                                },
+                                "responseModalities": {
+                                    "mode": "chose"
+                                }
+                            }
+                        },
+                        "system_instruction": {
+                            "nested": {
+                                "parts": {
+                                    "mode": "chose"
+                                }
+                            }
+                        },
+                        "google_maps_context": {
+                            "mode": "chose"
+                        },
+                        "google_search_context": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "gemini-ai-q9zyjp"
+                            },
+                            "label": "My Gemini AI connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:gemini-ai-q9zyjp",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "model",
+                        "type": "select",
+                        "label": "AI Model",
+                        "required": true
+                    },
+                    {
+                        "name": "contents",
+                        "spec": [
+                            {
+                                "name": "role",
+                                "type": "select",
+                                "label": "Role",
+                                "options": [
+                                    {
+                                        "label": "User",
+                                        "value": "user"
+                                    },
+                                    {
+                                        "label": "Model",
+                                        "value": "model"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "parts",
+                                "spec": [
+                                    {
+                                        "name": "type",
+                                        "type": "select",
+                                        "label": "Message Type",
+                                        "options": [
+                                            {
+                                                "label": "Text",
+                                                "value": "text",
+                                                "nested": [
+                                                    {
+                                                        "name": "text",
+                                                        "type": "text",
+                                                        "label": "Text",
+                                                        "required": false
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "label": "File",
+                                                "value": "file",
+                                                "nested": [
+                                                    {
+                                                        "name": "file_data",
+                                                        "spec": [
+                                                            {
+                                                                "name": "mime_type",
+                                                                "type": "text",
+                                                                "label": "Mime Type",
+                                                                "required": false
+                                                            },
+                                                            {
+                                                                "help": "You get this from the 'Upload a File' module.",
+                                                                "name": "file_uri",
+                                                                "type": "text",
+                                                                "label": "File URI",
+                                                                "required": false
+                                                            }
+                                                        ],
+                                                        "type": "collection",
+                                                        "label": "File Data",
+                                                        "required": false
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "type": "array",
+                                "label": "Parts"
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Messages",
+                        "required": true
+                    },
+                    {
+                        "name": "system_instruction",
+                        "spec": [
+                            {
+                                "name": "parts",
+                                "spec": {
+                                    "name": "value",
+                                    "spec": [
+                                        {
+                                            "name": "text",
+                                            "type": "text",
+                                            "label": "Value"
+                                        }
+                                    ],
+                                    "type": "collection",
+                                    "label": "Prompt"
+                                },
+                                "type": "array",
+                                "label": "Prompts"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "System Instructions"
+                    },
+                    {
+                        "name": "safetySettings",
+                        "spec": [
+                            {
+                                "name": "category",
+                                "type": "select",
+                                "label": "Category",
+                                "options": [
+                                    {
+                                        "label": "Harassment content",
+                                        "value": "HARM_CATEGORY_HARASSMENT"
+                                    },
+                                    {
+                                        "label": "Hate speech and content",
+                                        "value": "HARM_CATEGORY_HATE_SPEECH"
+                                    },
+                                    {
+                                        "label": "Sexually explicit content.",
+                                        "value": "HARM_CATEGORY_SEXUALLY_EXPLICIT"
+                                    },
+                                    {
+                                        "label": "Dangerous content:",
+                                        "value": "HARM_CATEGORY_DANGEROUS_CONTENT"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "threshold",
+                                "type": "select",
+                                "label": "Threshold",
+                                "options": [
+                                    {
+                                        "label": "Block low and above.",
+                                        "value": "BLOCK_LOW_AND_ABOVE"
+                                    },
+                                    {
+                                        "label": "Block medium and above.",
+                                        "value": "BLOCK_MEDIUM_AND_ABOVE"
+                                    },
+                                    {
+                                        "label": "Block only high.",
+                                        "value": "BLOCK_ONLY_HIGH"
+                                    },
+                                    {
+                                        "label": "Block none.",
+                                        "value": "BLOCK_NONE"
+                                    }
+                                ]
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Safety Settings"
+                    },
+                    {
+                        "name": "generationConfig",
+                        "spec": [
+                            {
+                                "name": "stopSequences",
+                                "spec": {
+                                    "name": "value",
+                                    "type": "text",
+                                    "label": "Stop Sequence"
+                                },
+                                "type": "array",
+                                "label": "Stop Sequences"
+                            },
+                            {
+                                "name": "responseModalities",
+                                "type": "select",
+                                "label": "Response Modalities",
+                                "multiple": true,
+                                "validate": {
+                                    "enum": [
+                                        "text",
+                                        "image"
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "maxOutputTokens",
+                                "type": "number",
+                                "label": "Max Output Tokens"
+                            },
+                            {
+                                "name": "temperature",
+                                "type": "number",
+                                "label": "Temperature",
+                                "validate": {
+                                    "max": 1,
+                                    "min": 0
+                                }
+                            },
+                            {
+                                "name": "topP",
+                                "type": "number",
+                                "label": "Top P",
+                                "validate": {
+                                    "max": 1,
+                                    "min": 0
+                                }
+                            },
+                            {
+                                "name": "topK",
+                                "type": "number",
+                                "label": "Top K"
+                            },
+                            {
+                                "name": "thinkingConfig",
+                                "spec": [
+                                    {
+                                        "name": "thinkingBudget",
+                                        "type": "number",
+                                        "label": "Thinking Budget"
+                                    },
+                                    {
+                                        "name": "include_thoughts",
+                                        "type": "boolean",
+                                        "label": "Include Thoughts"
+                                    }
+                                ],
+                                "type": "collection",
+                                "label": "Thinking Config"
+                            },
+                            {
+                                "name": "responseMimeType",
+                                "type": "select",
+                                "label": "Response Format"
+                            }
+                        ],
+                        "type": "collection",
+                        "label": "Generation configurations"
+                    },
+                    {
+                        "name": "tools",
+                        "type": "any",
+                        "label": "Tools"
+                    },
+                    {
+                        "name": "tool_config",
+                        "type": "any",
+                        "label": "Tool Config"
+                    },
+                    {
+                        "name": "url_context",
+                        "type": "boolean",
+                        "label": "URL Context"
+                    },
+                    {
+                        "name": "google_search_context",
+                        "type": "boolean",
+                        "label": "Google Search Grounding"
+                    },
+                    {
+                        "name": "code_execution",
+                        "type": "boolean",
+                        "label": "Code Execution"
+                    },
+                    {
+                        "name": "google_maps_context",
+                        "type": "boolean",
+                        "label": "Google Maps Grounding"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 33,
+            "module": "regexp:Replace",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "text": "{{26.result}}",
+                "value": " ",
+                "global": false,
+                "pattern": "```json",
+                "multiline": false,
+                "sensitive": true,
+                "singleline": false
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1274,
+                    "y": -1
+                },
+                "restore": {
+                    "expect": {
+                        "global": {
+                            "mode": "chose"
+                        },
+                        "multiline": {
+                            "mode": "chose"
+                        },
+                        "sensitive": {
+                            "mode": "chose"
+                        },
+                        "singleline": {
+                            "mode": "chose"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "pattern",
+                        "type": "text",
+                        "label": "Pattern",
+                        "required": true
+                    },
+                    {
+                        "name": "value",
+                        "type": "text",
+                        "label": "New value"
+                    },
+                    {
+                        "name": "global",
+                        "type": "boolean",
+                        "label": "Global match",
+                        "required": true
+                    },
+                    {
+                        "name": "sensitive",
+                        "type": "boolean",
+                        "label": "Case sensitive",
+                        "required": true
+                    },
+                    {
+                        "name": "multiline",
+                        "type": "boolean",
+                        "label": "Multiline",
+                        "required": true
+                    },
+                    {
+                        "name": "singleline",
+                        "type": "boolean",
+                        "label": "Singleline",
+                        "required": true
+                    },
+                    {
+                        "name": "text",
+                        "type": "text",
+                        "label": "Text"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 34,
+            "module": "regexp:Replace",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "text": "{{33.text}}",
+                "value": " ",
+                "global": false,
+                "pattern": "```",
+                "multiline": false,
+                "sensitive": true,
+                "singleline": false
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1574,
+                    "y": -1
+                },
+                "restore": {
+                    "expect": {
+                        "global": {
+                            "mode": "chose"
+                        },
+                        "multiline": {
+                            "mode": "chose"
+                        },
+                        "sensitive": {
+                            "mode": "chose"
+                        },
+                        "singleline": {
+                            "mode": "chose"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "pattern",
+                        "type": "text",
+                        "label": "Pattern",
+                        "required": true
+                    },
+                    {
+                        "name": "value",
+                        "type": "text",
+                        "label": "New value"
+                    },
+                    {
+                        "name": "global",
+                        "type": "boolean",
+                        "label": "Global match",
+                        "required": true
+                    },
+                    {
+                        "name": "sensitive",
+                        "type": "boolean",
+                        "label": "Case sensitive",
+                        "required": true
+                    },
+                    {
+                        "name": "multiline",
+                        "type": "boolean",
+                        "label": "Multiline",
+                        "required": true
+                    },
+                    {
+                        "name": "singleline",
+                        "type": "boolean",
+                        "label": "Singleline",
+                        "required": true
+                    },
+                    {
+                        "name": "text",
+                        "type": "text",
+                        "label": "Text"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 29,
+            "module": "postgres:InsertIntoTable",
+            "version": 2,
+            "parameters": {
+                "table": "\"public\".\"content_segments\"",
+                "account": 12721065,
+                "isToManageDataInSharedTransaction": true
+            },
+            "mapper": {
+                "@id": "",
+                "@end_time": "00:{{25.end_time}}",
+                "@video_url": "{{17.url}}",
+                "@created_at": "",
+                "@start_time": "00:{{25.start_time}}",
+                "@topic_hint": "{{25.topic_hint}}",
+                "@transcript": "{{25.segment_text}}",
+                "@updated_at": "",
+                "@analysis_json": "{{34.text}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 1862,
+                    "y": 4
+                },
+                "restore": {
+                    "parameters": {
+                        "table": {
+                            "label": "public.content_segments"
+                        },
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "postgres"
+                            },
+                            "label": "NEONDB Posgresql (neondb_owner@ep-purple-fire-ag5mwkps-pooler.c-2.eu-central-1.aws.neon.tech:5432/neondb)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:postgres",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "isToManageDataInSharedTransaction",
+                        "type": "boolean",
+                        "label": "Manage data within the shared transaction",
+                        "required": true
+                    },
+                    {
+                        "name": "returnRows",
+                        "type": "boolean",
+                        "label": "Return Rows"
+                    },
+                    {
+                        "name": "table",
+                        "type": "select",
+                        "label": "Table",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "@id",
+                        "type": "integer",
+                        "label": "id"
+                    },
+                    {
+                        "name": "@video_url",
+                        "type": "text",
+                        "label": "video_url"
+                    },
+                    {
+                        "name": "@start_time",
+                        "type": "time",
+                        "label": "start_time"
+                    },
+                    {
+                        "name": "@end_time",
+                        "type": "time",
+                        "label": "end_time"
+                    },
+                    {
+                        "name": "@topic_hint",
+                        "type": "text",
+                        "label": "topic_hint"
+                    },
+                    {
+                        "name": "@analysis_json",
+                        "type": "text",
+                        "label": "analysis_json"
+                    },
+                    {
+                        "name": "@created_at",
+                        "type": "text",
+                        "label": "created_at"
+                    },
+                    {
+                        "name": "@updated_at",
+                        "type": "text",
+                        "label": "updated_at"
+                    },
+                    {
+                        "name": "@transcript",
+                        "type": "text",
+                        "label": "transcript"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "rowsAffected",
+                        "type": "number",
+                        "label": "Affected rows"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 36,
+            "module": "builtin:BasicAggregator",
+            "version": 1,
+            "parameters": {
+                "feeder": 25
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 2162,
+                    "y": 4
+                },
+                "restore": {
+                    "extra": {
+                        "feeder": {
+                            "label": "Iterator [25]"
+                        },
+                        "target": {
+                            "label": "Custom"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "id": 37,
+            "module": "postgres:UpdateTable",
+            "version": 2,
+            "parameters": {
+                "table": "\"public\".\"youtube_videos\"",
+                "account": 12721065,
+                "isToManageDataInSharedTransaction": true
+            },
+            "mapper": {
+                "@id": "",
+                "@url": "",
+                "where": [
+                    [
+                        {
+                            "a": "id",
+                            "b": "{{17.id}}",
+                            "o": "equal"
+                        }
+                    ]
+                ],
+                "@views": "",
+                "@created_at": "",
+                "@transcript": "",
+                "@updated_at": "",
+                "@video_title": "",
+                "@channel_name": "",
+                "@video_post_date": "",
+                "@segments_created": "true",
+                "@channel_subscription": ""
+            },
+            "metadata": {
+                "designer": {
+                    "x": 2462,
+                    "y": 4
+                },
+                "restore": {
+                    "parameters": {
+                        "table": {
+                            "label": "public.youtube_videos"
+                        },
+                        "account": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "postgres"
+                            },
+                            "label": "NEONDB Posgresql (neondb_owner@ep-purple-fire-ag5mwkps-pooler.c-2.eu-central-1.aws.neon.tech:5432/neondb)"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:postgres",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "isToManageDataInSharedTransaction",
+                        "type": "boolean",
+                        "label": "Manage data within the shared transaction",
+                        "required": true
+                    },
+                    {
+                        "name": "table",
+                        "type": "select",
+                        "label": "Table",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "@id",
+                        "type": "integer",
+                        "label": "id"
+                    },
+                    {
+                        "name": "@channel_name",
+                        "type": "text",
+                        "label": "channel_name"
+                    },
+                    {
+                        "name": "@channel_subscription",
+                        "type": "text",
+                        "label": "channel_subscription"
+                    },
+                    {
+                        "name": "@video_title",
+                        "type": "text",
+                        "label": "video_title"
+                    },
+                    {
+                        "name": "@url",
+                        "type": "text",
+                        "label": "url"
+                    },
+                    {
+                        "name": "@views",
+                        "type": "text",
+                        "label": "views"
+                    },
+                    {
+                        "name": "@video_post_date",
+                        "type": "text",
+                        "label": "video_post_date"
+                    },
+                    {
+                        "name": "@transcript",
+                        "type": "text",
+                        "label": "transcript"
+                    },
+                    {
+                        "name": "@created_at",
+                        "type": "text",
+                        "label": "created_at"
+                    },
+                    {
+                        "name": "@updated_at",
+                        "type": "text",
+                        "label": "updated_at"
+                    },
+                    {
+                        "name": "@segments_created",
+                        "type": "text",
+                        "label": "segments_created"
+                    },
+                    {
+                        "name": "where",
+                        "type": "filter",
+                        "label": "Filter",
+                        "options": {
+                            "store": [
+                                {
+                                    "label": "id",
+                                    "value": "id"
+                                },
+                                {
+                                    "label": "channel_name",
+                                    "value": "channel_name"
+                                },
+                                {
+                                    "label": "channel_subscription",
+                                    "value": "channel_subscription"
+                                },
+                                {
+                                    "label": "video_title",
+                                    "value": "video_title"
+                                },
+                                {
+                                    "label": "url",
+                                    "value": "url"
+                                },
+                                {
+                                    "label": "views",
+                                    "value": "views"
+                                },
+                                {
+                                    "label": "video_post_date",
+                                    "value": "video_post_date"
+                                },
+                                {
+                                    "label": "transcript",
+                                    "value": "transcript"
+                                },
+                                {
+                                    "label": "created_at",
+                                    "value": "created_at"
+                                },
+                                {
+                                    "label": "updated_at",
+                                    "value": "updated_at"
+                                },
+                                {
+                                    "label": "segments_created",
+                                    "value": "segments_created"
+                                }
+                            ],
+                            "operators": [
+                                {
+                                    "label": "Basic",
+                                    "options": [
+                                        {
+                                            "label": "Is not null",
+                                            "value": "exist"
+                                        },
+                                        {
+                                            "label": "Is null",
+                                            "value": "notexist"
+                                        },
+                                        {
+                                            "label": "Equal to",
+                                            "value": "equal"
+                                        },
+                                        {
+                                            "label": "Not equal to",
+                                            "value": "notequal"
+                                        },
+                                        {
+                                            "label": "Greater than",
+                                            "value": "greater"
+                                        },
+                                        {
+                                            "label": "Greater than or equal to",
+                                            "value": "greaterorequal"
+                                        },
+                                        {
+                                            "label": "Less than",
+                                            "value": "less"
+                                        },
+                                        {
+                                            "label": "Less than or equal to",
+                                            "value": "lessorequal"
+                                        },
+                                        {
+                                            "label": "Contains",
+                                            "value": "contain"
+                                        },
+                                        {
+                                            "label": "Does not contain",
+                                            "value": "notcontain"
+                                        },
+                                        {
+                                            "label": "Starts with",
+                                            "value": "startwith"
+                                        },
+                                        {
+                                            "label": "Does not start with",
+                                            "value": "notstartwith"
+                                        },
+                                        {
+                                            "label": "Ends with",
+                                            "value": "endwith"
+                                        },
+                                        {
+                                            "label": "Does not end with",
+                                            "value": "notendwith"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu2.make.com",
+        "notes": []
+    }
+}
