@@ -8,7 +8,9 @@ export default function UploadPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [batchId, setBatchId] = useState<string | null>(null);
   const [status, setStatus] = useState<any>(null);
+  const [segments, setSegments] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showSegments, setShowSegments] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,6 +50,27 @@ export default function UploadPage() {
     }
   };
 
+  const fetchSegments = async () => {
+    if (!batchId) return;
+    try {
+      const response = await fetch(`/api/segments/batch/${batchId}/segments`);
+      const data = await response.json();
+      setSegments(data.segments || []);
+      setShowSegments(true);
+    } catch (err) {
+      console.error("Fetch segments error:", err);
+    }
+  };
+
+  const processSegment = async (segmentId: string) => {
+    if (!batchId) return;
+    try {
+      await apiPost(`/api/segments/batch/${batchId}/segments/${segmentId}`, {});
+    } catch (err) {
+      console.error("Process segment error:", err);
+    }
+  };
+
   useEffect(() => {
     if (!batchId) return;
 
@@ -60,6 +83,13 @@ export default function UploadPage() {
         if (data.isDone) {
           setIsProcessing(false);
         }
+
+        // Also fetch segments if showing them
+        if (showSegments) {
+          const segResponse = await fetch(`/api/segments/batch/${batchId}/segments`);
+          const segData = await segResponse.json();
+          setSegments(segData.segments || []);
+        }
       } catch (err) {
         console.error("Polling error:", err);
       }
@@ -69,7 +99,7 @@ export default function UploadPage() {
     const interval = setInterval(pollStatus, 2000);
 
     return () => clearInterval(interval);
-  }, [batchId]);
+  }, [batchId, showSegments]);
 
   return (
     <div className="space-y-6">
@@ -199,14 +229,22 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              {status.failed > 0 && status.isDone && (
+              <div className="flex gap-2">
+                {status.failed > 0 && status.isDone && (
+                  <button
+                    onClick={handleRetry}
+                    className="btn-primary flex-1"
+                  >
+                    Retry Failed ({status.failed})
+                  </button>
+                )}
                 <button
-                  onClick={handleRetry}
-                  className="btn-primary w-full"
+                  onClick={fetchSegments}
+                  className="btn-primary flex-1"
                 >
-                  Retry Failed Segments ({status.failed})
+                  {showSegments ? "Refresh Segments" : "View All Segments"}
                 </button>
-              )}
+              </div>
 
               {status.errors && status.errors.length > 0 && (
                 <div className="mt-4">
@@ -222,6 +260,61 @@ export default function UploadPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {showSegments && segments.length > 0 && (
+            <div className="card space-y-3">
+              <h3 className="font-semibold text-text-light">
+                All Segments ({segments.length})
+              </h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {segments.map((seg: any) => (
+                  <div
+                    key={seg.id}
+                    className="flex items-center justify-between p-3 bg-surface-dark rounded border border-border-subtle"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono text-text-light/60">
+                          #{seg.segment_index}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            seg.status === "completed"
+                              ? "bg-accent-cool/20 text-accent-cool"
+                              : seg.status === "failed"
+                              ? "bg-accent-hot/20 text-accent-hot"
+                              : seg.status === "processing"
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : "bg-text-light/20 text-text-light/60"
+                          }`}
+                        >
+                          {seg.status}
+                        </span>
+                      </div>
+                      {seg.segment_data?.topic_hint && (
+                        <div className="text-xs text-text-light/60 mt-1">
+                          {seg.segment_data.topic_hint}
+                        </div>
+                      )}
+                      {seg.error && (
+                        <div className="text-xs text-accent-hot mt-1">
+                          Error: {seg.error}
+                        </div>
+                      )}
+                    </div>
+                    {(seg.status === "pending" || seg.status === "failed") && (
+                      <button
+                        onClick={() => processSegment(seg.id)}
+                        className="px-3 py-1 text-xs bg-accent-cool hover:bg-accent-cool/80 text-white rounded"
+                      >
+                        Process
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
