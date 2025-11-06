@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { apiGet } from "@/lib/api-client";
 
 export default function SegmentDetailPage() {
   const params = useParams();
@@ -22,13 +23,7 @@ export default function SegmentDetailPage() {
 
   const fetchSegmentDetail = async () => {
     try {
-      const response = await fetch(`/api/segments/${segmentId}`);
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch segment");
-      }
-
+      const result = await apiGet<any>(`/api/segments/${segmentId}`);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

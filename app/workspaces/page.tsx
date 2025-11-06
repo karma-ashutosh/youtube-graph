@@ -10,24 +10,24 @@ interface WorkspaceInfo {
 
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState('default');
+  const [currentWorkspace, setCurrentWorkspace] = useState('micro_conf');
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadWorkspaces();
-    const saved = localStorage.getItem('workspace') || 'default';
+    const saved = localStorage.getItem('workspace') || 'micro_conf';
     setCurrentWorkspace(saved);
   }, []);
 
   const loadWorkspaces = async () => {
     try {
       setIsLoading(true);
-      const data = await fetch('/api/workspaces').then(r => r.json());
-      const workspaceList: WorkspaceInfo[] = (data.workspaces || ['default']).map((name: string) => ({
+      const data = await apiGet<{workspaces: string[]}>('/api/workspaces');
+      const workspaceList: WorkspaceInfo[] = (data.workspaces || ['micro_conf']).map((name: string) => ({
         name,
-        isCurrent: name === (localStorage.getItem('workspace') || 'default'),
+        isCurrent: name === (localStorage.getItem('workspace') || 'micro_conf'),
       }));
       setWorkspaces(workspaceList);
       setError(null);
@@ -182,7 +182,7 @@ export default function WorkspacesPage() {
             <li>Relationships and graph structure</li>
           </ul>
           <p className="mt-4">
-            Use workspaces to separate content from different domains (e.g., "health", "ecommerce", "finance")
+            Use workspaces to separate content from different domains (e.g., &quot;health&quot;, &quot;ecommerce&quot;, &quot;finance&quot;)
             to prevent concept collisions and ensure accurate search results.
           </p>
         </div>

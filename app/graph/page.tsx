@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { apiGet } from "@/lib/api-client";
 
 // Dynamically import ForceGraph2D to avoid SSR issues
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -57,13 +58,7 @@ export default function GraphPage() {
       params.append("limit", maxNodes.toString());
       params.append("includeSegments", includeSegments.toString());
 
-      const response = await fetch(`/api/graph?${params}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch graph data");
-      }
-
+      const data = await apiGet<GraphData>(`/api/graph?${params}`);
       setGraphData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -76,12 +71,8 @@ export default function GraphPage() {
     setLoadingDetails(true);
     try {
       const endpoint = nodeType === "segment" ? `/api/segments/${nodeId}` : `/api/concepts/${nodeId}`;
-      const response = await fetch(endpoint);
-      const data = await response.json();
-
-      if (response.ok) {
-        setNodeDetails(data);
-      }
+      const data = await apiGet<any>(endpoint);
+      setNodeDetails(data);
     } catch (err) {
       console.error("Error fetching node details:", err);
     } finally {

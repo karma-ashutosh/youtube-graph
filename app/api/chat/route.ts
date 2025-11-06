@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { answerQuestion } from "@/lib/ai/chat";
+import { withWorkspace } from "@/lib/workspace-context";
 
 /**
  * POST /api/chat
@@ -7,8 +8,9 @@ import { answerQuestion } from "@/lib/ai/chat";
  * Chat endpoint for RAG-powered Q&A
  * Request body: { question: string }
  * Response: { answer: string, sources: { concepts: [], segments: [] } }
+ * Automatically scoped to the workspace specified in X-Workspace header or query param
  */
-export async function POST(request: NextRequest) {
+export const POST = withWorkspace(async (request: NextRequest) => {
   try {
     const { question } = await request.json();
 
@@ -67,4 +69,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

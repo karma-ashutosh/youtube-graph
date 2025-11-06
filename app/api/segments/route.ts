@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getAllSegments } from "@/lib/neo4j/queries";
+import { withWorkspace } from "@/lib/workspace-context";
 
 /**
  * GET /api/segments
  *
  * Returns all segments in the knowledge graph
+ * Automatically scoped to the workspace specified in X-Workspace header or query param
  */
-export async function GET() {
+export const GET = withWorkspace(async () => {
   try {
     const segments = await getAllSegments();
 
@@ -23,4 +25,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});

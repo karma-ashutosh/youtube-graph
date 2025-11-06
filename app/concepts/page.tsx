@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiGet } from "@/lib/api-client";
 
 interface Concept {
   concept_id: string;
@@ -37,13 +38,7 @@ export default function ConceptsPage() {
 
   const fetchConcepts = async () => {
     try {
-      const response = await fetch("/api/concepts");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch concepts");
-      }
-
+      const data = await apiGet<{ concepts: Concept[] }>("/api/concepts");
       setConcepts(data.concepts);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

@@ -9,10 +9,10 @@ const workspaceStorage = new AsyncLocalStorage<string>();
 
 /**
  * Get the current workspace from the async context
- * Returns 'default' if no workspace is set in the context
+ * Returns 'micro_conf' if no workspace is set in the context
  */
 export function getCurrentWorkspace(): string {
-  return workspaceStorage.getStore() || 'default';
+  return workspaceStorage.getStore() || 'micro_conf';
 }
 
 /**
@@ -50,7 +50,7 @@ export function isValidWorkspace(workspace: string): boolean {
 
 /**
  * Get workspace from request headers or query parameters
- * Priority: X-Workspace header > workspace query param > default
+ * Priority: X-Workspace header > workspace query param > micro_conf
  */
 export function getWorkspaceFromRequest(request: Request): string {
   // Try header first
@@ -67,7 +67,7 @@ export function getWorkspaceFromRequest(request: Request): string {
   }
 
   // Default workspace
-  return 'default';
+  return 'micro_conf';
 }
 
 /**

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { apiGet } from "@/lib/api-client";
 
 export default function ConceptDetailPage() {
   const params = useParams();
@@ -21,13 +22,7 @@ export default function ConceptDetailPage() {
 
   const fetchConceptDetail = async () => {
     try {
-      const response = await fetch(`/api/concepts/${conceptId}`);
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch concept");
-      }
-
+      const result = await apiGet<any>(`/api/concepts/${conceptId}`);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

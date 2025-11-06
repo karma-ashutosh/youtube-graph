@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiGet } from "@/lib/api-client";
 
 interface Segment {
   segment: {
@@ -32,13 +33,7 @@ export default function SegmentsPage() {
 
   const fetchSegments = async () => {
     try {
-      const response = await fetch("/api/segments");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch segments");
-      }
-
+      const data = await apiGet<{ segments: Segment[] }>("/api/segments");
       setSegments(data.segments);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

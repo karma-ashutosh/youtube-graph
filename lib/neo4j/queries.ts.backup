@@ -8,14 +8,13 @@ import { Concept, Video, Segment, GraphNode, GraphLink } from "../types";
  */
 export async function getAllConcepts(): Promise<Concept[]> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const result = await session.run(`
-      MATCH (c:Concept {workspace: $workspace})
+      MATCH (c:Concept)
       RETURN DISTINCT c
       ORDER BY c.total_mentions DESC
-    `, { workspace });
+    `);
 
     return result.records.map((record) => {
       const node = record.get("c").properties;
@@ -42,12 +41,11 @@ export async function getAllConcepts(): Promise<Concept[]> {
  */
 export async function getAllConceptsWithRoles() {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const result = await session.run(`
-      MATCH (c:Concept {workspace: $workspace})
-      OPTIONAL MATCH (s:Segment {workspace: $workspace})-[d:DISCUSSES]->(c)
+      MATCH (c:Concept)
+      OPTIONAL MATCH (s:Segment)-[d:DISCUSSES]->(c)
       WITH c,
            sum(CASE WHEN d.role = 'primary' THEN 1 ELSE 0 END) as primary_count,
            sum(CASE WHEN d.role = 'supporting' THEN 1 ELSE 0 END) as supporting_count,
@@ -55,7 +53,7 @@ export async function getAllConceptsWithRoles() {
            collect(DISTINCT d.role) as roles
       RETURN c, primary_count, supporting_count, mentioned_count, roles
       ORDER BY c.total_mentions DESC
-    `, { workspace });
+    `);
 
     return result.records.map((record) => {
       const node = record.get("c").properties;
@@ -95,18 +93,17 @@ export async function createOrGetVideo(
   url: string
 ): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     await session.run(
       `
-      MERGE (v:Video {workspace: $workspace, video_id: $video_id})
+      MERGE (v:Video {video_id: $video_id})
       ON CREATE SET
         v.url = $url,
         v.created_at = datetime()
       RETURN v
     `,
-      { workspace, video_id: videoId, url }
+      { video_id: videoId, url }
     );
   } finally {
     await session.close();
@@ -127,13 +124,12 @@ export async function createSegment(params: {
   embedding?: number[];
 }): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     await session.run(
       `
-      MATCH (v:Video {workspace: $workspace, video_id: $video_id})
-      CREATE (s:Segment { workspace: $workspace,
+      MATCH (v:Video {video_id: $video_id})
+      CREATE (s:Segment {
         segment_id: $segment_id,
         video_id: $video_id,
         start_time: $start_time,
@@ -148,7 +144,6 @@ export async function createSegment(params: {
       RETURN s
     `,
       {
-        workspace,
         video_id: params.videoId,
         segment_id: params.segmentId,
         start_time: params.startTime,
@@ -175,12 +170,11 @@ export async function createConcept(params: {
   embedding?: number[];
 }): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     await session.run(
       `
-      MERGE (c:Concept {workspace: $workspace, concept_id: $concept_id})
+      MERGE (c:Concept {concept_id: $concept_id})
       ON CREATE SET
         c.canonical_name = $canonical_name,
         c.aliases = $aliases,
@@ -196,7 +190,6 @@ export async function createConcept(params: {
       RETURN c
     `,
       {
-        workspace,
         concept_id: params.conceptId,
         canonical_name: params.canonicalName,
         aliases: params.aliases,
@@ -217,13 +210,12 @@ export async function updateConcept(params: {
   newAlias?: string;
 }): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     if (params.newAlias) {
       await session.run(
         `
-        MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
+        MATCH (c:Concept {concept_id: $concept_id})
         SET c.aliases = CASE
           WHEN NOT $new_alias IN c.aliases
           THEN c.aliases + [$new_alias]
@@ -234,7 +226,6 @@ export async function updateConcept(params: {
         RETURN c
       `,
         {
-          workspace,
           concept_id: params.conceptId,
           new_alias: params.newAlias,
         }
@@ -242,13 +233,12 @@ export async function updateConcept(params: {
     } else {
       await session.run(
         `
-        MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
+        MATCH (c:Concept {concept_id: $concept_id})
         SET c.total_mentions = c.total_mentions + 1,
             c.last_mentioned = datetime()
         RETURN c
       `,
         {
-          workspace,
           concept_id: params.conceptId,
         }
       );
@@ -269,11 +259,9 @@ export async function linkSegmentToConcept(params: {
   explanationType?: string;
 }): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const queryParams: Record<string, any> = {
-      workspace,
       segment_id: params.segmentId,
       concept_id: params.conceptId,
       role: params.role,
@@ -281,8 +269,8 @@ export async function linkSegmentToConcept(params: {
     };
 
     let query = `
-      MATCH (s:Segment {workspace: $workspace, segment_id: $segment_id})
-      MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
+      MATCH (s:Segment {segment_id: $segment_id})
+      MATCH (c:Concept {concept_id: $concept_id})
       CREATE (s)-[:DISCUSSES {
         role: $role,
         coverage_depth: $coverage_depth`;
@@ -315,11 +303,9 @@ export async function createExample(params: {
   companyName?: string;
 }): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const queryParams: Record<string, any> = {
-      workspace,
       concept_id: params.conceptId,
       segment_id: params.segmentId,
       example_id: params.exampleId,
@@ -328,8 +314,8 @@ export async function createExample(params: {
     };
 
     let query = `
-      MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
-      MATCH (s:Segment {workspace: $workspace, segment_id: $segment_id})
+      MATCH (c:Concept {concept_id: $concept_id})
+      MATCH (s:Segment {segment_id: $segment_id})
       CREATE (e:Example {
         example_id: $example_id,
         example_text: $example_text,
@@ -367,13 +353,12 @@ export async function createKeyIdea(params: {
   segmentId: string;
 }): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     await session.run(
       `
-      MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
-      MATCH (s:Segment {workspace: $workspace, segment_id: $segment_id})
+      MATCH (c:Concept {concept_id: $concept_id})
+      MATCH (s:Segment {segment_id: $segment_id})
       CREATE (ki:KeyIdea {
         idea_id: $idea_id,
         idea_text: $idea_text,
@@ -386,7 +371,6 @@ export async function createKeyIdea(params: {
       CREATE (ki)-[:EXTRACTED_FROM]->(s)
     `,
       {
-        workspace,
         concept_id: params.conceptId,
         segment_id: params.segmentId,
         idea_id: params.ideaId,
@@ -406,15 +390,14 @@ export async function createKeyIdea(params: {
  */
 export async function getConceptById(conceptId: string) {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     // First get the main concept data
     const mainResult = await session.run(
       `
-      MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
+      MATCH (c:Concept {concept_id: $concept_id})
 
-      OPTIONAL MATCH (c)<-[d:DISCUSSES]-(s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v:Video {workspace: $workspace})
+      OPTIONAL MATCH (c)<-[d:DISCUSSES]-(s:Segment)-[:FROM_VIDEO]->(v:Video)
       OPTIONAL MATCH (c)<-[:ILLUSTRATES]-(e:Example)
       OPTIONAL MATCH (c)<-[:ABOUT]-(ki:KeyIdea)
 
@@ -423,7 +406,7 @@ export async function getConceptById(conceptId: string) {
              collect(DISTINCT e) as examples,
              collect(DISTINCT ki) as key_ideas
       `,
-      { workspace, concept_id: conceptId }
+      { concept_id: conceptId }
     );
 
     if (mainResult.records.length === 0) {
@@ -433,15 +416,15 @@ export async function getConceptById(conceptId: string) {
     // Get related concepts through co-occurrence
     const relatedResult = await session.run(
       `
-      MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
-      MATCH (c)<-[:DISCUSSES]-(shared:Segment {workspace: $workspace})-[:DISCUSSES]->(related:Concept {workspace: $workspace})
+      MATCH (c:Concept {concept_id: $concept_id})
+      MATCH (c)<-[:DISCUSSES]-(shared:Segment)-[:DISCUSSES]->(related:Concept)
       WHERE c.concept_id <> related.concept_id
       WITH related, count(DISTINCT shared) as strength
       ORDER BY strength DESC
       LIMIT 10
       RETURN related, strength
       `,
-      { workspace, concept_id: conceptId }
+      { concept_id: conceptId }
     );
 
     const record = mainResult.records[0];
@@ -485,14 +468,13 @@ export async function getConceptById(conceptId: string) {
  */
 export async function getAllSegments(): Promise<any[]> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const result = await session.run(`
-      MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v:Video {workspace: $workspace})
+      MATCH (s:Segment)-[:FROM_VIDEO]->(v:Video)
       RETURN s, v
       ORDER BY s.created_at DESC
-    `, { workspace });
+    `);
 
     return result.records.map((record) => {
       const segment = record.get("s").properties;
@@ -527,14 +509,13 @@ export async function getAllSegments(): Promise<any[]> {
  */
 export async function getSegmentById(segmentId: string) {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const result = await session.run(
       `
-      MATCH (s:Segment {workspace: $workspace, segment_id: $segment_id})-[:FROM_VIDEO]->(v:Video {workspace: $workspace})
+      MATCH (s:Segment {segment_id: $segment_id})-[:FROM_VIDEO]->(v:Video)
 
-      OPTIONAL MATCH (s)-[d:DISCUSSES]->(c:Concept {workspace: $workspace})
+      OPTIONAL MATCH (s)-[d:DISCUSSES]->(c:Concept)
       OPTIONAL MATCH (e:Example)-[:MENTIONED_IN]->(s)
       OPTIONAL MATCH (ki:KeyIdea)-[:EXTRACTED_FROM]->(s)
 
@@ -543,7 +524,7 @@ export async function getSegmentById(segmentId: string) {
              collect(DISTINCT e) as examples,
              collect(DISTINCT ki) as key_ideas
       `,
-      { workspace, segment_id: segmentId }
+      { segment_id: segmentId }
     );
 
     if (result.records.length === 0) {
@@ -587,16 +568,15 @@ export async function getSegmentById(segmentId: string) {
  */
 export async function getAllVideos() {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const result = await session.run(`
-      MATCH (v:Video {workspace: $workspace})
-      OPTIONAL MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v)
+      MATCH (v:Video)
+      OPTIONAL MATCH (s:Segment)-[:FROM_VIDEO]->(v)
       WITH v, count(s) as segment_count
       ORDER BY v.created_at DESC
       RETURN v, segment_count
-    `, { workspace });
+    `);
 
     return result.records.map((record) => {
       const video = record.get("v").properties;
@@ -616,19 +596,18 @@ export async function getAllVideos() {
 
 export async function getVideoById(videoId: string) {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     const result = await session.run(
       `
-      MATCH (v:Video {workspace: $workspace, video_id: $video_id})
-      OPTIONAL MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v)
+      MATCH (v:Video {video_id: $video_id})
+      OPTIONAL MATCH (s:Segment)-[:FROM_VIDEO]->(v)
       WITH v, s
       ORDER BY s.start_time
       RETURN v,
              collect(s) as segments
       `,
-      { workspace, video_id: videoId }
+      { video_id: videoId }
     );
 
     if (result.records.length === 0) {
@@ -672,11 +651,10 @@ export async function getGraphData(params?: {
   roleFilter?: string;
 }) {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     let conceptQuery = `
-      MATCH (c:Concept {workspace: $workspace})
+      MATCH (c:Concept)
       WHERE c.total_mentions >= $min_mentions
     `;
 
@@ -688,7 +666,7 @@ export async function getGraphData(params?: {
     if (params?.roleFilter && params.roleFilter !== "all") {
       if (params.roleFilter === "primary") {
         conceptQuery = `
-          MATCH (c:Concept {workspace: $workspace})<-[d:DISCUSSES]-(s:Segment {workspace: $workspace})
+          MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
           WHERE c.total_mentions >= $min_mentions
             AND d.role = 'primary'
             ${params?.category ? 'AND c.category = $category' : ''}
@@ -696,7 +674,7 @@ export async function getGraphData(params?: {
         `;
       } else {
         conceptQuery = `
-          MATCH (c:Concept {workspace: $workspace})<-[d:DISCUSSES]-(s:Segment {workspace: $workspace})
+          MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
           WHERE c.total_mentions >= $min_mentions
             AND d.role = $role_filter
             ${params?.category ? 'AND c.category = $category' : ''}
@@ -713,7 +691,6 @@ export async function getGraphData(params?: {
 
     // Get concepts first
     const conceptResult = await session.run(conceptQuery, {
-      workspace,
       min_mentions: neo4j.int(params?.minMentions || 0),
       category: params?.category,
       limit: neo4j.int(params?.limit || 100),
@@ -731,7 +708,7 @@ export async function getGraphData(params?: {
 
     // Get role information for each concept
     const roleQuery = `
-      MATCH (c:Concept {workspace: $workspace})<-[d:DISCUSSES]-(s:Segment {workspace: $workspace})
+      MATCH (c:Concept)<-[d:DISCUSSES]-(s:Segment)
       WHERE c.concept_id IN $concept_ids
       WITH c.concept_id as concept_id,
            collect(DISTINCT d.role) as roles,
@@ -740,7 +717,6 @@ export async function getGraphData(params?: {
     `;
 
     const roleResult = await session.run(roleQuery, {
-      workspace,
       concept_ids: conceptIds,
     });
 
@@ -759,7 +735,7 @@ export async function getGraphData(params?: {
 
     // Find links between concepts (co-occurrence in segments)
     const linkQuery = `
-      MATCH (c1:Concept {workspace: $workspace})<-[:DISCUSSES]-(s:Segment {workspace: $workspace})-[:DISCUSSES]->(c2:Concept {workspace: $workspace})
+      MATCH (c1:Concept)<-[:DISCUSSES]-(s:Segment)-[:DISCUSSES]->(c2:Concept)
       WHERE c1.concept_id IN $concept_ids
         AND c2.concept_id IN $concept_ids
         AND c1.concept_id < c2.concept_id
@@ -767,7 +743,6 @@ export async function getGraphData(params?: {
     `;
 
     const linkResult = await session.run(linkQuery, {
-      workspace,
       concept_ids: conceptIds,
     });
 
@@ -798,7 +773,7 @@ export async function getGraphData(params?: {
     // If includeSegments is true, also add segment nodes and their links to concepts
     if (params?.includeSegments) {
       const segmentQuery = `
-        MATCH (s:Segment {workspace: $workspace})-[:DISCUSSES]->(c:Concept {workspace: $workspace})
+        MATCH (s:Segment)-[:DISCUSSES]->(c:Concept)
         WHERE c.concept_id IN $concept_ids
         WITH DISTINCT s
         LIMIT 20
@@ -806,7 +781,6 @@ export async function getGraphData(params?: {
       `;
 
       const segmentResult = await session.run(segmentQuery, {
-        workspace,
         concept_ids: conceptIds,
       });
 
@@ -827,14 +801,13 @@ export async function getGraphData(params?: {
 
       // Get segment-to-concept links
       const segmentLinkQuery = `
-        MATCH (s:Segment {workspace: $workspace})-[d:DISCUSSES]->(c:Concept {workspace: $workspace})
+        MATCH (s:Segment)-[d:DISCUSSES]->(c:Concept)
         WHERE s.segment_id IN $segment_ids
           AND c.concept_id IN $concept_ids
         RETURN s.segment_id as source, c.concept_id as target, d.role as role
       `;
 
       const segmentLinkResult = await session.run(segmentLinkQuery, {
-        workspace,
         segment_ids: segments.map((s: any) => s.segment_id),
         concept_ids: conceptIds,
       });

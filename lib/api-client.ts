@@ -8,9 +8,9 @@
  */
 export function getWorkspace(): string {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('workspace') || 'default';
+    return localStorage.getItem('workspace') || 'micro_conf';
   }
-  return 'default';
+  return 'micro_conf';
 }
 
 /**

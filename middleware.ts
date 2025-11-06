@@ -11,7 +11,10 @@ export function middleware(request: NextRequest) {
     // Extract workspace from header or query param
     const headerWorkspace = request.headers.get('X-Workspace');
     const queryWorkspace = request.nextUrl.searchParams.get('workspace');
-    const workspace = headerWorkspace || queryWorkspace || 'default';
+    const workspace = headerWorkspace || queryWorkspace || 'micro_conf';
+
+    // Log workspace being used
+    console.log(`[Middleware] ${request.method} ${request.nextUrl.pathname} → workspace: ${workspace} (header: ${headerWorkspace || 'none'}, query: ${queryWorkspace || 'none'})`);
 
     // Validate workspace name (alphanumeric and underscores only)
     if (!/^[a-z0-9_]+$/.test(workspace)) {

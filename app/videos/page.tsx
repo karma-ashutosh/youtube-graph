@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { apiGet } from "@/lib/api-client";
 
 interface Video {
   video_id: string;
@@ -22,13 +23,7 @@ export default function VideosPage() {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch("/api/videos");
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch videos");
-      }
-
+      const result = await apiGet<{ videos: Video[] }>("/api/videos");
       setVideos(result.videos);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

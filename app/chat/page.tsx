@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiGet, apiPost } from '@/lib/api-client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -31,8 +32,7 @@ export default function ChatPage() {
 
   const checkBackfillStatus = async () => {
     try {
-      const response = await fetch('/api/backfill');
-      const data = await response.json();
+      const data = await apiGet<{ success: boolean; status: { concepts: { needingEmbeddings: number }; segments: { needingEmbeddings: number }; total: number } }>('/api/backfill');
 
       if (data.success && data.status) {
         setBackfillStatus({
@@ -52,15 +52,7 @@ export default function ChatPage() {
     setBackfilling(true);
 
     try {
-      const response = await fetch('/api/backfill', {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to backfill embeddings');
-      }
+      const data = await apiPost<{ results: { concepts: { processed: number; total: number }; segments: { processed: number; total: number } } }>('/api/backfill', {});
 
       alert(`Backfill complete!\nConcepts: ${data.results.concepts.processed}/${data.results.concepts.total}\nSegments: ${data.results.segments.processed}/${data.results.segments.total}`);
 
@@ -94,17 +86,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: input }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to get response');
-      }
+      const data = await apiPost<{ answer: string; sources: { concepts: any[]; segments: any[] } }>('/api/chat', { question: input });
 
       const assistantMessage: Message = {
         role: 'assistant',

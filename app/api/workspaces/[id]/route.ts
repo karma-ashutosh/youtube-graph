@@ -7,10 +7,11 @@ import { deleteWorkspace } from '@/lib/neo4j/client';
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const workspace = params.id;
+    const { id } = await params;
+    const workspace = id;
 
     if (workspace === 'default') {
       return NextResponse.json(

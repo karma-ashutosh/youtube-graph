@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiPost } from "@/lib/api-client";
 
 export default function UploadPage() {
   const [jsonInput, setJsonInput] = useState("");
@@ -27,21 +28,7 @@ export default function UploadPage() {
 
     try {
       const data = JSON.parse(jsonInput);
-
-      const response = await fetch("/api/segments/ingest", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to ingest segments");
-      }
-
+      const result = await apiPost<any>("/api/segments/ingest", data);
       setResults(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error occurred");

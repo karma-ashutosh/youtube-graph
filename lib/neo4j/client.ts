@@ -28,19 +28,12 @@ export function getDriver(): Driver {
 /**
  * Get a Neo4j session scoped to the current workspace
  * The workspace is retrieved from the async context set by the middleware
+ *
+ * Note: In Community Edition, we use a single database with workspace properties
+ * instead of separate databases (which requires Enterprise Edition)
  */
 export function getSession(): Session {
-  const workspace = getCurrentWorkspace();
-  return getDriver().session({
-    database: `workspace_${workspace}`,
-  });
-}
-
-/**
- * Get a Neo4j session for the system database (for workspace management)
- */
-export function getSystemSession(): Session {
-  return getDriver().session({ database: 'system' });
+  return getDriver().session();
 }
 
 /**
@@ -71,35 +64,53 @@ export async function testConnection(): Promise<boolean> {
 
 /**
  * List all available workspaces
+ * In Community Edition, we track workspaces by finding distinct workspace properties
  */
 export async function listWorkspaces(): Promise<string[]> {
-  const session = getSystemSession();
+  const session = getSession();
   try {
-    const result = await session.run('SHOW DATABASES');
-    return result.records
-      .map(r => r.get('name') as string)
-      .filter(name => name.startsWith('workspace_'))
-      .map(name => name.replace('workspace_', ''));
+    const result = await session.run(`
+      MATCH (n)
+      WHERE n.workspace IS NOT NULL
+      RETURN DISTINCT n.workspace as workspace
+      ORDER BY workspace
+    `);
+    const workspaces = result.records.map(r => r.get('workspace') as string);
+
+    // Always include 'default' workspace
+    if (!workspaces.includes('default')) {
+      workspaces.unshift('default');
+    }
+
+    return workspaces;
   } finally {
     await session.close();
   }
 }
 
 /**
- * Create a new workspace (database)
+ * Create a new workspace
+ * In Community Edition, workspaces are logical - we create a marker node
+ * so the workspace appears in the list even before any data is added.
  */
 export async function createWorkspace(workspace: string): Promise<void> {
-  const session = getSystemSession();
+  const session = getSession();
   try {
-    await session.run(`CREATE DATABASE workspace_${workspace} IF NOT EXISTS`);
-    console.log(`Workspace '${workspace}' created successfully`);
+    // Create a marker node so the workspace appears in listWorkspaces()
+    await session.run(`
+      MERGE (w:WorkspaceMarker {workspace: $workspace, name: $workspace})
+      ON CREATE SET w.created_at = datetime()
+      RETURN w
+    `, { workspace });
+    console.log(`Workspace '${workspace}' is ready for use`);
   } finally {
     await session.close();
   }
 }
 
 /**
- * Delete a workspace (database)
+ * Delete a workspace
+ * Removes all nodes and relationships associated with this workspace
  * Cannot delete the default workspace
  */
 export async function deleteWorkspace(workspace: string): Promise<void> {
@@ -107,9 +118,22 @@ export async function deleteWorkspace(workspace: string): Promise<void> {
     throw new Error('Cannot delete default workspace');
   }
 
-  const session = getSystemSession();
+  const session = getSession();
   try {
-    await session.run(`DROP DATABASE workspace_${workspace} IF EXISTS`);
+    // Delete all nodes with this workspace (including the marker) in batches
+    let deletedCount = 0;
+    let batchCount = 0;
+    do {
+      const result = await session.run(`
+        MATCH (n {workspace: $workspace})
+        WITH n LIMIT 10000
+        DETACH DELETE n
+        RETURN count(n) as deleted
+      `, { workspace });
+      deletedCount = result.records[0]?.get('deleted')?.toNumber() || 0;
+      batchCount++;
+    } while (deletedCount > 0 && batchCount < 100); // Safety limit
+
     console.log(`Workspace '${workspace}' deleted successfully`);
   } finally {
     await session.close();
