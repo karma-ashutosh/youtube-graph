@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-export function WorkspaceSelector() {
+function WorkspaceSelectorInner() {
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
   const [workspaces, setWorkspaces] = useState<string[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState('default');
@@ -11,7 +11,6 @@ export function WorkspaceSelector() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   useEffect(() => {
     // Check for workspace in URL query parameter first
@@ -147,5 +146,13 @@ export function WorkspaceSelector() {
         )
       )}
     </div>
+  );
+}
+
+export function WorkspaceSelector() {
+  return (
+    <Suspense fallback={<div className="text-sm text-gray-500">Loading...</div>}>
+      <WorkspaceSelectorInner />
+    </Suspense>
   );
 }
