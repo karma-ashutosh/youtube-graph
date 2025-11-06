@@ -122,8 +122,43 @@ async function truncateDatabase() {
     );
     console.log('✓ Constraints recreated\n');
 
-    // Step 6: Verify reset
-    console.log('Step 6: Verifying reset...');
+    // Step 6: Recreate vector indexes
+    console.log('Step 6: Recreating vector indexes...');
+
+    // Create concept embeddings index
+    await session.run(`
+      CREATE VECTOR INDEX concept_embeddings IF NOT EXISTS
+      FOR (c:Concept)
+      ON c.embedding
+      OPTIONS {indexConfig: {
+        \`vector.dimensions\`: 768,
+        \`vector.similarity_function\`: 'cosine'
+      }}
+    `).catch((err) => {
+      if (!err.message.includes('already exists') && !err.message.includes('equivalent index')) {
+        throw err;
+      }
+    });
+
+    // Create segment embeddings index
+    await session.run(`
+      CREATE VECTOR INDEX segment_embeddings IF NOT EXISTS
+      FOR (s:Segment)
+      ON s.embedding
+      OPTIONS {indexConfig: {
+        \`vector.dimensions\`: 768,
+        \`vector.similarity_function\`: 'cosine'
+      }}
+    `).catch((err) => {
+      if (!err.message.includes('already exists') && !err.message.includes('equivalent index')) {
+        throw err;
+      }
+    });
+
+    console.log('✓ Vector indexes recreated\n');
+
+    // Step 7: Verify reset
+    console.log('Step 7: Verifying reset...');
     const finalCountResult = await session.run('MATCH (n) RETURN count(n) as count');
     const finalCount = finalCountResult.records[0].get('count').toNumber();
     console.log(`Final node count: ${finalCount}`);

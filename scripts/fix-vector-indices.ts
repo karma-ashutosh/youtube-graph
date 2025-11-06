@@ -1,5 +1,6 @@
 /**
  * Direct script to check and create vector indices
+ * Note: Indices are shared across workspaces (not workspace-specific)
  */
 
 import * as dotenv from 'dotenv';
@@ -7,8 +8,6 @@ import { getDriver } from '../lib/neo4j/client';
 
 dotenv.config({ path: '.env.local' });
 dotenv.config();
-
-const workspace = 'micro_conf';
 
 async function fixIndices() {
   const driver = getDriver();
@@ -30,11 +29,11 @@ async function fixIndices() {
     }
     console.log();
 
-    // Try to create concept index
-    console.log(`🔧 Creating concept_embeddings_${workspace}...`);
+    // Try to create concept index (shared across workspaces)
+    console.log('🔧 Creating concept_embeddings...');
     try {
       await session.run(`
-        CREATE VECTOR INDEX concept_embeddings_${workspace}
+        CREATE VECTOR INDEX concept_embeddings IF NOT EXISTS
         FOR (c:Concept)
         ON c.embedding
         OPTIONS {indexConfig: {
@@ -52,11 +51,11 @@ async function fixIndices() {
       }
     }
 
-    // Try to create segment index
-    console.log(`🔧 Creating segment_embeddings_${workspace}...`);
+    // Try to create segment index (shared across workspaces)
+    console.log('🔧 Creating segment_embeddings...');
     try {
       await session.run(`
-        CREATE VECTOR INDEX segment_embeddings_${workspace}
+        CREATE VECTOR INDEX segment_embeddings IF NOT EXISTS
         FOR (s:Segment)
         ON s.embedding
         OPTIONS {indexConfig: {

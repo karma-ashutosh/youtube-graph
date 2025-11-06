@@ -43,10 +43,11 @@ export const GET = withWorkspace(async () => {
 
     try {
       // Check if indices exist
+      // Note: Indices are shared across workspaces, not workspace-specific
       const result = await session.run(`
         SHOW INDEXES
         YIELD name, type
-        WHERE name IN ['concept_embeddings_${workspace}', 'segment_embeddings_${workspace}']
+        WHERE name IN ['concept_embeddings', 'segment_embeddings']
         RETURN name, type
       `);
 
@@ -55,8 +56,8 @@ export const GET = withWorkspace(async () => {
         type: r.get('type'),
       }));
 
-      const hasConceptIndex = indices.some(i => i.name === `concept_embeddings_${workspace}`);
-      const hasSegmentIndex = indices.some(i => i.name === `segment_embeddings_${workspace}`);
+      const hasConceptIndex = indices.some(i => i.name === 'concept_embeddings');
+      const hasSegmentIndex = indices.some(i => i.name === 'segment_embeddings');
 
       return NextResponse.json({
         success: true,
