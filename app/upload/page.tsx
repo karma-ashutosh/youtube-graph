@@ -7,6 +7,7 @@ export default function UploadPage() {
   const [jsonInput, setJsonInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [batchId, setBatchId] = useState<string | null>(null);
+  const [batchIdInput, setBatchIdInput] = useState("");
   const [status, setStatus] = useState<any>(null);
   const [segments, setSegments] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,15 @@ export default function UploadPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Retry failed");
     }
+  };
+
+  const loadExistingBatch = () => {
+    if (!batchIdInput.trim()) return;
+    setError(null);
+    setStatus(null);
+    setSegments([]);
+    setBatchId(batchIdInput.trim());
+    setShowSegments(false);
   };
 
   const fetchSegments = async () => {
@@ -109,6 +119,34 @@ export default function UploadPage() {
           Upload video transcript segments with AI-analyzed concepts to build
           the knowledge graph.
         </p>
+      </div>
+
+      {/* Load Existing Batch */}
+      <div className="card">
+        <label className="block text-sm font-medium mb-2 text-text-light">
+          Load Existing Batch
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={batchIdInput}
+            onChange={(e) => setBatchIdInput(e.target.value)}
+            placeholder="Enter batch ID (UUID)..."
+            className="flex-1 p-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light text-sm focus:outline-none focus:border-accent-cool"
+          />
+          <button
+            onClick={loadExistingBatch}
+            disabled={!batchIdInput.trim()}
+            className="btn-primary disabled:bg-gray-600 disabled:cursor-not-allowed"
+          >
+            Load
+          </button>
+        </div>
+        {batchId && (
+          <div className="mt-2 text-xs text-text-light/60">
+            Current Batch: {batchId}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -34,7 +34,11 @@ export async function POST(
 
       try {
         // Process the segment
-        await ingestSegment(row.segment_data);
+        const result = await ingestSegment(row.segment_data);
+
+        if (!result.success) {
+          throw new Error(result.error || "Segment processing failed");
+        }
 
         // Update to completed
         await client.query(

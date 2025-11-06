@@ -111,7 +111,7 @@ export interface NormalizedConcept {
   canonical_name: string;
   concept_id: string;
   is_new: boolean;
-  matched_existing_id?: string;
+  matched_existing_id?: string | null;
   confidence: "high" | "medium" | "low";
 }
 

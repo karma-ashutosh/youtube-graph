@@ -74,6 +74,10 @@ async function processSegmentsBatch(batchId: string) {
         const segmentData = row.segment_data;
         const result = await ingestSegment(segmentData);
 
+        if (!result.success) {
+          throw new Error(result.error || "Segment processing failed");
+        }
+
         // Update to completed
         await client.query(
           `UPDATE batch_segments
