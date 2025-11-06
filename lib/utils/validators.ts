@@ -85,9 +85,9 @@ export const SegmentBatchSchema = z.array(SegmentDataSchema);
 
 // Normalized concept response schema
 export const NormalizedConceptSchema = z.object({
-  canonical_name: z.string(),
-  concept_id: z.string(),
-  is_new: z.boolean(),
+  canonical_name: z.string().nullable().transform(val => val || "Unknown Concept"),
+  concept_id: z.string().nullable().transform(val => val || "unknown_concept"),
+  is_new: z.boolean().default(true),
   matched_existing_id: z.string().nullish(),
-  confidence: z.enum(["high", "medium", "low"]),
+  confidence: z.enum(["high", "medium", "low"]).nullable().transform(val => val || "low"),
 });
