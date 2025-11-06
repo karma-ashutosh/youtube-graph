@@ -53,12 +53,22 @@ RULES:
 - Focus on semantic meaning
 
 OUTPUT (JSON only, no explanation):
+If matching existing concept:
 {
   "canonical_name": "Product-Market Fit",
   "concept_id": "product_market_fit",
   "is_new": false,
   "matched_existing_id": "product_market_fit",
   "confidence": "high"
+}
+
+If creating new concept:
+{
+  "canonical_name": "New Concept Name",
+  "concept_id": "new_concept_name",
+  "is_new": true,
+  "matched_existing_id": null,
+  "confidence": "medium"
 }`;
 }
 
@@ -126,8 +136,10 @@ async function normalizeWithGemini(
   const prompt = buildNormalizationPrompt(rawName, existingConcepts);
 
   try {
+    const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
     const model = googleAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: modelName,
       generationConfig: {
         temperature: 0.1,
         responseMimeType: "application/json",

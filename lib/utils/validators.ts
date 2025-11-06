@@ -88,6 +88,6 @@ export const NormalizedConceptSchema = z.object({
   canonical_name: z.string(),
   concept_id: z.string(),
   is_new: z.boolean(),
-  matched_existing_id: z.string().optional(),
+  matched_existing_id: z.string().nullish(),
   confidence: z.enum(["high", "medium", "low"]),
 });
