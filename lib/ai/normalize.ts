@@ -3,9 +3,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Concept, NormalizedConcept } from "../types";
 import { nameToSlug } from "../utils/parsers";
 import { NormalizedConceptSchema } from "../utils/validators";
+import { findFuzzyMatch } from "../utils/fuzzy-match";
 
 // Determine which AI provider to use from environment
 const AI_PROVIDER = process.env.AI_PROVIDER || "gemini"; // "claude" or "gemini"
+const USE_LLM_NORMALIZATION = process.env.USE_LLM_NORMALIZATION !== "false"; // default true for backward compatibility
 
 // Initialize clients
 const anthropic = AI_PROVIDER === "claude" && process.env.ANTHROPIC_API_KEY
@@ -166,6 +168,34 @@ export async function normalizeConcept(
   rawName: string,
   existingConcepts: Concept[]
 ): Promise<NormalizedConcept> {
+  // Step 1: Try fuzzy matching first (fast, no LLM call)
+  const fuzzyMatch = findFuzzyMatch(rawName, existingConcepts, 0.85);
+
+  if (fuzzyMatch) {
+    console.log(`✓ FUZZY MATCH: "${rawName}" → "${fuzzyMatch.canonical_name}"`);
+    return {
+      canonical_name: fuzzyMatch.canonical_name,
+      concept_id: fuzzyMatch.concept_id,
+      is_new: false,
+      matched_existing_id: fuzzyMatch.concept_id,
+      confidence: "high",
+    };
+  }
+
+  // Step 2: Check if LLM normalization is enabled
+  if (!USE_LLM_NORMALIZATION) {
+    // Skip LLM, create new concept directly
+    console.log(`➕ CREATE NEW: "${rawName}" (LLM normalization disabled)`);
+    return {
+      canonical_name: rawName,
+      concept_id: nameToSlug(rawName),
+      is_new: true,
+      confidence: "medium",
+    };
+  }
+
+  // Step 3: No fuzzy match, use LLM for smarter matching
+  console.log(`⚡ LLM CALL: "${rawName}" (no fuzzy match found)`);
   try {
     if (AI_PROVIDER === "claude") {
       return await normalizeWithClaude(rawName, existingConcepts);
@@ -180,6 +210,7 @@ export async function normalizeConcept(
     console.error("Error normalizing concept with LLM:", error);
 
     // Fallback: Create new concept if LLM fails
+    console.log(`✗ FALLBACK: "${rawName}" → creating new concept`);
     return {
       canonical_name: rawName,
       concept_id: nameToSlug(rawName),
