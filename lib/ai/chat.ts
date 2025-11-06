@@ -21,7 +21,9 @@ async function generateGeneralAnswer(question: string): Promise<string> {
     throw new Error("Google API key not configured");
   }
 
-  const model = googleAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = googleAI.getGenerativeModel({
+    model: process.env.GEMINI_MODEL || "gemini-2.0-flash"
+  });
 
   const result = await model.generateContent(question);
   return result.response.text();
@@ -114,7 +116,9 @@ Please provide an enhanced answer that:
 
 Format your response naturally, incorporating the video insights smoothly into the explanation rather than listing them separately.`;
 
-  const model = googleAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = googleAI.getGenerativeModel({
+    model: process.env.GEMINI_MODEL || "gemini-2.0-flash"
+  });
   const result = await model.generateContent(prompt);
 
   return result.response.text();
