@@ -298,3 +298,19 @@ resource "google_secret_manager_secret_iam_member" "anthropic_api_key_access" {
 data "google_project" "project" {
   project_id = var.project_id
 }
+
+# Domain mapping for Cloud Run
+resource "google_cloud_run_domain_mapping" "youtube_subdomain" {
+  location = var.region
+  name     = "youtube.mysolutions.work"
+
+  metadata {
+    namespace = var.project_id
+  }
+
+  spec {
+    route_name = google_cloud_run_v2_service.youtube_graph.name
+  }
+
+  depends_on = [google_cloud_run_v2_service.youtube_graph]
+}
