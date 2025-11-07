@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { ingestSegment } from "@/lib/utils/ingest";
+import { withWorkspace } from "@/lib/workspace-context";
 
-export async function POST(
+export const POST = withWorkspace(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string; segmentId: string }> }
-) {
+) => {
   try {
     const { id: batchId, segmentId } = await params;
     const client = await pool.connect();
@@ -76,4 +77,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

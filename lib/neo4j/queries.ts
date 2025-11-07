@@ -89,24 +89,25 @@ export async function getAllConceptsWithRoles() {
 
 /**
  * Create or get a video node
+ * Note: Video nodes are NOT workspace-specific - they're shared across all workspaces
+ * since a YouTube video is a YouTube video regardless of which workspace uses it
  */
 export async function createOrGetVideo(
   videoId: string,
   url: string
 ): Promise<void> {
   const session = getSession();
-  const workspace = getCurrentWorkspace();
 
   try {
     await session.run(
       `
-      MERGE (v:Video {workspace: $workspace, video_id: $video_id})
+      MERGE (v:Video {video_id: $video_id})
       ON CREATE SET
         v.url = $url,
         v.created_at = datetime()
       RETURN v
     `,
-      { workspace, video_id: videoId, url }
+      { video_id: videoId, url }
     );
   } finally {
     await session.close();
@@ -132,7 +133,7 @@ export async function createSegment(params: {
   try {
     await session.run(
       `
-      MATCH (v:Video {workspace: $workspace, video_id: $video_id})
+      MATCH (v:Video {video_id: $video_id})
       CREATE (s:Segment { workspace: $workspace,
         segment_id: $segment_id,
         video_id: $video_id,
@@ -414,7 +415,7 @@ export async function getConceptById(conceptId: string) {
       `
       MATCH (c:Concept {workspace: $workspace, concept_id: $concept_id})
 
-      OPTIONAL MATCH (c)<-[d:DISCUSSES]-(s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v:Video {workspace: $workspace})
+      OPTIONAL MATCH (c)<-[d:DISCUSSES]-(s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v:Video)
       OPTIONAL MATCH (c)<-[:ILLUSTRATES]-(e:Example)
       OPTIONAL MATCH (c)<-[:ABOUT]-(ki:KeyIdea)
 
@@ -489,7 +490,7 @@ export async function getAllSegments(): Promise<any[]> {
 
   try {
     const result = await session.run(`
-      MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v:Video {workspace: $workspace})
+      MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v:Video)
       RETURN s, v
       ORDER BY s.created_at DESC
     `, { workspace });
@@ -532,7 +533,7 @@ export async function getSegmentById(segmentId: string) {
   try {
     const result = await session.run(
       `
-      MATCH (s:Segment {workspace: $workspace, segment_id: $segment_id})-[:FROM_VIDEO]->(v:Video {workspace: $workspace})
+      MATCH (s:Segment {workspace: $workspace, segment_id: $segment_id})-[:FROM_VIDEO]->(v:Video)
 
       OPTIONAL MATCH (s)-[d:DISCUSSES]->(c:Concept {workspace: $workspace})
       OPTIONAL MATCH (e:Example)-[:MENTIONED_IN]->(s)
@@ -591,8 +592,7 @@ export async function getAllVideos() {
 
   try {
     const result = await session.run(`
-      MATCH (v:Video {workspace: $workspace})
-      OPTIONAL MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v)
+      MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v:Video)
       WITH v, count(s) as segment_count
       ORDER BY v.created_at DESC
       RETURN v, segment_count
@@ -621,7 +621,7 @@ export async function getVideoById(videoId: string) {
   try {
     const result = await session.run(
       `
-      MATCH (v:Video {workspace: $workspace, video_id: $video_id})
+      MATCH (v:Video {video_id: $video_id})
       OPTIONAL MATCH (s:Segment {workspace: $workspace})-[:FROM_VIDEO]->(v)
       WITH v, s
       ORDER BY s.start_time

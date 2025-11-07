@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { apiPost } from "@/lib/api-client";
+import { apiPost, getWorkspace, setWorkspace } from "@/lib/api-client";
 
 export default function UploadPage() {
   const [jsonInput, setJsonInput] = useState("");
@@ -12,6 +12,12 @@ export default function UploadPage() {
   const [segments, setSegments] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showSegments, setShowSegments] = useState(false);
+  const [workspace, setWorkspaceInput] = useState(getWorkspace());
+
+  const handleWorkspaceChange = (newWorkspace: string) => {
+    setWorkspaceInput(newWorkspace);
+    setWorkspace(newWorkspace);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -118,6 +124,23 @@ export default function UploadPage() {
         <p className="text-text-light/80 mt-2">
           Upload video transcript segments with AI-analyzed concepts to build
           the knowledge graph.
+        </p>
+      </div>
+
+      {/* Workspace Configuration */}
+      <div className="card">
+        <label className="block text-sm font-medium mb-2 text-text-light">
+          Workspace (Namespace)
+        </label>
+        <input
+          type="text"
+          value={workspace}
+          onChange={(e) => handleWorkspaceChange(e.target.value)}
+          placeholder="e.g., micro_conf, lenny_podcast, ycombinator..."
+          className="w-full p-2 border border-border-subtle rounded-lg bg-surface-dark text-text-light text-sm focus:outline-none focus:border-accent-cool"
+        />
+        <p className="text-xs text-text-light/60 mt-2">
+          All uploaded segments will be tagged to this workspace. Use lowercase letters, numbers, and underscores only.
         </p>
       </div>
 

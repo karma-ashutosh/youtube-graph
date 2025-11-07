@@ -89,7 +89,13 @@ export function processSegmentData(segment: SegmentData) {
   const videoId = extractVideoId(segment.video_url);
   const analysis = parseAnalysisJson(segment.analysis_json);
   const duration = calculateDuration(segment.start_time, segment.end_time);
-  const segmentId = segment.id || generateId();
+
+  // Generate segment ID from video ID + timestamps for uniqueness
+  // Format: {videoId}_{startSeconds}_{endSeconds}
+  // Example: "abc123_000354_000442"
+  const startSeconds = parseTimeToSeconds(segment.start_time);
+  const endSeconds = parseTimeToSeconds(segment.end_time);
+  const segmentId = `${videoId}_${String(startSeconds).padStart(6, '0')}_${String(endSeconds).padStart(6, '0')}`;
 
   return {
     segmentId,
