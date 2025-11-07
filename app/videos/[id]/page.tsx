@@ -62,11 +62,13 @@ export default function VideoDetailPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">
-          Video Details
+          {video.title || 'Video Details'}
         </h1>
-        <p className="text-text-light/70 mt-2">
-          Video ID: {video.video_id}
-        </p>
+        {!video.title && (
+          <p className="text-text-light/70 mt-2">
+            Video ID: {video.video_id}
+          </p>
+        )}
       </div>
 
       {/* Video Info */}

@@ -615,6 +615,7 @@ export async function getAllVideos() {
       return {
         video_id: video.video_id,
         url: video.url,
+        title: video.title,
         created_at: video.created_at,
         segment_count: neo4j.isInt(segmentCount) ? segmentCount.toNumber() : segmentCount || 0,
       };

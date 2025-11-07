@@ -8,6 +8,7 @@ import { apiGet } from "@/lib/api-client";
 interface Video {
   video_id: string;
   url: string;
+  title?: string;
   created_at: string;
   segment_count: number;
 }
@@ -126,7 +127,7 @@ export default function VideosPage() {
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold text-text-light group-hover:text-accent-cool transition-colors line-clamp-2">
-                        Video {video.video_id}
+                        {video.title || `Video ${video.video_id}`}
                       </h3>
                     </div>
 
