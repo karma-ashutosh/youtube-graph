@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getConceptById } from "@/lib/neo4j/queries";
-import { withWorkspace } from "@/lib/workspace-context";
 
 /**
  * GET /api/concepts/[id]
  *
  * Returns detailed information about a specific concept
- * Uses workspace context from request headers/query params
  */
-export const GET = withWorkspace(async (
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) => {
+) {
   try {
     const { id: conceptId } = await params;
 
@@ -36,4 +34,4 @@ export const GET = withWorkspace(async (
       { status: 500 }
     );
   }
-});
+}

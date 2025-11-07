@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SegmentBatchSchema } from "@/lib/utils/validators";
 import { ingestSegmentsBatch } from "@/lib/utils/ingest";
-import { withWorkspace } from "@/lib/workspace-context";
 
 /**
  * POST /api/segments/ingest
  *
  * Ingests a batch of segment data into the knowledge graph
- * Uses workspace context from request headers/query params
  *
  * Body: Array of SegmentData objects
  */
-export const POST = withWorkspace(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -25,7 +23,7 @@ export const POST = withWorkspace(async (request: NextRequest) => {
       );
     }
 
-    // Process segments (workspace context is maintained via AsyncLocalStorage)
+    // Process segments
     const results = await ingestSegmentsBatch(segments);
 
     return NextResponse.json({
@@ -47,4 +45,4 @@ export const POST = withWorkspace(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}

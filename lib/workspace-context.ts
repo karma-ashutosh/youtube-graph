@@ -1,41 +1,18 @@
 import { AsyncLocalStorage } from 'async_hooks';
 
 /**
- * DEFAULT_WORKSPACE constant - used when no workspace is explicitly specified
- * This ensures consistency across the application
- */
-export const DEFAULT_WORKSPACE = 'micro_conf';
-
-/**
  * AsyncLocalStorage for maintaining workspace context across async operations
  * This allows us to set the workspace once and access it anywhere in the call chain
  * without passing it as a parameter to every function.
- *
- * @example
- * // In an API route wrapped with withWorkspace():
- * export const GET = withWorkspace(async (request) => {
- *   const concepts = await getAllConcepts();
- *   // getAllConcepts() internally calls getCurrentWorkspace()
- *   return NextResponse.json(concepts);
- * });
  */
 const workspaceStorage = new AsyncLocalStorage<string>();
 
 /**
  * Get the current workspace from the async context
- *
- * @returns The current workspace string, or DEFAULT_WORKSPACE if not set
- *
- * @example
- * // In any Neo4j query function:
- * const workspace = getCurrentWorkspace();
- * const result = await session.run(
- *   'MATCH (n:Node {workspace: $workspace}) RETURN n',
- *   { workspace }
- * );
+ * Returns 'micro_conf' if no workspace is set in the context
  */
 export function getCurrentWorkspace(): string {
-  return workspaceStorage.getStore() || DEFAULT_WORKSPACE;
+  return workspaceStorage.getStore() || 'micro_conf';
 }
 
 /**
@@ -73,15 +50,7 @@ export function isValidWorkspace(workspace: string): boolean {
 
 /**
  * Get workspace from request headers or query parameters
- * Priority: X-Workspace header > workspace query param > DEFAULT_WORKSPACE
- *
- * @param request - The incoming HTTP request
- * @returns The workspace string to use for this request
- *
- * @example
- * // Automatically used by withWorkspace() HOF:
- * const workspace = getWorkspaceFromRequest(request);
- * // Returns 'my_workspace' if X-Workspace header is set to 'my_workspace'
+ * Priority: X-Workspace header > workspace query param > micro_conf
  */
 export function getWorkspaceFromRequest(request: Request): string {
   // Try header first
@@ -98,7 +67,7 @@ export function getWorkspaceFromRequest(request: Request): string {
   }
 
   // Default workspace
-  return DEFAULT_WORKSPACE;
+  return 'micro_conf';
 }
 
 /**
