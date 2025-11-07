@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSegmentById } from "@/lib/neo4j/queries";
+import { withWorkspace } from "@/lib/workspace-context";
 
 /**
  * GET /api/segments/[id]
  *
  * Returns detailed information about a specific segment
+ * Uses workspace context from request headers/query params
  */
-export async function GET(
+export const GET = withWorkspace(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id: segmentId } = await params;
 
@@ -34,4 +36,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
