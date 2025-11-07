@@ -47,6 +47,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingTimer, setLoadingTimer] = useState(0);
   const [backfillStatus, setBackfillStatus] = useState<{ concepts: number; segments: number; total: number } | null>(null);
   const [backfilling, setBackfilling] = useState(false);
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
@@ -108,6 +109,20 @@ export default function ChatPage() {
   useEffect(() => {
     checkBackfillStatus();
   }, []);
+
+  // Timer for loading state
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (loading) {
+      setLoadingTimer(0);
+      interval = setInterval(() => {
+        setLoadingTimer((prev) => prev + 0.1);
+      }, 100);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -456,12 +471,33 @@ export default function ChatPage() {
 
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-surface-dark border border-border-subtle rounded-lg p-4">
-              <div className="flex items-center gap-2 text-text-light/60">
-                <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                <span className="ml-2 text-sm">Thinking...</span>
+            <div className="bg-surface-dark border border-border-subtle rounded-lg p-4 min-w-[320px]">
+              <div className="space-y-3">
+                {/* Header with dots and timer */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-text-light/60">
+                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                    <span className="ml-2 text-sm">Thinking...</span>
+                  </div>
+                  <div className="text-sm font-mono text-accent-cool">
+                    {loadingTimer.toFixed(1)}s
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="space-y-1">
+                  <div className="w-full h-2 bg-primary-dark rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-accent-cool to-accent-warm transition-all duration-100 ease-linear"
+                      style={{ width: `${Math.min((loadingTimer / 20) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-text-light/50 text-center">
+                    This may take up to 20 seconds
+                  </div>
+                </div>
               </div>
             </div>
           </div>
