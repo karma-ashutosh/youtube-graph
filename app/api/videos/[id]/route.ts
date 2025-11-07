@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVideoById } from "@/lib/neo4j/queries";
+import { withWorkspace } from "@/lib/workspace-context";
 
-export async function GET(
+export const GET = withWorkspace(async (
   request: NextRequest,
   props: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const params = await props.params;
     const videoId = params.id;
@@ -22,4 +23,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
