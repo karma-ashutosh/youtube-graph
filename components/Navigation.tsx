@@ -4,21 +4,20 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { WorkspaceSelector } from './WorkspaceSelector';
+import CreatorOnboardingModal from './CreatorOnboardingModal';
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
 
   const allNavLinks = [
     { href: '/', label: 'Home', modes: ['internal', 'external'] },
     { href: '/chat', label: 'Chat', modes: ['internal', 'external'] },
-    { href: '/upload', label: 'Upload', modes: ['internal'] },
-    { href: '/graph', label: 'Graph', modes: ['internal'] },
     { href: '/videos', label: 'Videos', modes: ['internal', 'external'] },
     { href: '/concepts', label: 'Concepts', modes: ['internal'] },
     { href: '/segments', label: 'Segments', modes: ['internal'] },
     { href: '/query', label: 'Query', modes: ['internal'] },
-    { href: '/workspaces', label: 'Workspaces', modes: ['internal'] },
   ];
 
   // Filter nav links based on app mode
@@ -59,6 +58,13 @@ export default function Navigation() {
                 {link.label}
               </Link>
             ))}
+            {/* CTA Button */}
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="ml-4 inline-flex items-center px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-accent-cool to-accent-warm hover:from-accent-cool/80 hover:to-accent-warm/80 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            >
+              Onboard Your Favorite Creator
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -102,9 +108,26 @@ export default function Navigation() {
                 {link.label}
               </Link>
             ))}
+            {/* Mobile CTA Button */}
+            <div className="border-t border-border-subtle my-2"></div>
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                setIsFormOpen(true);
+              }}
+              className="w-full text-center px-3 py-2.5 text-base font-semibold text-white bg-gradient-to-r from-accent-cool to-accent-warm hover:from-accent-cool/80 hover:to-accent-warm/80 rounded-lg shadow-lg transition-all duration-200"
+            >
+              Onboard Your Favorite Creator
+            </button>
           </div>
         </div>
       )}
+
+      {/* Onboarding Modal */}
+      <CreatorOnboardingModal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+      />
     </nav>
   );
 }

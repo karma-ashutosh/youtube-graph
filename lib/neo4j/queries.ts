@@ -48,12 +48,16 @@ export async function getAllConceptsWithRoles() {
     const result = await session.run(`
       MATCH (c:Concept {workspace: $workspace})
       OPTIONAL MATCH (s:Segment {workspace: $workspace})-[d:DISCUSSES]->(c)
+      OPTIONAL MATCH (c)<-[:ILLUSTRATES]-(e:Example)
+      OPTIONAL MATCH (c)<-[:ABOUT]-(ki:KeyIdea)
       WITH c,
            sum(CASE WHEN d.role = 'primary' THEN 1 ELSE 0 END) as primary_count,
            sum(CASE WHEN d.role = 'supporting' THEN 1 ELSE 0 END) as supporting_count,
            sum(CASE WHEN d.role = 'mentioned' THEN 1 ELSE 0 END) as mentioned_count,
-           collect(DISTINCT d.role) as roles
-      RETURN c, primary_count, supporting_count, mentioned_count, roles
+           collect(DISTINCT d.role) as roles,
+           count(DISTINCT e) as example_count,
+           count(DISTINCT ki) as key_idea_count
+      RETURN c, primary_count, supporting_count, mentioned_count, roles, example_count, key_idea_count
       ORDER BY c.total_mentions DESC
     `, { workspace });
 
@@ -63,6 +67,11 @@ export async function getAllConceptsWithRoles() {
       const supportingCount = record.get("supporting_count");
       const mentionedCount = record.get("mentioned_count");
       const roles = record.get("roles");
+      const exampleCount = record.get("example_count");
+      const keyIdeaCount = record.get("key_idea_count");
+
+      const exampleCountNum = neo4j.isInt(exampleCount) ? exampleCount.toNumber() : exampleCount || 0;
+      const keyIdeaCountNum = neo4j.isInt(keyIdeaCount) ? keyIdeaCount.toNumber() : keyIdeaCount || 0;
 
       return {
         concept_id: node.concept_id,
@@ -80,6 +89,7 @@ export async function getAllConceptsWithRoles() {
         mentioned_count: neo4j.isInt(mentionedCount) ? mentionedCount.toNumber() : mentionedCount || 0,
         roles: roles || [],
         has_primary: roles.includes("primary"),
+        has_details: exampleCountNum > 0 || keyIdeaCountNum > 0,
       };
     });
   } finally {

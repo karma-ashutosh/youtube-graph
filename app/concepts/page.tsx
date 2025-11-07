@@ -18,6 +18,7 @@ interface Concept {
   mentioned_count: number;
   roles: string[];
   has_primary: boolean;
+  has_details: boolean;
 }
 
 type RoleFilter = "all" | "primary" | "supporting" | "mentioned";
