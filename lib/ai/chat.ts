@@ -14,39 +14,6 @@ export interface ChatResponse {
   };
 }
 
-/**
- * Generate a general answer using Gemini
- */
-async function generateGeneralAnswer(question: string, requestId: string): Promise<string> {
-  if (!googleAI) {
-    throw new Error("Google API key not configured");
-  }
-
-  const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
-
-  debugLogger.log("generateGeneralAnswer", "start", {
-    requestId,
-    question,
-    questionLength: question.length,
-    model: modelName,
-  });
-
-  const model = googleAI.getGenerativeModel({ model: modelName });
-
-  const startTime = Date.now();
-  const result = await model.generateContent(question);
-  const answer = result.response.text();
-  const endTime = Date.now();
-
-  debugLogger.log("generateGeneralAnswer", "complete", {
-    requestId,
-    answerLength: answer.length,
-    durationMs: endTime - startTime,
-    model: modelName,
-  });
-
-  return answer;
-}
 
 /**
  * Build context string from knowledge graph results
@@ -112,11 +79,10 @@ function buildContextFromGraph(
 }
 
 /**
- * Enhance general answer with knowledge graph context
+ * Generate answer with knowledge graph context (one-pass approach)
  */
-async function enhanceWithContext(
+async function generateAnswerWithContext(
   question: string,
-  generalAnswer: string,
   graphResults: { concepts: SimilarConcept[]; segments: SimilarSegment[] },
   requestId: string
 ): Promise<string> {
@@ -124,46 +90,45 @@ async function enhanceWithContext(
     throw new Error("Google API key not configured");
   }
 
-  debugLogger.log("enhanceWithContext", "start", {
+  debugLogger.log("generateAnswerWithContext", "start", {
     requestId,
     questionLength: question.length,
-    generalAnswerLength: generalAnswer.length,
     conceptCount: graphResults.concepts.length,
     segmentCount: graphResults.segments.length,
   });
 
   const context = buildContextFromGraph(graphResults, requestId);
 
-  if (!context) {
-    debugLogger.log("enhanceWithContext", "no_context", {
-      requestId,
-      message: "No relevant context found, returning general answer",
-    });
-    return generalAnswer;
-  }
+  let prompt: string;
 
-  const prompt = `You are a helpful assistant that provides comprehensive answers by combining general knowledge with specific insights from a video knowledge base.
+  if (!context) {
+    debugLogger.log("generateAnswerWithContext", "no_context", {
+      requestId,
+      message: "No relevant context found, generating general answer",
+    });
+    prompt = question;
+  } else {
+    prompt = `You are a helpful assistant that provides comprehensive answers using insights from a video knowledge base.
 
 Question: ${question}
 
-General Answer:
-${generalAnswer}
-
-Additional Context from Video Database:
+Context from Video Database:
 ${context}
 
-Please provide an enhanced answer that:
-1. Starts with a clear, concise explanation
+Please provide a comprehensive answer that:
+1. Directly addresses the question with a clear, concise explanation
 2. Integrates specific insights from the video segments when relevant
-3. Mentions which concepts or videos the insights come from
-4. Keeps the tone conversational and helpful
-5. If the video content contradicts or adds nuance to the general answer, acknowledge that
+3. Mentions which concepts or videos the insights come from (with timestamps when helpful)
+4. Uses both your general knowledge and the video content to give a complete answer
+5. Keeps the tone conversational and helpful
+6. If the video content provides unique perspectives or details, highlight those
 
 Format your response naturally, incorporating the video insights smoothly into the explanation rather than listing them separately.`;
+  }
 
   const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 
-  debugLogger.log("enhanceWithContext", "llm_call", {
+  debugLogger.log("generateAnswerWithContext", "llm_call", {
     requestId,
     promptLength: prompt.length,
     model: modelName,
@@ -173,16 +138,16 @@ Format your response naturally, incorporating the video insights smoothly into t
 
   const startTime = Date.now();
   const result = await model.generateContent(prompt);
-  const enhancedAnswer = result.response.text();
+  const answer = result.response.text();
   const endTime = Date.now();
 
-  debugLogger.log("enhanceWithContext", "complete", {
+  debugLogger.log("generateAnswerWithContext", "complete", {
     requestId,
-    enhancedAnswerLength: enhancedAnswer.length,
+    answerLength: answer.length,
     durationMs: endTime - startTime,
   });
 
-  return enhancedAnswer;
+  return answer;
 }
 
 /**
@@ -199,46 +164,40 @@ export async function answerQuestion(question: string): Promise<ChatResponse> {
   });
 
   try {
-    // 1. Get general answer and semantic search in parallel
-    debugLogger.log("answerQuestion", "parallel_operations_start", {
+    // 1. Get semantic search results
+    debugLogger.log("answerQuestion", "semantic_search_start", {
       requestId,
-      operations: ["generateGeneralAnswer", "semanticSearch"],
     });
 
-    const startTime = Date.now();
-    const [generalAnswer, graphResults] = await Promise.all([
-      generateGeneralAnswer(question, requestId),
-      semanticSearch(question, requestId),
-    ]);
-    const parallelDuration = Date.now() - startTime;
+    const searchStartTime = Date.now();
+    const graphResults = await semanticSearch(question, requestId);
+    const searchDuration = Date.now() - searchStartTime;
 
-    debugLogger.log("answerQuestion", "parallel_operations_complete", {
+    debugLogger.log("answerQuestion", "semantic_search_complete", {
       requestId,
-      durationMs: parallelDuration,
+      durationMs: searchDuration,
       conceptsFound: graphResults.concepts.length,
       segmentsFound: graphResults.segments.length,
-      generalAnswerLength: generalAnswer.length,
     });
 
     console.log(`Found ${graphResults.concepts.length} concepts and ${graphResults.segments.length} segments`);
 
-    // 2. Enhance answer with graph context
-    const enhancedAnswer = await enhanceWithContext(
+    // 2. Generate answer with context in one pass
+    const answer = await generateAnswerWithContext(
       question,
-      generalAnswer,
       graphResults,
       requestId
     );
 
     debugLogger.log("answerQuestion", "complete", {
       requestId,
-      finalAnswerLength: enhancedAnswer.length,
+      finalAnswerLength: answer.length,
       totalConceptsReturned: graphResults.concepts.length,
       totalSegmentsReturned: graphResults.segments.length,
     });
 
     return {
-      answer: enhancedAnswer,
+      answer,
       sources: graphResults,
     };
   } catch (error) {
