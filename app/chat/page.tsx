@@ -304,20 +304,29 @@ export default function ChatPage() {
                                     {segment.video_title}
                                   </div>
                                 )}
-                                <div className="text-xs text-text-light/70 line-clamp-2 mb-2">
+                                <div className="text-xs text-text-light/70 line-clamp-2 mb-3">
                                   {segment.transcript}
                                 </div>
-                                <a
-                                  href={`${segment.video_url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-accent-cool hover:text-accent-cool/80 transition-colors"
-                                >
-                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
-                                  </svg>
-                                  Watch at {segment.start_time}
-                                </a>
+                                <div className="flex items-center gap-2">
+                                  <Link
+                                    href={`/segments/${segment.segment_id}`}
+                                    className="text-xs text-accent-cool hover:text-accent-cool/80 underline transition-colors"
+                                  >
+                                    View Details
+                                  </Link>
+                                  <span className="text-text-light/40">•</span>
+                                  <a
+                                    href={`${segment.video_url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 px-3 py-1 bg-accent-cool/10 hover:bg-accent-cool/20 border border-accent-cool/30 hover:border-accent-cool/50 rounded text-xs text-accent-cool transition-all"
+                                  >
+                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                                    </svg>
+                                    Watch now
+                                  </a>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -344,20 +353,31 @@ export default function ChatPage() {
                                 {segment.video_title}
                               </div>
                             )}
-                            <div className="text-xs text-text-light/70 line-clamp-2 mb-2">
+                            {/* Segment Preview */}
+                            <div className="text-xs text-text-light/70 line-clamp-2 mb-3">
                               {segment.transcript}
                             </div>
-                            <a
-                              href={`${segment.video_url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs text-accent-cool hover:text-accent-cool/80 transition-colors"
-                            >
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
-                              </svg>
-                              Watch at {segment.start_time}
-                            </a>
+                            {/* Segment Direct URL and Watch Now Button */}
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/segments/${segment.segment_id}`}
+                                className="text-xs text-accent-cool hover:text-accent-cool/80 underline transition-colors"
+                              >
+                                View Details
+                              </Link>
+                              <span className="text-text-light/40">•</span>
+                              <a
+                                href={`${segment.video_url}&t=${getYouTubeTimestamp(segment.start_time)}s`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-3 py-1 bg-accent-cool/10 hover:bg-accent-cool/20 border border-accent-cool/30 hover:border-accent-cool/50 rounded text-xs text-accent-cool transition-all"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                                </svg>
+                                Watch now
+                              </a>
+                            </div>
                           </div>
                         );
 
@@ -373,7 +393,7 @@ export default function ChatPage() {
                             )}
                             {reference.length > 0 && (
                               <div>
-                                <div className="text-xs text-text-light/60 mb-2">Additional References:</div>
+                                <div className="text-xs text-text-light/60 mb-2">Relevant Segments:</div>
                                 <div className="space-y-2">
                                   {reference.map(renderSegment)}
                                 </div>
@@ -382,6 +402,50 @@ export default function ChatPage() {
                           </div>
                         );
                       })()}
+
+                      {/* Concepts Section */}
+                      {msg.sources.concepts.length > 0 && (
+                        <div className="mt-3">
+                          <div className="text-xs text-text-light/60 mb-2">Related Concepts:</div>
+                          <div className="space-y-2">
+                            {msg.sources.concepts.map((concept) => (
+                              <div
+                                key={concept.concept_id}
+                                className="bg-primary-dark border border-border-subtle rounded-lg p-3"
+                              >
+                                {/* Concept Preview */}
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div className="font-medium text-sm text-text-light">
+                                    {concept.canonical_name}
+                                  </div>
+                                  {concept.category && (
+                                    <span className="text-xs px-2 py-0.5 bg-accent-cool/10 border border-accent-cool/30 rounded text-accent-cool">
+                                      {concept.category}
+                                    </span>
+                                  )}
+                                </div>
+                                {concept.aliases && concept.aliases.length > 0 && (
+                                  <div className="text-xs text-text-light/60 mb-2">
+                                    Also known as: {concept.aliases.join(', ')}
+                                  </div>
+                                )}
+                                {concept.total_mentions && (
+                                  <div className="text-xs text-text-light/70 mb-2">
+                                    Mentioned {concept.total_mentions} time{concept.total_mentions !== 1 ? 's' : ''}
+                                  </div>
+                                )}
+                                {/* Concept Direct URL */}
+                                <Link
+                                  href={`/concepts/${concept.concept_id}`}
+                                  className="text-xs text-accent-cool hover:text-accent-cool/80 underline transition-colors"
+                                >
+                                  View Concept Details
+                                </Link>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
