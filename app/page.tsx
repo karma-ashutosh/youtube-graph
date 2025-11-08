@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { apiGet } from "@/lib/api-client";
 
 interface Video {
@@ -137,40 +138,59 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {recentVideos.map((video) => (
-              <Link
-                key={video.video_id}
-                href={`/videos/${video.video_id}`}
-                className="card hover:shadow-glow-cool hover:border-accent-cool/50 transition-all duration-300 group"
-              >
-                <h3 className="text-lg font-semibold text-text-light group-hover:text-accent-cool transition-colors mb-3 line-clamp-2">
-                  {video.title}
-                </h3>
-                {video.description && (
-                  <p className="text-sm text-text-light/60 mb-3 line-clamp-2">
-                    {video.description}
-                  </p>
-                )}
-                <div className="flex items-center gap-4 text-sm text-text-light/70">
-                  {video.duration && (
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>{formatDuration(video.duration)}</span>
+            {recentVideos.map((video) => {
+              const thumbnail = `https://img.youtube.com/vi/${video.video_id}/mqdefault.jpg`;
+
+              return (
+                <Link
+                  key={video.video_id}
+                  href={`/videos/${video.video_id}`}
+                  className="block border border-border-subtle rounded-lg overflow-hidden hover:border-accent-cool/50 hover:shadow-glow-cool transition-all duration-300 bg-surface-dark group"
+                >
+                  {/* Thumbnail */}
+                  <div className="relative aspect-video bg-primary-dark">
+                    <Image
+                      src={thumbnail}
+                      alt={video.title || "Video thumbnail"}
+                      width={320}
+                      height={180}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-text-light group-hover:text-accent-cool transition-colors mb-3 line-clamp-2">
+                      {video.title}
+                    </h3>
+                    {video.description && (
+                      <p className="text-sm text-text-light/60 mb-3 line-clamp-2">
+                        {video.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-sm text-text-light/70">
+                      {video.duration && (
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>{formatDuration(video.duration)}</span>
+                        </div>
+                      )}
+                      {video.segment_count && (
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span>{video.segment_count} segments</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {video.segment_count && (
-                    <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <span>{video.segment_count} segments</span>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            ))}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
           <div className="text-center">
             <Link
