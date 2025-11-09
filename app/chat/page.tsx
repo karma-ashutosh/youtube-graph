@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { apiGet, apiPost } from '@/lib/api-client';
+import { LoadingAnimation } from '@/components/chat/LoadingAnimation';
 
 interface Concept {
   name: string;
@@ -564,35 +565,7 @@ export default function ChatPage() {
 
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-surface-dark border border-border-subtle rounded-lg p-4 min-w-[320px]">
-              <div className="space-y-3">
-                {/* Header with dots and timer */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-text-light/60">
-                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                    <span className="ml-2 text-sm">Thinking...</span>
-                  </div>
-                  <div className="text-sm font-mono text-accent-cool">
-                    {loadingTimer.toFixed(1)}s
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="w-full h-2 bg-primary-dark rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-accent-cool to-accent-warm transition-all duration-100 ease-linear"
-                      style={{ width: `${Math.min((loadingTimer / 20) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-text-light/50 text-center">
-                    This may take up to 20 seconds
-                  </div>
-                </div>
-              </div>
-            </div>
+            <LoadingAnimation elapsedTime={loadingTimer} maxTime={20} />
           </div>
         )}
       </div>
