@@ -1,0 +1,6 @@
+{
+  "projectInstructions": [
+    ".claude/project_context.md"
+  ],
+  "description": "YouTube Knowledge Graph - RAG-powered chat with video insights"
+}
