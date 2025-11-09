@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { answerQuestion } from "@/lib/ai/chat";
+import { answerQuestion, ConversationMessage } from "@/lib/ai/chat";
 import { withWorkspace } from "@/lib/workspace-context";
+import {
+  createConversation,
+  addMessage,
+  getMessages,
+  generateConversationTitle,
+} from "@/lib/db/conversations";
+import { rewriteQueryWithContext } from "@/lib/rag/query-rewriter";
 
 /**
  * POST /api/chat
  *
- * Chat endpoint for RAG-powered Q&A
- * Request body: { question: string }
- * Response: { answer: string, sources: { concepts: [], segments: [] } }
+ * Chat endpoint for RAG-powered Q&A with conversation history support
+ * Request body: { question: string, conversationId?: string }
+ * Response: { answer: string, conversationId: string, sources: { concepts: [], segments: [] } }
  * Automatically scoped to the workspace specified in X-Workspace header or query param
  */
 export const POST = withWorkspace(async (request: NextRequest) => {
   try {
-    const { question } = await request.json();
+    const { question, conversationId } = await request.json();
 
     if (!question || typeof question !== "string") {
       return NextResponse.json(
@@ -30,12 +37,58 @@ export const POST = withWorkspace(async (request: NextRequest) => {
 
     console.log(`Chat question: "${question}"`);
 
-    // Generate answer using RAG
-    const response = await answerQuestion(question);
+    // Get or create conversation
+    const workspace = request.headers.get("X-Workspace") || "default";
+    let convId = conversationId;
+    let conversationHistory: ConversationMessage[] = [];
+
+    if (!convId) {
+      // Create new conversation
+      convId = await createConversation(workspace);
+      console.log(`Created new conversation: ${convId}`);
+    } else {
+      // Load existing conversation history
+      const messages = await getMessages(convId);
+      conversationHistory = messages.map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      }));
+      console.log(`Loaded ${conversationHistory.length} messages from conversation ${convId}`);
+    }
+
+    // Save user message
+    await addMessage(convId, "user", question);
+
+    // Rewrite query with context if needed (for better RAG search)
+    let searchQuery = question;
+    if (conversationHistory.length > 0) {
+      try {
+        searchQuery = await rewriteQueryWithContext(question, await getMessages(convId));
+        console.log(`Rewritten query: "${searchQuery}"`);
+      } catch (error) {
+        console.error("Query rewriting failed, using original query:", error);
+        // Continue with original query if rewriting fails
+      }
+    }
+
+    // Generate answer using RAG with conversation history
+    const response = await answerQuestion(searchQuery, conversationHistory);
+
+    // Save assistant message with sources
+    await addMessage(convId, "assistant", response.answer, {
+      concepts: response.sources.concepts,
+      segments: response.sources.segments,
+    });
+
+    // Generate title after first exchange
+    if (conversationHistory.length === 0) {
+      await generateConversationTitle(convId);
+    }
 
     return NextResponse.json({
       success: true,
       answer: response.answer,
+      conversationId: convId,
       sources: {
         concepts: response.sources.concepts.map((c) => ({
           concept_id: c.concept_id,

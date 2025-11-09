@@ -50,6 +50,7 @@ export default function ChatPage() {
   const [loadingTimer, setLoadingTimer] = useState(0);
   const [backfillStatus, setBackfillStatus] = useState<{ concepts: number; segments: number; total: number } | null>(null);
   const [backfilling, setBackfilling] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
 
   // Helper function to categorize segments
@@ -105,10 +106,27 @@ export default function ChatPage() {
     }
   };
 
-  // Check backfill status on page load
+  // Load conversation from URL if present
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const convId = params.get('conversation');
+
+    if (convId) {
+      loadConversation(convId);
+    }
+
     checkBackfillStatus();
   }, []);
+
+  const loadConversation = async (convId: string) => {
+    try {
+      const data = await apiGet<{ conversation: any; messages: Message[] }>(`/api/conversations/${convId}`);
+      setConversationId(convId);
+      setMessages(data.messages);
+    } catch (error) {
+      console.error('Failed to load conversation:', error);
+    }
+  };
 
   // Timer for loading state
   useEffect(() => {
@@ -139,7 +157,21 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const data = await apiPost<{ answer: string; sources: { concepts: any[]; segments: any[] } }>('/api/chat', { question: input });
+      const data = await apiPost<{ answer: string; conversationId: string; sources: { concepts: any[]; segments: any[] } }>('/api/chat', {
+        question: input,
+        conversationId, // Pass conversation ID if exists
+      });
+
+      // Update conversation ID if new
+      if (!conversationId) {
+        setConversationId(data.conversationId);
+        // Update URL without reload
+        window.history.pushState(
+          {},
+          '',
+          `/chat?conversation=${data.conversationId}`
+        );
+      }
 
       const assistantMessage: Message = {
         role: 'assistant',
@@ -160,6 +192,13 @@ export default function ChatPage() {
     }
   };
 
+  // Start a new conversation
+  const startNewConversation = () => {
+    setConversationId(null);
+    setMessages([]);
+    window.history.pushState({}, '', '/chat');
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-8">
@@ -173,23 +212,35 @@ export default function ChatPage() {
             </p>
           </div>
 
-          {/* Backfill Button */}
-          {backfillStatus && backfillStatus.total > 0 && (
-            <button
-              onClick={handleBackfill}
-              disabled={backfilling}
-              className="px-4 py-2 bg-accent-warm/20 hover:bg-accent-warm/30 border border-accent-warm/50 hover:border-accent-warm rounded-lg text-sm text-accent-warm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {backfilling ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-accent-warm border-t-transparent rounded-full animate-spin"></div>
-                  Backfilling...
-                </span>
-              ) : (
-                <span>⚡ Backfill {backfillStatus.total} Embeddings</span>
-              )}
-            </button>
-          )}
+          <div className="flex gap-2">
+            {/* New Conversation Button */}
+            {conversationId && (
+              <button
+                onClick={startNewConversation}
+                className="px-4 py-2 bg-accent-cool/20 hover:bg-accent-cool/30 border border-accent-cool/50 hover:border-accent-cool rounded-lg text-sm text-accent-cool font-medium transition-all whitespace-nowrap"
+              >
+                + New Chat
+              </button>
+            )}
+
+            {/* Backfill Button */}
+            {backfillStatus && backfillStatus.total > 0 && (
+              <button
+                onClick={handleBackfill}
+                disabled={backfilling}
+                className="px-4 py-2 bg-accent-warm/20 hover:bg-accent-warm/30 border border-accent-warm/50 hover:border-accent-warm rounded-lg text-sm text-accent-warm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {backfilling ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-accent-warm border-t-transparent rounded-full animate-spin"></div>
+                    Backfilling...
+                  </span>
+                ) : (
+                  <span>⚡ Backfill {backfillStatus.total} Embeddings</span>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

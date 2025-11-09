@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { semanticSearch, SimilarConcept, SimilarSegment } from "../neo4j/vector";
 import { debugLogger } from "../debug-logger";
+import { Message } from "../db/conversations";
 
 const googleAI = process.env.GOOGLE_API_KEY
   ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
@@ -12,6 +13,11 @@ export interface ChatResponse {
     concepts: SimilarConcept[];
     segments: SimilarSegment[];
   };
+}
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 
@@ -84,6 +90,7 @@ function buildContextFromGraph(
 async function generateAnswerWithContext(
   question: string,
   graphResults: { concepts: SimilarConcept[]; segments: SimilarSegment[] },
+  conversationHistory: ConversationMessage[],
   requestId: string
 ): Promise<string> {
   if (!googleAI) {
@@ -95,33 +102,57 @@ async function generateAnswerWithContext(
     questionLength: question.length,
     conceptCount: graphResults.concepts.length,
     segmentCount: graphResults.segments.length,
+    historyLength: conversationHistory.length,
   });
 
   const context = buildContextFromGraph(graphResults, requestId);
 
   let prompt: string;
 
+  // Build conversation history context
+  let conversationContext = "";
+  if (conversationHistory.length > 0) {
+    // Limit to last 10 messages to avoid token limits
+    const recentHistory = conversationHistory.slice(-10);
+    conversationContext = "\nConversation History:\n";
+    recentHistory.forEach(msg => {
+      conversationContext += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`;
+    });
+  }
+
   if (!context) {
     debugLogger.log("generateAnswerWithContext", "no_context", {
       requestId,
       message: "No relevant context found, generating general answer",
     });
-    prompt = question;
+
+    if (conversationHistory.length > 0) {
+      prompt = `You are a helpful assistant engaged in an ongoing conversation.
+
+${conversationContext}
+User: ${question}
+
+Please respond naturally, taking into account the conversation history.`;
+    } else {
+      prompt = question;
+    }
   } else {
     prompt = `You are a helpful assistant that provides comprehensive answers using insights from a video knowledge base.
 
-Question: ${question}
+${conversationContext}
+Current Question: ${question}
 
 Context from Video Database:
 ${context}
 
 Please provide a comprehensive answer that:
-1. Directly addresses the question with a clear, concise explanation
-2. Integrates specific insights from the video segments when relevant
-3. Mentions which concepts or videos the insights come from (with timestamps when helpful)
-4. Uses both your general knowledge and the video content to give a complete answer
-5. Keeps the tone conversational and helpful
-6. If the video content provides unique perspectives or details, highlight those
+1. Takes into account the conversation history when relevant
+2. Directly addresses the question with a clear, concise explanation
+3. Integrates specific insights from the video segments when relevant
+4. Mentions which concepts or videos the insights come from (with timestamps when helpful)
+5. Uses both your general knowledge and the video content to give a complete answer
+6. Keeps the tone conversational and helpful
+7. If the video content provides unique perspectives or details, highlight those
 
 Format your response naturally, incorporating the video insights smoothly into the explanation rather than listing them separately.`;
   }
@@ -152,14 +183,19 @@ Format your response naturally, incorporating the video insights smoothly into t
 
 /**
  * Main chat function - answers question using RAG
+ * Now supports conversation history for multi-turn conversations
  */
-export async function answerQuestion(question: string): Promise<ChatResponse> {
+export async function answerQuestion(
+  question: string,
+  conversationHistory: ConversationMessage[] = []
+): Promise<ChatResponse> {
   const requestId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
   debugLogger.log("answerQuestion", "start", {
     requestId,
     question,
     questionLength: question.length,
+    historyLength: conversationHistory.length,
     timestamp: new Date().toISOString(),
   });
 
@@ -182,10 +218,11 @@ export async function answerQuestion(question: string): Promise<ChatResponse> {
 
     console.log(`Found ${graphResults.concepts.length} concepts and ${graphResults.segments.length} segments`);
 
-    // 2. Generate answer with context in one pass
+    // 2. Generate answer with context in one pass (including conversation history)
     const answer = await generateAnswerWithContext(
       question,
       graphResults,
+      conversationHistory,
       requestId
     );
 
