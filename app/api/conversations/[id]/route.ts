@@ -8,10 +8,10 @@ import { getConversation, getMessages, getMessageCount } from "@/lib/db/conversa
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
 
     // Get conversation
     const conversation = await getConversation(conversationId);

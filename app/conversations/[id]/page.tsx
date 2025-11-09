@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { apiGet, apiPost } from '@/lib/api-client';
+import { apiGet } from '@/lib/api-client';
 
 interface Concept {
   name: string;
@@ -43,13 +43,11 @@ function getYouTubeTimestamp(timeStr: string): number {
   return 0;
 }
 
-export default function ChatPage() {
+export default function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loadingTimer, setLoadingTimer] = useState(0);
-  const [backfillStatus, setBackfillStatus] = useState<{ concepts: number; segments: number; total: number } | null>(null);
-  const [backfilling, setBackfilling] = useState(false);
+  const [conversation, setConversation] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
 
@@ -70,254 +68,77 @@ export default function ChatPage() {
     return { primary, reference };
   };
 
-  const checkBackfillStatus = async () => {
-    try {
-      const data = await apiGet<{ success: boolean; status: { concepts: { needingEmbeddings: number }; segments: { needingEmbeddings: number }; total: number } }>('/api/backfill');
-
-      if (data.success && data.status) {
-        setBackfillStatus({
-          concepts: data.status.concepts.needingEmbeddings,
-          segments: data.status.segments.needingEmbeddings,
-          total: data.status.total,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to check backfill status:', error);
-    }
-  };
-
-  const handleBackfill = async () => {
-    if (backfilling) return;
-
-    setBackfilling(true);
-
-    try {
-      const data = await apiPost<{ results: { concepts: { processed: number; total: number }; segments: { processed: number; total: number } } }>('/api/backfill', {});
-
-      alert(`Backfill complete!\nConcepts: ${data.results.concepts.processed}/${data.results.concepts.total}\nSegments: ${data.results.segments.processed}/${data.results.segments.total}`);
-
-      // Refresh status
-      await checkBackfillStatus();
-    } catch (error) {
-      console.error('Backfill error:', error);
-      alert('Failed to backfill embeddings. Check console for details.');
-    } finally {
-      setBackfilling(false);
-    }
-  };
-
-  // Load conversation from URL if present
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const convId = params.get('conversation');
-
-    if (convId) {
-      loadConversation(convId);
-    }
-
-    checkBackfillStatus();
-  }, []);
-
-  const loadConversation = async (convId: string) => {
-    try {
-      const data = await apiGet<{ conversation: any; messages: Message[] }>(`/api/conversations/${convId}`);
-      setConversationId(convId);
-      setMessages(data.messages);
-    } catch (error) {
-      console.error('Failed to load conversation:', error);
-    }
-  };
-
-  // Timer for loading state
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (loading) {
-      setLoadingTimer(0);
-      interval = setInterval(() => {
-        setLoadingTimer((prev) => prev + 0.1);
-      }, 100);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [loading]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!input.trim() || loading) return;
-
-    const userMessage: Message = {
-      role: 'user',
-      content: input,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setLoading(true);
-
-    try {
-      const data = await apiPost<{ answer: string; conversationId: string; sources: { concepts: any[]; segments: any[] } }>('/api/chat', {
-        question: input,
-        conversationId, // Pass conversation ID if exists
-      });
-
-      // Update conversation ID if new
-      if (!conversationId) {
-        setConversationId(data.conversationId);
-        // Update URL without reload
-        window.history.pushState(
-          {},
-          '',
-          `/chat?conversation=${data.conversationId}`
-        );
-      }
-
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data.answer,
-        sources: data.sources,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Chat error:', error);
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Start a new conversation
-  const startNewConversation = () => {
-    setConversationId(null);
-    setMessages([]);
-    window.history.pushState({}, '', '/chat');
-  };
-
-  // Share conversation
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/conversations/${conversationId}`;
-
-    if (navigator.share) {
+    const loadConversation = async () => {
       try {
-        await navigator.share({
-          title: 'Check out this conversation',
-          url: shareUrl,
-        });
+        setLoading(true);
+        const { id } = await params;
+        setConversationId(id);
+        const data = await apiGet<{ conversation: any; messages: Message[] }>(`/api/conversations/${id}`);
+        setConversation(data.conversation);
+        setMessages(data.messages);
       } catch (err) {
-        // User cancelled or error
-        console.log('Share failed:', err);
+        console.error('Failed to load conversation:', err);
+        setError('Conversation not found or could not be loaded');
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setShowShareModal(true);
-    }
-  };
+    };
 
-  const handleCopy = async () => {
-    const shareUrl = `${window.location.origin}/conversations/${conversationId}`;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    loadConversation();
+  }, [params]);
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="card text-center py-12">
+          <div className="text-6xl mb-4">⏳</div>
+          <h3 className="text-xl font-semibold text-text-light mb-2">Loading conversation...</h3>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !conversation) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="card text-center py-12">
+          <div className="text-6xl mb-4">❌</div>
+          <h3 className="text-xl font-semibold text-text-light mb-2">Conversation Not Found</h3>
+          <p className="text-text-light/60 mb-4">{error || 'This conversation does not exist or has been deleted.'}</p>
+          <Link href="/chat" className="btn-primary inline-block">
+            Start New Chat
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto">
+      {/* Header */}
       <div className="mb-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool mb-2">
-              Knowledge Graph Chat
+              {conversation.title || 'Shared Conversation'}
             </h1>
             <p className="text-text-light/70">
-              Ask questions and get answers enhanced with insights from your video knowledge base
+              Read-only view • Created {new Date(conversation.created_at).toLocaleDateString()}
             </p>
           </div>
 
-          <div className="flex gap-2">
-            {/* Share Button */}
-            {conversationId && messages.length > 0 && (
-              <button
-                onClick={handleShare}
-                className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light font-medium transition-all whitespace-nowrap inline-flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                Share
-              </button>
-            )}
-
-            {/* New Conversation Button */}
-            {conversationId && (
-              <button
-                onClick={startNewConversation}
-                className="px-4 py-2 bg-accent-cool/20 hover:bg-accent-cool/30 border border-accent-cool/50 hover:border-accent-cool rounded-lg text-sm text-accent-cool font-medium transition-all whitespace-nowrap"
-              >
-                + New Chat
-              </button>
-            )}
-
-            {/* Backfill Button */}
-            {backfillStatus && backfillStatus.total > 0 && (
-              <button
-                onClick={handleBackfill}
-                disabled={backfilling}
-                className="px-4 py-2 bg-accent-warm/20 hover:bg-accent-warm/30 border border-accent-warm/50 hover:border-accent-warm rounded-lg text-sm text-accent-warm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                {backfilling ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-3 h-3 border-2 border-accent-warm border-t-transparent rounded-full animate-spin"></div>
-                    Backfilling...
-                  </span>
-                ) : (
-                  <span>⚡ Backfill {backfillStatus.total} Embeddings</span>
-                )}
-              </button>
-            )}
-          </div>
+          <Link
+            href="/chat"
+            className="px-4 py-2 bg-accent-cool hover:bg-accent-cool/80 text-primary-dark font-medium rounded-lg transition-all whitespace-nowrap"
+          >
+            Start Your Own Chat
+          </Link>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="space-y-6 mb-6 min-h-[400px]">
-        {messages.length === 0 && (
-          <div className="card text-center py-12">
-            <div className="text-6xl mb-4">💬</div>
-            <h3 className="text-xl font-semibold text-text-light mb-2">Start a conversation</h3>
-            <p className="text-text-light/60 mb-4">
-              Ask me anything! I&apos;ll provide answers using both general knowledge and specific insights from your videos.
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <button
-                onClick={() => setInput('How do I do A/B testing?')}
-                className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light transition-all"
-              >
-                How do I do A/B testing?
-              </button>
-              <button
-                onClick={() => setInput('What is product-market fit?')}
-                className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light transition-all"
-              >
-                What is product-market fit?
-              </button>
-              <button
-                onClick={() => setInput('How to find my target customer?')}
-                className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light transition-all"
-              >
-                How to find my target customer?
-              </button>
-            </div>
-          </div>
-        )}
-
+      <div className="space-y-6 mb-6">
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -461,11 +282,9 @@ export default function ChatPage() {
                                 {segment.video_title}
                               </div>
                             )}
-                            {/* Segment Preview */}
                             <div className="text-xs text-text-light/70 line-clamp-2 mb-3">
                               {segment.transcript}
                             </div>
-                            {/* Segment Direct URL and Watch Now Button */}
                             <div className="flex items-center gap-2">
                               <Link
                                 href={`/segments/${segment.segment_id}`}
@@ -521,7 +340,6 @@ export default function ChatPage() {
                                 key={concept.concept_id}
                                 className="bg-primary-dark border border-border-subtle rounded-lg p-3"
                               >
-                                {/* Concept Preview */}
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <div className="font-medium text-sm text-text-light">
                                     {concept.canonical_name}
@@ -542,7 +360,6 @@ export default function ChatPage() {
                                     Mentioned {concept.total_mentions} time{concept.total_mentions !== 1 ? 's' : ''}
                                   </div>
                                 )}
-                                {/* Concept Direct URL */}
                                 <Link
                                   href={`/concepts/${concept.concept_id}`}
                                   className="text-xs text-accent-cool hover:text-accent-cool/80 underline transition-colors"
@@ -561,125 +378,22 @@ export default function ChatPage() {
             </div>
           </div>
         ))}
-
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-surface-dark border border-border-subtle rounded-lg p-4 min-w-[320px]">
-              <div className="space-y-3">
-                {/* Header with dots and timer */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-text-light/60">
-                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-accent-cool rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                    <span className="ml-2 text-sm">Thinking...</span>
-                  </div>
-                  <div className="text-sm font-mono text-accent-cool">
-                    {loadingTimer.toFixed(1)}s
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="w-full h-2 bg-primary-dark rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-accent-cool to-accent-warm transition-all duration-100 ease-linear"
-                      style={{ width: `${Math.min((loadingTimer / 20) * 100, 100)}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-text-light/50 text-center">
-                    This may take up to 20 seconds
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Input */}
+      {/* Footer CTA */}
       <div className="sticky bottom-0 bg-primary-dark border-t border-border-subtle pt-4 pb-8">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
-            disabled={loading}
-            className="flex-1 px-4 py-3 bg-surface-dark border border-border-subtle rounded-lg text-text-light placeholder-text-light/40 focus:outline-none focus:border-accent-cool/50 focus:ring-1 focus:ring-accent-cool/50 transition-all disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="px-6 py-3 bg-accent-cool hover:bg-accent-cool/80 disabled:bg-accent-cool/20 text-primary-dark font-medium rounded-lg transition-all disabled:cursor-not-allowed"
+        <div className="text-center">
+          <p className="text-text-light/70 mb-4">
+            This is a read-only view. Start your own conversation to ask questions.
+          </p>
+          <Link
+            href="/chat"
+            className="inline-block px-6 py-3 bg-accent-cool hover:bg-accent-cool/80 text-primary-dark font-medium rounded-lg transition-all"
           >
-            {loading ? 'Thinking...' : 'Ask'}
-          </button>
-        </form>
-      </div>
-
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowShareModal(false)}>
-          <div className="bg-surface-dark border border-border-subtle rounded-lg p-6 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-semibold text-text-light mb-4">Share Conversation</h3>
-
-            <div className="space-y-4">
-              {/* URL Input */}
-              <div>
-                <label className="text-sm text-text-light/70 mb-2 block">Shareable Link (Read-only)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={`${window.location.origin}/conversations/${conversationId}`}
-                    readOnly
-                    className="flex-1 px-3 py-2 bg-primary-dark border border-border-subtle rounded text-text-light text-sm"
-                  />
-                  <button
-                    onClick={handleCopy}
-                    className="px-4 py-2 bg-accent-cool hover:bg-accent-cool/80 text-primary-dark rounded transition-all"
-                  >
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-                <p className="text-xs text-text-light/50 mt-2">
-                  Anyone with this link can view the conversation but cannot continue chatting.
-                </p>
-              </div>
-
-              {/* Social Share Buttons */}
-              <div>
-                <label className="text-sm text-text-light/70 mb-2 block">Share via</label>
-                <div className="flex gap-2">
-                  <a
-                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${window.location.origin}/conversations/${conversationId}`)}&text=Check%20out%20this%20conversation`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white rounded transition-all flex-1 text-center text-sm"
-                  >
-                    Twitter
-                  </a>
-                  <a
-                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}/conversations/${conversationId}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-[#0077B5] hover:bg-[#006399] text-white rounded transition-all flex-1 text-center text-sm"
-                  >
-                    LinkedIn
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="mt-6 w-full px-4 py-2 bg-surface-dark hover:bg-primary-dark border border-border-subtle rounded transition-all text-text-light"
-            >
-              Close
-            </button>
-          </div>
+            Start Your Own Chat
+          </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }
