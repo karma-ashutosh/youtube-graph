@@ -35,7 +35,7 @@ export interface AnalysisData {
   }>;
   examples: Array<{
     example_text: string;
-    type: "real_company" | "personal_story" | "metaphor" | "hypothetical" | "data_point" | "case_study" | "comparison";
+    type: "real_company" | "personal_story" | "metaphor" | "hypothetical" | "data_point" | "case_study" | "comparison" | "story";
     concept_illustrated: string;
   }>;
 }

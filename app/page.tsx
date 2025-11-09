@@ -65,9 +65,12 @@ export default function Home() {
         <h1 className="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text-light via-accent-cool to-accent-warm">
           Dive Deeper Into Your Favorite Content
         </h1>
-        <p className="text-2xl text-text-light/90 max-w-4xl mx-auto leading-relaxed">
-          Explore YouTube videos like never before. Get <span className="text-accent-cool font-semibold">instant answers</span> with timestamped references,
-          discover key segments, and unlock the full depth of your favorite creators&apos; content.
+        <p className="text-xl text-accent-cool/80 font-medium max-w-3xl mx-auto">
+          Optimize learning from YouTube videos. Find exactly what you need instantly—without losing the joy of watching.
+        </p>
+        <p className="text-lg text-text-light/80 max-w-4xl mx-auto leading-relaxed">
+          Get <span className="text-accent-cool font-semibold">precise answers</span> with timestamped references,
+          explore key segments, then jump straight to the actual moments that matter in the video.
         </p>
         <div className="flex items-center justify-center gap-4 pt-4">
           <Link

@@ -58,6 +58,7 @@ export const AnalysisDataSchema = z.object({
         "data_point",
         "case_study", // AI sometimes uses this instead of real_company
         "comparison", // AI sometimes uses this for comparative examples
+        "story", // AI sometimes uses this for narrative examples
       ]),
       concept_illustrated: z.string(),
     })
