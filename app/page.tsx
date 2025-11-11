@@ -71,15 +71,15 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
             <div className="text-3xl mb-3">🎯</div>
-            <p className="text-base text-text-light/90">Get <span className="text-accent-cool font-semibold"> precise answers </span> from knowledge bank of Your Favorite creators</p>
+            <p className="text-base text-text-light/90">Get  precise answers from knowledge bank of <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-semibold">Your Favorite creators</span> </p>
           </div>
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
             <div className="text-3xl mb-3">✅</div>
-            <p className="text-base text-text-light/90">See exact point in video discussing your problem -- <span className="text-accent-cool font-semibold">No AI slop</span></p>
+            <p className="text-base text-text-light/90">See exact point in video discussing your problem -- <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-semibold">No AI slop</span></p>
           </div>
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
             <div className="text-3xl mb-3">🗺️</div>
-            <p className="text-base text-text-light/90"><span className="text-accent-cool font-semibold">Explore</span> concepts, examples, and key segments across videos— all in one place</p>
+            <p className="text-base text-text-light/90"><span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-semibold">Segmented Concepts</span>, for quick check through</p>
           </div>
         </div>
         <div className="flex items-center justify-center gap-4 pt-4">
