@@ -70,12 +70,15 @@ export default function Home() {
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
+            <div className="text-3xl mb-3">🎯</div>
             <p className="text-base text-text-light/90">Get <span className="text-accent-cool font-semibold"> precise answers </span> from knowledge bank of Your Favorite creators</p>
           </div>
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
+            <div className="text-3xl mb-3">⏯️</div>
             <p className="text-base text-text-light/90"><span className="text-accent-cool font-semibold">Jump</span> to the precise moment in the video discussing your problem</p>
           </div>
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
+            <div className="text-3xl mb-3">🗺️</div>
             <p className="text-base text-text-light/90"><span className="text-accent-cool font-semibold">Explore</span> concepts, examples, and key segments across videos— all in one place</p>
           </div>
         </div>
