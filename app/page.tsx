@@ -74,8 +74,8 @@ export default function Home() {
             <p className="text-base text-text-light/90">Get <span className="text-accent-cool font-semibold"> precise answers </span> from knowledge bank of Your Favorite creators</p>
           </div>
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
-            <div className="text-3xl mb-3">⏯️</div>
-            <p className="text-base text-text-light/90"><span className="text-accent-cool font-semibold">Jump</span> to the precise moment in the video discussing your problem</p>
+            <div className="text-3xl mb-3">✅</div>
+            <p className="text-base text-text-light/90">See exact point in video discussing your problem -- <span className="text-accent-cool font-semibold">No AI slop</span></p>
           </div>
           <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
             <div className="text-3xl mb-3">🗺️</div>
