@@ -66,12 +66,19 @@ export default function Home() {
           Dive Deeper Into Your Favorite Content
         </h1>
         <p className="text-xl text-accent-cool/80 font-medium max-w-3xl mx-auto">
-          Optimize learning from YouTube videos. Find exactly what you need instantly—without losing the joy of watching.
+          AI answers your questions. YouTubers explain why it works.
         </p>
-        <p className="text-lg text-text-light/80 max-w-4xl mx-auto leading-relaxed">
-          Get <span className="text-accent-cool font-semibold">precise answers</span> with timestamped references,
-          explore key segments, then jump straight to the actual moments that matter in the video.
-        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+          <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
+            <p className="text-base text-text-light/90">Get <span className="text-accent-cool font-semibold"> precise answers </span> from knowledge bank of Your Favorite creators</p>
+          </div>
+          <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
+            <p className="text-base text-text-light/90"><span className="text-accent-cool font-semibold">Jump</span> to the precise moment in the video discussing your problem</p>
+          </div>
+          <div className="p-4 border border-accent-cool/30 rounded-lg bg-surface-dark/30">
+            <p className="text-base text-text-light/90"><span className="text-accent-cool font-semibold">Explore</span> concepts, examples, and key segments across videos— all in one place</p>
+          </div>
+        </div>
         <div className="flex items-center justify-center gap-4 pt-4">
           <Link
             href="/chat"
