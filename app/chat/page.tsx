@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { apiGet, apiPost } from '@/lib/api-client';
+import { apiGet, apiPost, getWorkspace } from '@/lib/api-client';
 import { LoadingAnimation } from '@/components/chat/LoadingAnimation';
+import suggestedQuestionsData from '@/lib/data/suggested-questions.json';
 
 interface Concept {
   name: string;
@@ -64,6 +65,16 @@ export default function ChatPage() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [includedSegments, setIncludedSegments] = useState<Set<string>>(new Set());
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
+
+  // Get workspace-specific suggested questions
+  const workspace = getWorkspace();
+  const workspaceData = (suggestedQuestionsData as any)[workspace];
+  const suggestedQuestions = workspaceData?.suggestedQuestions || [
+    'How do I do A/B testing?',
+    'What is product-market fit?',
+    'How to find my target customer?',
+  ];
+  const workspaceSummary = workspaceData?.summary || 'Ask me anything! I\'ll provide answers using both general knowledge and specific insights from your videos.';
 
   // Helper function to categorize segments
   const categorizeSegments = (segments: Segment[]) => {
@@ -322,27 +333,18 @@ export default function ChatPage() {
             <div className="text-6xl mb-4">💬</div>
             <h3 className="text-xl font-semibold text-text-light mb-2">Start a conversation</h3>
             <p className="text-text-light/60 mb-4">
-              Ask me anything! I&apos;ll provide answers using both general knowledge and specific insights from your videos.
+              {workspaceSummary}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              <button
-                onClick={() => setInput('How do I do A/B testing?')}
-                className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light transition-all"
-              >
-                How do I do A/B testing?
-              </button>
-              <button
-                onClick={() => setInput('What is product-market fit?')}
-                className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light transition-all"
-              >
-                What is product-market fit?
-              </button>
-              <button
-                onClick={() => setInput('How to find my target customer?')}
-                className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light transition-all"
-              >
-                How to find my target customer?
-              </button>
+              {suggestedQuestions.map((question, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setInput(question)}
+                  className="px-4 py-2 bg-surface-dark hover:bg-accent-cool/10 border border-border-subtle hover:border-accent-cool/50 rounded-lg text-sm text-text-light transition-all"
+                >
+                  {question}
+                </button>
+              ))}
             </div>
           </div>
         )}

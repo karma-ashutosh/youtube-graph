@@ -1,0 +1,418 @@
+{
+  "huberman_sleep_energy_optimize": {
+    "workspace": "huberman_sleep_energy_optimize",
+    "totalConcepts": 62,
+    "totalSegments": 13,
+    "topConcepts": [
+      {
+        "canonical_name": "Human Seasonality",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Daily Protocols for Sustained Brain and Body Optimization",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Daily Light Exposure Protocols for Circadian Health",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Strategic Light Exposure for Rapid Circadian Clock Adjustment",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Morning Protocols for Optimizing Alertness and Focus",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Strategies for Optimizing Sleep Transition and Maintenance",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "The Physiology and Architecture of Human Sleep",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Strategies for Optimizing Sleep and Napping",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "The Tripartite Model of Sleep-Wake Regulation",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Integrating Light and Meal Timing to Regulate Appetite and Eating Behavior",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Mechanisms and Efficacy of Common Sleep Interventions",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Understanding and Mitigating Factors that Disrupt Sleep Quality and Architecture",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Science-Backed Strategies for Optimizing Deep Work Sessions",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Supra-physiological Dosing (of Melatonin)",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 0
+      },
+      {
+        "canonical_name": "Melatonin's Role in Circadian Rhythm",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 0
+      }
+    ],
+    "topCategories": [],
+    "suggestedQuestions": [
+      "How do I apply Human Seasonality effectively?",
+      "What are the key principles of Daily Protocols for Sustained Brain and Body Optimization?",
+      "How does Daily Light Exposure Protocols for Circadian Health work in practice?"
+    ],
+    "summary": "Discover insights about Human Seasonality and Daily Protocols for Sustained Brain and Body Optimization and more"
+  },
+  "micro_conf": {
+    "workspace": "micro_conf",
+    "totalConcepts": 207,
+    "totalSegments": 49,
+    "topConcepts": [
+      {
+        "canonical_name": "Email Nurture Sequence",
+        "category": "Uncategorized",
+        "total_mentions": 2,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Zero-Click Content Creation Tactics",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "SaaS Plateau Equation",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Advanced SaaS Marketing Strategies",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Early Access Strategy for Software Launches",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Social Media Strategy for Algorithmic Visibility and Audience Engagement",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "One-Time External Events Causing SaaS Plateaus",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Breaking Through SaaS Plateaus Caused by Insufficient Leads and Fierce Competition",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "High Customer Churn as a SaaS Plateau Cause and Strategies for Resolution",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Versus and Alternative-to Comparison Pages",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Content Marketing Strategy for Early-Stage Startups",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Breaking Through Plateaus Caused by Perceived Market Saturation",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Effective Early Access Management",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Zero Click Content",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Content Marketing Strategy Using Eugene Schwarz's Five Levels of Awareness",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      }
+    ],
+    "topCategories": [],
+    "suggestedQuestions": [
+      "How do I apply Email Nurture Sequence effectively?",
+      "What are the key principles of Zero-Click Content Creation Tactics?",
+      "How does SaaS Plateau Equation work in practice?"
+    ],
+    "summary": "Discover insights about Email Nurture Sequence and Zero-Click Content Creation Tactics and more"
+  },
+  "saas_design_theory": {
+    "workspace": "saas_design_theory",
+    "totalConcepts": 130,
+    "totalSegments": 29,
+    "topConcepts": [
+      {
+        "canonical_name": "The Profound Influence of Space and Origin on Luxury Perception",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Challenges to Radical Innovation in Large Corporations",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Visual Signaling in Branding and Consumer Perception",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Deconstruction of Branding Through Satirical Application",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Data-Driven Design",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Product Vision Failure",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "East Asian Collective Harmony and Holistic Worldview",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Systems Thinking in Design",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Unity and Tribalism as Marketing Tactics",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "The Creation and Value of Meaning in Branding",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Design Language",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Historical and Developmental Context of Intellectual Property Theft",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "How Language and Culture Shape Design Thinking and Perception",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Critique of Dieter Rams' 'Good Design Is Honest' Principle",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "How Design and Symbolism Function as Propaganda",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      }
+    ],
+    "topCategories": [],
+    "suggestedQuestions": [
+      "How do I apply The Profound Influence of Space and Origin on Luxury Perception effectively?",
+      "What are the key principles of Challenges to Radical Innovation in Large Corporations?",
+      "How does Visual Signaling in Branding and Consumer Perception work in practice?"
+    ],
+    "summary": "Discover insights about The Profound Influence of Space and Origin on Luxury Perception and Challenges to Radical Innovation in Large Corporations and more"
+  },
+  "shopify": {
+    "workspace": "shopify",
+    "totalConcepts": 118,
+    "totalSegments": 28,
+    "topConcepts": [
+      {
+        "canonical_name": "Strategic Market Entry and Channel Selection for CPG Brands",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Characteristics of Effective Creator Content",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "The Power of Brand Awareness (Even Over Early Product Flaws)",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Strategic Retail Channel Entry and Growth for CPG Brands",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "The Necessity and Function of Incrementality in Marketing Measurement",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Creating Effective Ad Hooks",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Multi-Stage Subscription Acquisition & Conversion Strategies",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Designing and Optimizing Initial Subscription Offers",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Developing and Maintaining a Consistent Brand Tone of Voice",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Optimizing Retailer-Specific Marketing and Investment Strategies",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Optimizing On-Site Strategies for Subscription Acquisition",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Triggers and Tangible Business Impact of Adopting Advanced Marketing Measurement Tools",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Optimizing On-Site Subscription Conversion Strategies",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "Strategic Marketing Measurement in a Multi-Channel Environment",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      },
+      {
+        "canonical_name": "The Dangers and Ethical Implications of AI-Generated User-Generated Content (UGC)",
+        "category": "Uncategorized",
+        "total_mentions": 1,
+        "primary_count": 1
+      }
+    ],
+    "topCategories": [],
+    "suggestedQuestions": [
+      "How do I apply Strategic Market Entry and Channel Selection for CPG Brands effectively?",
+      "What are the key principles of Characteristics of Effective Creator Content?",
+      "How does The Power of Brand Awareness (Even Over Early Product Flaws) work in practice?"
+    ],
+    "summary": "Discover insights about Strategic Market Entry and Channel Selection for CPG Brands and Characteristics of Effective Creator Content and more"
+  }
+}
