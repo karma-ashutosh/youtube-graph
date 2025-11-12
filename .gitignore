@@ -46,3 +46,10 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/terraform.tfvars
 terraform/*.tfvars
+
+# development scripts and todos
+scripts/check-*.ts
+scripts/test-*.ts
+scripts/validate-*.ts
+scripts/full-comparison.ts
+.todos/
