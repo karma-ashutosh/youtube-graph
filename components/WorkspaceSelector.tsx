@@ -91,14 +91,14 @@ function WorkspaceSelectorInner() {
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="workspace-select" className="text-sm font-medium text-text-muted">
+      <label htmlFor="workspace-select" className="text-sm font-medium text-text-muted shrink-0">
         Workspace:
       </label>
       <select
         id="workspace-select"
         value={currentWorkspace}
         onChange={(e) => handleWorkspaceChange(e.target.value)}
-        className="px-3 py-1.5 text-sm bg-surface-muted border border-border-subtle rounded-lg text-text-light focus:outline-none focus:ring-2 focus:ring-accent-cool/50 focus:border-accent-cool transition-all duration-200 hover:border-border-default"
+        className="px-2 md:px-3 py-1.5 text-sm bg-surface-muted border border-border-subtle rounded-lg text-text-light focus:outline-none focus:ring-2 focus:ring-accent-cool/50 focus:border-accent-cool transition-all duration-200 hover:border-border-default min-w-0"
       >
         {workspaces.map((ws) => (
           <option key={ws} value={ws} className="bg-surface-muted text-text-light">

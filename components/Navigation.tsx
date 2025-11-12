@@ -28,8 +28,8 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           {/* Logo */}
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 md:space-x-6 min-w-0 flex-1">
+            <Link href="/" className="flex items-center space-x-2 md:space-x-3 shrink-0">
               <Image
                 src="/logo.png"
                 alt="YouTube Knowledge Graph"
@@ -37,7 +37,7 @@ export default function Navigation() {
                 height={48}
                 className="hover:opacity-80 transition-opacity duration-300"
               />
-              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">
+              <span className="text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-text-light to-accent-cool">
                 YouTube Graph
               </span>
             </Link>
@@ -68,7 +68,7 @@ export default function Navigation() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center shrink-0">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-lg text-text-light hover:text-accent-cool hover:bg-accent-cool/5 transition-all duration-200"

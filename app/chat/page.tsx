@@ -336,7 +336,7 @@ export default function ChatPage() {
               {workspaceSummary}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              {suggestedQuestions.map((question, idx) => (
+              {suggestedQuestions.map((question: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setInput(question)}
