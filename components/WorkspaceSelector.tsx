@@ -86,22 +86,22 @@ function WorkspaceSelectorInner() {
   };
 
   if (isLoading) {
-    return <div className="text-sm text-gray-500">Loading...</div>;
+    return <div className="text-sm text-text-muted">Loading...</div>;
   }
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="workspace-select" className="text-sm font-medium text-gray-700">
+      <label htmlFor="workspace-select" className="text-sm font-medium text-text-muted">
         Workspace:
       </label>
       <select
         id="workspace-select"
         value={currentWorkspace}
         onChange={(e) => handleWorkspaceChange(e.target.value)}
-        className="px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="px-3 py-1.5 text-sm bg-surface-muted border border-border-subtle rounded-lg text-text-light focus:outline-none focus:ring-2 focus:ring-accent-cool/50 focus:border-accent-cool transition-all duration-200 hover:border-border-default"
       >
         {workspaces.map((ws) => (
-          <option key={ws} value={ws}>
+          <option key={ws} value={ws} className="bg-surface-muted text-text-light">
             {ws}
           </option>
         ))}
@@ -111,7 +111,7 @@ function WorkspaceSelectorInner() {
         !showCreateForm ? (
           <button
             onClick={() => setShowCreateForm(true)}
-            className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            className="px-3 py-1.5 text-sm bg-accent-cool/10 text-accent-cool rounded-lg hover:bg-accent-cool/20 transition-all duration-200 font-medium"
           >
             + New
           </button>
@@ -122,13 +122,13 @@ function WorkspaceSelectorInner() {
               value={newWorkspaceName}
               onChange={(e) => setNewWorkspaceName(e.target.value)}
               placeholder="workspace_name"
-              className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-1.5 text-sm bg-surface-elevated border border-border-subtle rounded-lg text-text-light placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent-cool/50 focus:border-accent-cool"
               pattern="[a-z0-9_]+"
               required
             />
             <button
               type="submit"
-              className="px-2 py-1 text-sm bg-green-500 text-white rounded-md hover:bg-green-600"
+              className="px-3 py-1.5 text-sm bg-accent-cool text-white rounded-lg hover:bg-accent-cool/80 transition-all duration-200 font-medium"
             >
               Create
             </button>
@@ -138,7 +138,7 @@ function WorkspaceSelectorInner() {
                 setShowCreateForm(false);
                 setNewWorkspaceName('');
               }}
-              className="px-2 py-1 text-sm bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              className="px-3 py-1.5 text-sm bg-surface-elevated border border-border-subtle text-text-light rounded-lg hover:bg-surface-muted transition-all duration-200"
             >
               Cancel
             </button>

@@ -87,7 +87,7 @@ export default function Home() {
             href="/chat"
             className="px-8 py-4 bg-gradient-to-r from-accent-cool to-accent-warm hover:shadow-glow-cool text-primary-dark font-bold text-lg rounded-xl transition-all duration-300 transform hover:scale-105"
           >
-            💬 Start Exploring
+            💬 Ask Now
           </Link>
           <Link
             href="/videos"
