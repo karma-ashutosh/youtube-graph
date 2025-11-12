@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { semanticSearch, SimilarConcept, SimilarSegment } from "../neo4j/vector";
 import { debugLogger } from "../debug-logger";
 import { Message } from "../db/conversations";
+import { RelatedSegment } from "../rag/graph-expander";
 
 const googleAI = process.env.GOOGLE_API_KEY
   ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
@@ -13,6 +14,7 @@ export interface ChatResponse {
     concepts: SimilarConcept[];
     segments: SimilarSegment[];
   };
+  relatedTopics?: RelatedSegment[];
 }
 
 export interface ConversationMessage {
@@ -235,7 +237,11 @@ export async function answerQuestion(
 
     return {
       answer,
-      sources: graphResults,
+      sources: {
+        concepts: graphResults.concepts,
+        segments: graphResults.segments,
+      },
+      relatedTopics: graphResults.relatedSegments || [],
     };
   } catch (error) {
     debugLogger.log("answerQuestion", "error", {

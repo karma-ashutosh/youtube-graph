@@ -25,6 +25,15 @@ interface Segment {
   concepts: Concept[];
 }
 
+interface RelatedTopic {
+  segment_id: string;
+  topic_hint: string;
+  similarity_score: number;
+  shared_concept_count: number;
+  connecting_concepts: string[];
+  preview?: string;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -32,6 +41,7 @@ interface Message {
     concepts: any[];
     segments: Segment[];
   };
+  relatedTopics?: RelatedTopic[];
 }
 
 function getYouTubeTimestamp(timeStr: string): number {
@@ -158,7 +168,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const data = await apiPost<{ answer: string; conversationId: string; sources: { concepts: any[]; segments: any[] } }>('/api/chat', {
+      const data = await apiPost<{ answer: string; conversationId: string; sources: { concepts: any[]; segments: any[] }; relatedTopics?: RelatedTopic[] }>('/api/chat', {
         question: input,
         conversationId, // Pass conversation ID if exists
       });
@@ -177,6 +187,7 @@ export default function ChatPage() {
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.answer,
+        relatedTopics: data.relatedTopics,
         sources: data.sources,
       };
 
@@ -557,6 +568,49 @@ export default function ChatPage() {
                       )}
                     </>
                   )}
+                </div>
+              )}
+
+              {/* Related Topics */}
+              {msg.relatedTopics && msg.relatedTopics.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border-subtle">
+                  <div className="text-xs font-semibold text-accent-warm mb-3">
+                    💡 Related Topics You Might Explore
+                  </div>
+                  <div className="space-y-2">
+                    {msg.relatedTopics.map((topic) => (
+                      <div
+                        key={topic.segment_id}
+                        className="bg-accent-warm/5 border border-accent-warm/30 rounded-lg p-3 hover:bg-accent-warm/10 transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="font-medium text-sm text-text-light">
+                            {topic.topic_hint}
+                          </div>
+                          <div className="text-xs text-accent-warm/70 whitespace-nowrap">
+                            {Math.round(topic.similarity_score * 100)}% related
+                          </div>
+                        </div>
+                        {topic.preview && (
+                          <div className="text-xs text-text-light/70 line-clamp-2 mb-2">
+                            {topic.preview}...
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-xs text-text-light/60 mb-2">
+                          <span>Connected via: {topic.connecting_concepts.slice(0, 2).join(', ')}</span>
+                          {topic.connecting_concepts.length > 2 && (
+                            <span>+{topic.connecting_concepts.length - 2} more</span>
+                          )}
+                        </div>
+                        <Link
+                          href={`/segments/${topic.segment_id}`}
+                          className="text-xs text-accent-warm hover:text-accent-warm/80 underline transition-colors"
+                        >
+                          Explore this topic →
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

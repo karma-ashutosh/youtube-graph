@@ -110,6 +110,14 @@ export const POST = withWorkspace(async (request: NextRequest) => {
           concepts: s.concepts,
         })),
       },
+      relatedTopics: response.relatedTopics?.map((r) => ({
+        segment_id: r.segment_id,
+        topic_hint: r.topic_hint,
+        similarity_score: r.similarity_score,
+        shared_concept_count: r.shared_concept_count,
+        connecting_concepts: r.connecting_concepts,
+        preview: r.preview,
+      })) || [],
     });
   } catch (error) {
     console.error("Chat error:", error);

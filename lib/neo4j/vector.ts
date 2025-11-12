@@ -3,6 +3,8 @@ import { getSession } from './client';
 import { generateEmbedding } from '../ai/embeddings';
 import { getCurrentWorkspace } from '../workspace-context';
 import { debugLogger } from '../debug-logger';
+import { expandWithConceptSimilarity, RelatedSegment } from '../rag/graph-expander';
+import { getDriver } from './client';
 
 export interface SimilarConcept {
   concept_id: string;
@@ -274,7 +276,7 @@ export async function findSimilarSegments(
 }
 
 /**
- * Semantic search for chatbot RAG
+ * Semantic search for chatbot RAG with graph expansion
  */
 export async function semanticSearch(question: string, requestId?: string) {
   debugLogger.log("semanticSearch", "start", {
@@ -296,5 +298,40 @@ export async function semanticSearch(question: string, requestId?: string) {
     durationMs: duration,
   });
 
-  return { concepts, segments };
+  // Graph expansion: find related segments through concept similarity
+  let relatedSegments: RelatedSegment[] = [];
+  if (segments.length > 0) {
+    debugLogger.log("semanticSearch", "graph_expansion_start", {
+      requestId,
+      retrievedSegmentCount: segments.length,
+    });
+
+    const expansionStart = Date.now();
+    try {
+      const driver = getDriver();
+      const segmentIds = segments.map(s => s.segment_id);
+
+      relatedSegments = await expandWithConceptSimilarity(driver, segmentIds, {
+        similarityThreshold: 0.8,
+        topKSimilarConcepts: 10,
+        maxRelatedSegments: 5,
+        minSharedConcepts: 1,
+      });
+
+      debugLogger.log("semanticSearch", "graph_expansion_complete", {
+        requestId,
+        relatedSegmentsFound: relatedSegments.length,
+        durationMs: Date.now() - expansionStart,
+      });
+    } catch (error) {
+      debugLogger.log("semanticSearch", "graph_expansion_error", {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      console.error("Graph expansion failed:", error);
+      // Continue without related segments if expansion fails
+    }
+  }
+
+  return { concepts, segments, relatedSegments };
 }
