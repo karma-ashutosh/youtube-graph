@@ -186,10 +186,12 @@ Format your response naturally, incorporating the video insights smoothly into t
 /**
  * Main chat function - answers question using RAG
  * Now supports conversation history for multi-turn conversations
+ * and user-selected segments to include in context
  */
 export async function answerQuestion(
   question: string,
-  conversationHistory: ConversationMessage[] = []
+  conversationHistory: ConversationMessage[] = [],
+  includeSegmentIds?: string[]
 ): Promise<ChatResponse> {
   const requestId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -205,10 +207,11 @@ export async function answerQuestion(
     // 1. Get semantic search results
     debugLogger.log("answerQuestion", "semantic_search_start", {
       requestId,
+      includeSegmentIds: includeSegmentIds?.length || 0,
     });
 
     const searchStartTime = Date.now();
-    const graphResults = await semanticSearch(question, requestId);
+    const graphResults = await semanticSearch(question, requestId, includeSegmentIds);
     const searchDuration = Date.now() - searchStartTime;
 
     debugLogger.log("answerQuestion", "semantic_search_complete", {
@@ -216,9 +219,10 @@ export async function answerQuestion(
       durationMs: searchDuration,
       conceptsFound: graphResults.concepts.length,
       segmentsFound: graphResults.segments.length,
+      includedSegments: includeSegmentIds?.length || 0,
     });
 
-    console.log(`Found ${graphResults.concepts.length} concepts and ${graphResults.segments.length} segments`);
+    console.log(`Found ${graphResults.concepts.length} concepts and ${graphResults.segments.length} segments${includeSegmentIds ? ` (+ ${includeSegmentIds.length} user-included)` : ''}`);
 
     // 2. Generate answer with context in one pass (including conversation history)
     const answer = await generateAnswerWithContext(

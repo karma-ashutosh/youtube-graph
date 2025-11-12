@@ -276,29 +276,99 @@ export async function findSimilarSegments(
 }
 
 /**
+ * Fetch segments by IDs for user-included topics
+ */
+export async function getSegmentsByIds(segmentIds: string[]): Promise<SimilarSegment[]> {
+  const workspace = getCurrentWorkspace();
+  const session = getSession();
+
+  try {
+    const result = await session.run(`
+      MATCH (s:Segment)-[:FROM_VIDEO]->(v:Video)
+      WHERE s.segment_id IN $segmentIds AND s.workspace = $workspace
+      OPTIONAL MATCH (s)-[d:DISCUSSES]->(c:Concept)
+      WITH s, v,
+           collect({
+             name: c.canonical_name,
+             id: c.concept_id,
+             role: d.role
+           }) as concepts
+      RETURN
+        s.segment_id as segment_id,
+        s.topic_hint as topic_hint,
+        s.start_time as start_time,
+        s.end_time as end_time,
+        s.transcript as transcript,
+        1.0 as similarity,
+        v.url as video_url,
+        v.title as video_title,
+        concepts
+    `, { segmentIds, workspace });
+
+    return result.records.map(record => ({
+      segment_id: record.get('segment_id'),
+      topic_hint: record.get('topic_hint'),
+      start_time: record.get('start_time'),
+      end_time: record.get('end_time'),
+      transcript: record.get('transcript') || '',
+      similarity: record.get('similarity'),
+      video_url: record.get('video_url'),
+      video_title: record.get('video_title'),
+      concepts: record.get('concepts').filter((c: any) => c.id !== null),
+    }));
+  } finally {
+    await session.close();
+  }
+}
+
+/**
  * Semantic search for chatbot RAG with graph expansion
  */
-export async function semanticSearch(question: string, requestId?: string) {
+export async function semanticSearch(
+  question: string,
+  requestId?: string,
+  includeSegmentIds?: string[]
+) {
   debugLogger.log("semanticSearch", "start", {
     requestId,
     question,
+    includeSegmentIds: includeSegmentIds?.length || 0,
   });
 
   const startTime = Date.now();
-  const [concepts, segments] = await Promise.all([
+
+  // Fetch included segments and semantic search in parallel
+  const promises: Promise<any>[] = [
     findSimilarConcepts(question, 5, 0.6, requestId),
     findSimilarSegments(question, 10, 0.6, requestId),
-  ]);
+  ];
+
+  if (includeSegmentIds && includeSegmentIds.length > 0) {
+    promises.push(getSegmentsByIds(includeSegmentIds));
+  }
+
+  const results = await Promise.all(promises);
+  const concepts = results[0];
+  let segments = results[1];
+  const includedSegments = results[2] || [];
+
+  // Merge included segments at the top
+  if (includedSegments.length > 0) {
+    segments = [...includedSegments, ...segments];
+  }
+
   const duration = Date.now() - startTime;
 
   debugLogger.log("semanticSearch", "complete", {
     requestId,
     conceptsFound: concepts.length,
     segmentsFound: segments.length,
+    includedSegments: includedSegments.length,
     durationMs: duration,
   });
 
   // Graph expansion: find related segments through concept similarity
+  // Use all segments (including user-included) for expansion
   let relatedSegments: RelatedSegment[] = [];
   if (segments.length > 0) {
     debugLogger.log("semanticSearch", "graph_expansion_start", {
@@ -309,7 +379,7 @@ export async function semanticSearch(question: string, requestId?: string) {
     const expansionStart = Date.now();
     try {
       const driver = getDriver();
-      const segmentIds = segments.map(s => s.segment_id);
+      const segmentIds = segments.map((s: SimilarSegment) => s.segment_id);
 
       relatedSegments = await expandWithConceptSimilarity(driver, segmentIds, {
         similarityThreshold: 0.8,

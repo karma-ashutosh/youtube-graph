@@ -62,6 +62,7 @@ export default function ChatPage() {
   const [backfillStatus, setBackfillStatus] = useState<{ concepts: number; segments: number; total: number } | null>(null);
   const [backfilling, setBackfilling] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [includedSegments, setIncludedSegments] = useState<Set<string>>(new Set());
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
 
   // Helper function to categorize segments
@@ -153,6 +154,18 @@ export default function ChatPage() {
     };
   }, [loading]);
 
+  const handleIncludeTopic = (segmentId: string) => {
+    setIncludedSegments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(segmentId)) {
+        newSet.delete(segmentId);
+      } else {
+        newSet.add(segmentId);
+      }
+      return newSet;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -171,6 +184,7 @@ export default function ChatPage() {
       const data = await apiPost<{ answer: string; conversationId: string; sources: { concepts: any[]; segments: any[] }; relatedTopics?: RelatedTopic[] }>('/api/chat', {
         question: input,
         conversationId, // Pass conversation ID if exists
+        includeSegments: includedSegments.size > 0 ? Array.from(includedSegments) : undefined,
       });
 
       // Update conversation ID if new
@@ -192,6 +206,9 @@ export default function ChatPage() {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Clear included segments after successful response
+      setIncludedSegments(new Set());
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage: Message = {
@@ -578,39 +595,63 @@ export default function ChatPage() {
                     💡 Related Topics You Might Explore
                   </div>
                   <div className="space-y-2">
-                    {msg.relatedTopics.map((topic) => (
-                      <div
-                        key={topic.segment_id}
-                        className="bg-accent-warm/5 border border-accent-warm/30 rounded-lg p-3 hover:bg-accent-warm/10 transition-all"
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div className="font-medium text-sm text-text-light">
-                            {topic.topic_hint}
-                          </div>
-                          <div className="text-xs text-accent-warm/70 whitespace-nowrap">
-                            {Math.round(topic.similarity_score * 100)}% related
-                          </div>
-                        </div>
-                        {topic.preview && (
-                          <div className="text-xs text-text-light/70 line-clamp-2 mb-2">
-                            {topic.preview}...
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 text-xs text-text-light/60 mb-2">
-                          <span>Connected via: {topic.connecting_concepts.slice(0, 2).join(', ')}</span>
-                          {topic.connecting_concepts.length > 2 && (
-                            <span>+{topic.connecting_concepts.length - 2} more</span>
-                          )}
-                        </div>
-                        <Link
-                          href={`/segments/${topic.segment_id}`}
-                          className="text-xs text-accent-warm hover:text-accent-warm/80 underline transition-colors"
+                    {msg.relatedTopics.map((topic) => {
+                      const isIncluded = includedSegments.has(topic.segment_id);
+                      return (
+                        <div
+                          key={topic.segment_id}
+                          className={`border rounded-lg p-3 transition-all ${
+                            isIncluded
+                              ? 'bg-accent-warm/20 border-accent-warm'
+                              : 'bg-accent-warm/5 border-accent-warm/30 hover:bg-accent-warm/10'
+                          }`}
                         >
-                          Explore this topic →
-                        </Link>
-                      </div>
-                    ))}
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="font-medium text-sm text-text-light">
+                              {topic.topic_hint}
+                            </div>
+                            <div className="text-xs text-accent-warm/70 whitespace-nowrap">
+                              {Math.round(topic.similarity_score * 100)}% related
+                            </div>
+                          </div>
+                          {topic.preview && (
+                            <div className="text-xs text-text-light/70 line-clamp-2 mb-2">
+                              {topic.preview}...
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-xs text-text-light/60 mb-3">
+                            <span>Connected via: {topic.connecting_concepts.slice(0, 2).join(', ')}</span>
+                            {topic.connecting_concepts.length > 2 && (
+                              <span>+{topic.connecting_concepts.length - 2} more</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleIncludeTopic(topic.segment_id)}
+                              className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+                                isIncluded
+                                  ? 'bg-accent-warm text-primary-dark hover:bg-accent-warm/90'
+                                  : 'bg-accent-warm/20 text-accent-warm hover:bg-accent-warm/30 border border-accent-warm/50'
+                              }`}
+                            >
+                              {isIncluded ? '✓ Included in next response' : '+ Include in next response'}
+                            </button>
+                            <Link
+                              href={`/segments/${topic.segment_id}`}
+                              className="text-xs text-accent-warm hover:text-accent-warm/80 underline transition-colors"
+                            >
+                              View details →
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                  {includedSegments.size > 0 && (
+                    <div className="mt-3 text-xs text-accent-warm bg-accent-warm/10 border border-accent-warm/30 rounded-lg p-2">
+                      💡 {includedSegments.size} topic{includedSegments.size !== 1 ? 's' : ''} will be included in your next question
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -19,7 +19,7 @@ import { rewriteQueryWithContext } from "@/lib/rag/query-rewriter";
  */
 export const POST = withWorkspace(async (request: NextRequest) => {
   try {
-    const { question, conversationId } = await request.json();
+    const { question, conversationId, includeSegments } = await request.json();
 
     if (!question || typeof question !== "string") {
       return NextResponse.json(
@@ -71,8 +71,12 @@ export const POST = withWorkspace(async (request: NextRequest) => {
       }
     }
 
-    // Generate answer using RAG with conversation history
-    const response = await answerQuestion(searchQuery, conversationHistory);
+    // Generate answer using RAG with conversation history and included segments
+    const response = await answerQuestion(
+      searchQuery,
+      conversationHistory,
+      includeSegments
+    );
 
     // Save assistant message with sources
     await addMessage(convId, "assistant", response.answer, {
