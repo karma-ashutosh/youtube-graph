@@ -338,9 +338,14 @@ export async function semanticSearch(
   const startTime = Date.now();
 
   // Fetch included segments and semantic search in parallel
+  // Use higher threshold (0.75) and cap total segments at 5
+  const HIGH_QUALITY_THRESHOLD = 0.75;
+  const FALLBACK_THRESHOLD = 0.6;
+  const MAX_TOTAL_SEGMENTS = 5;
+
   const promises: Promise<any>[] = [
     findSimilarConcepts(question, 5, 0.6, requestId),
-    findSimilarSegments(question, 10, 0.6, requestId),
+    findSimilarSegments(question, 10, FALLBACK_THRESHOLD, requestId), // Fetch more to filter
   ];
 
   if (includeSegmentIds && includeSegmentIds.length > 0) {
@@ -349,10 +354,50 @@ export async function semanticSearch(
 
   const results = await Promise.all(promises);
   const concepts = results[0];
-  let segments = results[1];
+  let ragSegments = results[1];
   const includedSegments = results[2] || [];
 
-  // Merge included segments at the top
+  // Calculate how many RAG segments we can include
+  const userIncludedCount = includedSegments.length;
+  const maxRagSegments = Math.max(1, MAX_TOTAL_SEGMENTS - userIncludedCount);
+
+  debugLogger.log("semanticSearch", "segment_budget", {
+    requestId,
+    userIncluded: userIncludedCount,
+    maxRagSegments: maxRagSegments,
+    totalBudget: MAX_TOTAL_SEGMENTS,
+  });
+
+  // Smart filtering: prioritize high-quality matches
+  let segments: SimilarSegment[] = [];
+
+  // Strategy 1: If we have high-quality matches (>75%), use those (up to budget)
+  const highQualitySegments = ragSegments.filter((s: SimilarSegment) => s.similarity > HIGH_QUALITY_THRESHOLD);
+
+  if (highQualitySegments.length > 0) {
+    segments = highQualitySegments.slice(0, maxRagSegments);
+    debugLogger.log("semanticSearch", "using_high_quality", {
+      requestId,
+      count: segments.length,
+      minSimilarity: Math.min(...segments.map((s: SimilarSegment) => s.similarity)),
+    });
+  }
+  // Strategy 2: If no high-quality matches, keep only top 1-2 best matches (up to budget)
+  else if (ragSegments.length > 0) {
+    const topMatches = Math.min(
+      maxRagSegments,
+      userIncludedCount > 0 ? 2 : 1
+    );
+    segments = ragSegments.slice(0, topMatches);
+    debugLogger.log("semanticSearch", "using_fallback", {
+      requestId,
+      count: segments.length,
+      topSimilarity: segments[0]?.similarity,
+      note: "No high-quality matches, using top match(es) only",
+    });
+  }
+
+  // Merge user-included segments at the top (always included regardless of similarity)
   if (includedSegments.length > 0) {
     segments = [...includedSegments, ...segments];
   }
