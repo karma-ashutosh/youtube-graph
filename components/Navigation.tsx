@@ -28,8 +28,8 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           {/* Logo */}
-          <div className="flex items-center space-x-3 md:space-x-6 min-w-0 flex-1">
-            <Link href="/" className="flex items-center space-x-2 md:space-x-3 shrink-0">
+          <div className="flex items-center space-x-2 md:space-x-3 shrink-0">
+            <Link href="/" className="flex items-center space-x-2 md:space-x-3">
               <Image
                 src="/logo.png"
                 alt="YouTube Knowledge Graph"
@@ -41,10 +41,6 @@ export default function Navigation() {
                 YouTube Graph
               </span>
             </Link>
-            {/* Workspace Selector */}
-            <div className="hidden md:block">
-              <WorkspaceSelector />
-            </div>
           </div>
 
           {/* Desktop Navigation */}
@@ -86,6 +82,11 @@ export default function Navigation() {
               )}
             </button>
           </div>
+        </div>
+
+        {/* Workspace Selector Row - Desktop Only */}
+        <div className="hidden md:block pb-3 pt-1 border-t border-border-subtle/30">
+          <WorkspaceSelector />
         </div>
       </div>
 

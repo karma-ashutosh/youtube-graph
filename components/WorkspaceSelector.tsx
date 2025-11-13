@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 function WorkspaceSelectorInner() {
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || 'internal';
   const [workspaces, setWorkspaces] = useState<string[]>([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState('default');
+  const [currentWorkspace, setCurrentWorkspace] = useState('huberman_sleep_energy_optimize');
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
@@ -98,7 +98,7 @@ function WorkspaceSelectorInner() {
         id="workspace-select"
         value={currentWorkspace}
         onChange={(e) => handleWorkspaceChange(e.target.value)}
-        className="px-2 md:px-3 py-1.5 text-sm bg-surface-muted border border-border-subtle rounded-lg text-text-light focus:outline-none focus:ring-2 focus:ring-accent-cool/50 focus:border-accent-cool transition-all duration-200 hover:border-border-default min-w-0"
+        className="px-2 md:px-3 py-1.5 text-sm bg-surface-muted border border-border-subtle rounded-lg text-text-light focus:outline-none focus:ring-2 focus:ring-accent-cool/50 focus:border-accent-cool transition-all duration-200 hover:border-border-default"
       >
         {workspaces.map((ws) => (
           <option key={ws} value={ws} className="bg-surface-muted text-text-light">

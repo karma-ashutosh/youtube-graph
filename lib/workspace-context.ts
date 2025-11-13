@@ -9,10 +9,10 @@ const workspaceStorage = new AsyncLocalStorage<string>();
 
 /**
  * Get the current workspace from the async context
- * Returns 'micro_conf' if no workspace is set in the context
+ * Returns 'huberman_sleep_energy_optimize' if no workspace is set in the context
  */
 export function getCurrentWorkspace(): string {
-  return workspaceStorage.getStore() || 'micro_conf';
+  return workspaceStorage.getStore() || 'huberman_sleep_energy_optimize';
 }
 
 /**
@@ -50,7 +50,7 @@ export function isValidWorkspace(workspace: string): boolean {
 
 /**
  * Get workspace from request headers or query parameters
- * Priority: X-Workspace header > workspace query param > micro_conf
+ * Priority: X-Workspace header > workspace query param > huberman_sleep_energy_optimize
  */
 export function getWorkspaceFromRequest(request: Request): string {
   // Try header first
@@ -67,7 +67,7 @@ export function getWorkspaceFromRequest(request: Request): string {
   }
 
   // Default workspace
-  return 'micro_conf';
+  return 'huberman_sleep_energy_optimize';
 }
 
 /**
